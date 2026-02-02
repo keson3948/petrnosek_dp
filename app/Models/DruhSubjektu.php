@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class DruhSubjektu extends Model
+{
+    protected $connection = 'firebird';
+    protected $table = 'eca_DruhSubj';
+
+    protected $primaryKey = 'KlicDruhuSubjektu';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
+    protected $guarded = [];
+
+    public function getAttribute($key)
+    {
+        $value = parent::getAttribute($key);
+
+        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
+        }
+
+        return $value;
+    }
+
+    public function subjekty()
+    {
+        return $this->hasMany(Subjekt::class, 'DruhSubjektu', 'KlicDruhuSubjektu');
+    }
+}
