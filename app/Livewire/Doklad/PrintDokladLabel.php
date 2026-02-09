@@ -36,7 +36,7 @@ class PrintDokladLabel extends Component
             abort(404, 'Doklad ID missing');
         }
 
-        $qrCode = base64_encode(QrCode::format('png')->size(200)->margin(0)->generate($this->dokladId));
+        $qrCode = base64_encode(QrCode::format('png')->size(200)->margin(0)->generate('https://jobtrack.cz?v=1234567890&r=123&p=123'));
 
         $data = [
             'id' => $this->dokladId,
@@ -46,7 +46,8 @@ class PrintDokladLabel extends Component
             'date' => date('d.m.Y H:i'),
         ];
 
-        $customPaper = [0, 0, 175.75, 100]; // 62mm x 40mm
+        // custom paper size 69mm x 29 mm
+        $customPaper = [0, 0, 170, 81];
 
         $pdf = Pdf::loadView('pdf.pdf-label', $data)
             ->setPaper($customPaper);
@@ -61,9 +62,6 @@ class PrintDokladLabel extends Component
 
         // Absolutní cesta (pro tiskovou službu)
         $absolutePath = storage_path('app/'.$relativePath);
-
-        // stream pdf to user
-        // return $pdf->stream("label-$safeId.pdf");
 
         $pdf->save($absolutePath);
 
@@ -86,6 +84,7 @@ class PrintDokladLabel extends Component
         } else {
             session()->flash('error', 'Chyba při tisku: '.$response->body());
         }
+
     }
 
     public function render()

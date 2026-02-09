@@ -40,7 +40,7 @@
             <tr>
                 <!-- QR Code Column -->
                 <td style="width: 35%; vertical-align: middle; text-align: center; padding: 0;">
-                    <img src="data:image/png;base64, {{ $qrCode }}" class="qr" alt="QR Code" style="width: 100%; max-width: 80px; height: auto;">
+                    <img src="data:image/png;base64, {{ $qrCode }}" class="qr" alt="QR Code" style="min-width: 90px; max-width: 110px; height: auto;">
                 </td>
                 
                 <!-- Text Info Column -->
@@ -48,20 +48,20 @@
                     <div class="info" style="font-size: 30px; line-height: 1; margin: 0;">
                         {{ $projekt }}
                     </div>
-                    <div class="info" style="font-size: 20px; line-height: 1; margin: 0;">
+                    <div class="info" style="font-size: 15px; line-height: 1; margin: 0;">
                         {{ $id }}
                     </div>
-                    <div class="info" style="font-size: 20px; line-height: 1; margin: 0;">
+                    <div class="info" style="font-size: 15px; line-height: 1; margin: 0;">
                         1 ks
                     </div>
+                    @if(isset($author))
+                        <div class="date" style="font-size: 10px; line-height: 1; margin: 0;">
+                            G: {{ $author }}
+                        </div>
+                    @endif
                 </td>
             </tr>
         </table>
-        @if(isset($author))
-            <div class="date" style="font-size: 15px; margin-top: 0; font-weight: bold;">
-                G: {{ $author }}
-            </div>
-        @endif
     </div>
 </body>
 </html>
