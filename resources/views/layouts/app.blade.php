@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,23 +14,72 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            <livewire:layout.navigation />
+    <body class="min-h-screen font-sans antialiased bg-base-200">
+        {{-- NAVBAR mobile only --}}
+        <x-mary-nav sticky class="lg:hidden">
+            <x-slot:brand>
+                <div class="ml-5 pt-5">
+                    <x-application-logo class="w-8 h-8"></x-application-logo>
+                </div>
+            </x-slot:brand>
+            <x-slot:actions>
+                <label for="main-drawer" class="lg:hidden mr-3">
+                    <x-mary-icon name="o-bars-3" class="cursor-pointer" />
+                </label>
+            </x-slot:actions>
+        </x-mary-nav>
 
-            <!-- Page Heading -->
-            @if (isset($header))
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
+        {{-- MAIN --}}
+        <x-mary-main full-width>
+            {{-- SIDEBAR --}}
+            <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit" collapse-text="Skrýt" >
 
-            <!-- Page Content -->
-            <main>
+                {{-- BRAND --}}
+                <div class="ml-5 pt-2">
+                    <x-application-logo class="w-11 h-11"></x-application-logo>
+                </div>
+
+                {{-- MENU --}}
+                <x-mary-menu activate-by-route class="pt-0">
+
+                    {{-- User --}}
+                    @if($user = auth()->user())
+                        <x-mary-menu-separator/>
+
+                        <x-mary-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
+                            <x-slot:avatar>
+                                <x-mary-avatar placeholder="US" class="!w-10"/>
+                            </x-slot:avatar>
+                            <x-slot:actions>
+                                <x-logout-button></x-logout-button>
+                            </x-slot:actions>
+                        </x-mary-list-item>
+
+                        <x-mary-menu-separator />
+                    @endif
+
+                    <x-mary-menu-item icon="o-home" title="Dashboard" link="dashboard" />
+                    <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
+                    <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
+                    <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
+                    <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />
+                    <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
+
+                    <x-mary-menu-separator/>
+
+                    <x-mary-menu-item icon="o-user" title="Profil" link="{{ route('profile') }}" />
+                </x-mary-menu>
+            </x-slot:sidebar>
+
+            {{-- The `$slot` goes here --}}
+            <x-slot:content>
                 {{ $slot }}
-            </main>
-        </div>
+            </x-slot:content>
+        </x-mary-main>
+
+        {{-- Toast --}}
+        <x-mary-toast />
+
+
     </body>
 </html>

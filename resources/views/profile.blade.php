@@ -1,29 +1,36 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+    <x-mary-header title="Profil" separator></x-mary-header>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.update-profile-information-form />
-                </div>
-            </div>
+    <div class="space-y-6">
+        <x-mary-card
+            title="Profile Information"
+            separator
+            subtitle="Update your account's profile information and email address."
+        >
+            <livewire:profile.update-profile-information-form/>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.update-password-form />
-                </div>
-            </div>
+        </x-mary-card>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.delete-user-form />
-                </div>
-            </div>
-        </div>
+
+        <x-mary-card
+            title="Update Password"
+            separator
+            subtitle="Ensure your account is using a long, random password to stay secure."
+        >
+            <livewire:profile.update-password-form/>
+
+        </x-mary-card>
+
+
+        <x-mary-card
+            title="Delete Account"
+            separator
+            subtitle="Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain."
+        >
+            <livewire:profile.delete-user-form/>
+
+        </x-mary-card>
     </div>
+
+
 </x-app-layout>

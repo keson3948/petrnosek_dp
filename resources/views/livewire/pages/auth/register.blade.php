@@ -37,52 +37,32 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <form wire:submit="register">
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
 
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+    <x-mary-form wire:submit="register">
+        <x-mary-input label="Jméno" icon="o-user" wire:model="name" error-field="name" type="text" name="name" required autofocus autocomplete="name"/>
+        <x-mary-input label="Email" icon="o-envelope" wire:model="email" error-field="email" type="email" name="email" required autofocus autocomplete="username"/>
+        <x-mary-input label="Heslo" icon="o-key" wire:model="password" type="password" name="password" error-field="password" required autocomplete="new-password"/>
+        <x-mary-input label="Potvrdit heslo" icon="o-key" wire:model="password_confirmation" type="password" name="password_confirmation" error-field="password_confirmation" required autocomplete="new-password"/>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+        <x-slot:actions>
+            {{-- Obalovací DIV, který zajistí roztažení a zarovnání --}}
+            <div class="w-full flex items-center justify-between">
 
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+                <x-mary-button
+                    label="Už máte účet?"
+                    link="{{ route('login') }}"
+                    class="btn-link text-gray-600 underline hover:no-underline p-0 h-auto min-h-0"
+                />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+                {{-- 2. Tlačítko (bude vpravo) --}}
+                <x-mary-button
+                    label="ZAREGISTROVAT SE"
+                    icon="o-paper-airplane"
+                    class="btn-primary"
+                    type="submit"
+                    spinner="save" />
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}" wire:navigate>
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
+            </div>
+        </x-slot:actions>
+    </x-mary-form>
 </div>
