@@ -3,40 +3,56 @@
 namespace App\Livewire\Doklad;
 
 use App\Models\Doklad;
+use App\Models\Printer; // Import modelu tiskárny
+use App\Jobs\PrintLabelJob; // Import Jobu
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Mary\Traits\Toast;
 
 class PrintDokladLabel extends Component
 {
-    public $dokladId;
+    use Toast;
 
+    public $dokladId;
     public Doklad $doklad;
 
+    // Formulářová data
     public $copies = 1;
+    public $selectedPrinterId; // ID vybrané tiskárny
 
-    public $showModal = false;
-
-    public $statusMessage = '';
-
-    public $messageType = ''; // 'success' or 'error'
+    public bool $modal = false;
 
     public function mount($dokladId, $doklad)
     {
         $this->dokladId = $dokladId;
         $this->doklad = $doklad;
+
+        $printer = Printer::where('is_active', true)
+            ->where('is_default', true)
+            ->first();
+
+        if (!$printer) {
+            $printer = Printer::where('is_active', true)->first();
+        }
+
+        $this->selectedPrinterId = $printer?->id;
     }
 
     public function print()
     {
-        if (! $this->dokladId) {
-            abort(404, 'Doklad ID missing');
-        }
+        // 1. Validace
+        $this->validate([
+            'selectedPrinterId' => 'required|exists:printers,id',
+            'copies' => 'required|integer|min:1',
+        ]);
 
-        $qrCode = base64_encode(QrCode::format('png')->size(200)->margin(0)->generate('https://jobtrack.cz?v=1234567890&r=123&p=123'));
+        $this->modal = false;
+
+        // 2. Příprava dat pro PDF
+        $qrCode = base64_encode(QrCode::format('png')->size(200)->margin(0)->generate('https://jobtrack.cz?v=' . $this->dokladId));
 
         $data = [
             'id' => $this->dokladId,
@@ -46,49 +62,36 @@ class PrintDokladLabel extends Component
             'date' => date('d.m.Y H:i'),
         ];
 
-        // custom paper size 69mm x 29 mm
+        // Rozměr plátna PDF (aby to graficky sedělo na štítek)
+        // Fyzický ořez řeší až Python služba podle nastavení v DB
         $customPaper = [0, 0, 170, 81];
 
         $pdf = Pdf::loadView('pdf.pdf-label', $data)
             ->setPaper($customPaper);
 
-        $safeId = str_replace(['/', '\\'], '-', $this->dokladId);
+        // 3. Uložení PDF do Storage (aby ho Worker našel)
+        // Použijeme unikátní název, aby se nepřepisovaly
+        $filename = 'prints/label-' . $this->dokladId . '-' . time() . '.pdf';
 
-        // Ujisti se, že adresář existuje
-        Storage::disk('local')->makeDirectory('public/labels');
+        // Uložíme přímo obsah PDF do storage/app/prints/...
+        Storage::put($filename, $pdf->output());
 
-        // Relativní cesta v storage/app
-        $relativePath = 'public/labels/label-'.$safeId.'.pdf';
+        // 4. Odeslání do FRONTY (Job)
+        // Předáváme ID tiskárny, cestu k souboru a počet kopií
+        PrintLabelJob::dispatch($this->selectedPrinterId, $filename, $this->copies);
 
-        // Absolutní cesta (pro tiskovou službu)
-        $absolutePath = storage_path('app/'.$relativePath);
-
-        $pdf->save($absolutePath);
-
-        // echo $absolutePath; // Livewire nesmí mít echo output
-
-        $response = Http::withHeaders([
-            'Accept' => 'application/json',
-        ])
-            ->attach(
-                'file',
-                file_get_contents($absolutePath),
-                basename($absolutePath)
-            )
-            ->post(config('services.print.url').'/print', [
-                'printer' => 'default',
-            ]);
-
-        if ($response->successful()) {
-            session()->flash('success', 'Štítek byl odeslán k tisku.');
-        } else {
-            session()->flash('error', 'Chyba při tisku: '.$response->body());
-        }
-
+        // 5. Info uživateli
+        $this->success('Tisk byl zařazen do fronty.');
     }
 
     public function render()
     {
-        return view('livewire.doklad.print-doklad-label');
+        // Načteme aktivní tiskárny pro selectbox
+        // MaryUI select potřebuje kolekci objektů nebo pole ['id' => ..., 'name' => ...]
+        $printers = Printer::where('is_active', true)->get();
+
+        return view('livewire.doklad.print-doklad-label', [
+            'printers' => $printers
+        ]);
     }
 }

@@ -67,6 +67,10 @@
 
                     <x-mary-menu-separator/>
 
+                    <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
+
+                    <x-mary-menu-separator/>
+
                     <x-mary-menu-item icon="o-user" title="Profil" link="{{ route('profile') }}" />
                 </x-mary-menu>
             </x-slot:sidebar>

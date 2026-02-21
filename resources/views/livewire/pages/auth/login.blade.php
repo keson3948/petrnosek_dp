@@ -53,4 +53,16 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
         </x-slot:actions>
     </x-mary-form>
+
+    <!-- Reset password-->
+
+        <div class="mt-4 text-center">
+            <x-mary-button
+                label="Zapomněli jste heslo?"
+                link="{{ route('password.request') }}"
+                class="btn-link text-gray-600 underline hover:no-underline p-0 h-auto min-h-0"
+            />
+        </div>
+
+
 </div>

@@ -5,6 +5,10 @@ use App\Http\Controllers\SubjektController;
 use App\Http\Controllers\DruhSubjektuController;
 use App\Http\Controllers\ProstredekController;
 use App\Http\Controllers\StaDoklController;
+use App\Http\Controllers\PrinterController;
+use App\Http\Controllers\StaPoController;
+use App\Http\Controllers\DokladLabelController;
+
 use App\Models\Polozka;
 use Illuminate\Support\Facades\Route;
 
@@ -30,8 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/prostredky', [ProstredekController::class, 'index'])->name('prostredky.index');
     Route::get('/stadokl', [StaDoklController::class, 'index'])->name('stadokl.index');
     Route::get('/stadokl/{id}', [StaDoklController::class, 'show'])->name('stadokl.show')->where('id', '.*');
-    Route::get('/stadokl-label', [App\Http\Controllers\DokladLabelController::class, 'show'])->name('stadokl.label');
-    Route::get('/stapo', [App\Http\Controllers\StaPoController::class, 'index'])->name('stapo.index');
+    Route::get('/stadokl-label', [DokladLabelController::class, 'show'])->name('stadokl.label');
+    Route::get('/stapo', [StaPoController::class, 'index'])->name('stapo.index');
+
+    Route::get('/admin/printers', [PrinterController::class, 'index'])->name('printers.index');
 });
 
 require __DIR__.'/auth.php';
