@@ -18,8 +18,13 @@
         {{-- NAVBAR mobile only --}}
         <x-mary-nav sticky class="lg:hidden">
             <x-slot:brand>
-                <div class="ml-5 pt-5">
+                <div class="ml-5 pt-5 flex items-center gap-2">
                     <x-application-logo class="w-8 h-8"></x-application-logo>
+                    @if($terminal = \App\Models\Terminal::current())
+                        <div class="text-sm font-semibold text-gray-500 truncate mt-1">
+                            {{ $terminal->name }}
+                        </div>
+                    @endif
                 </div>
             </x-slot:brand>
             <x-slot:actions>
@@ -35,8 +40,13 @@
             <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit" collapse-text="Skrýt" >
 
                 {{-- BRAND --}}
-                <div class="ml-5 pt-2">
+                <div class="ml-5 pt-2 flex items-center gap-2">
                     <x-application-logo class="w-11 h-11"></x-application-logo>
+                    @if($terminal = \App\Models\Terminal::current())
+                        <div class="text-sm font-semibold text-gray-500 truncate mt-1">
+                            {{ $terminal->name }}
+                        </div>
+                    @endif
                 </div>
 
                 {{-- MENU --}}
@@ -58,7 +68,7 @@
                         <x-mary-menu-separator />
                     @endif
 
-                    <x-mary-menu-item icon="o-home" title="Dashboard" link="dashboard" />
+                    <x-mary-menu-item icon="o-home" title="Dashboard" link="{{ route('dashboard') }}" />
                     <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
                     <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
                     <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
@@ -67,6 +77,8 @@
 
                     <x-mary-menu-separator/>
 
+                    <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
+                    <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
                     <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
 
                     <x-mary-menu-separator/>

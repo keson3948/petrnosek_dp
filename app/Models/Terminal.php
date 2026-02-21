@@ -24,4 +24,9 @@ class Terminal extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public static function current(): ?self
+    {
+        return app()->bound('current_terminal') ? app('current_terminal') : null;
+    }
 }

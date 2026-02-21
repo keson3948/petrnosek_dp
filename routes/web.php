@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
+Route::get('/terminal/{token}', \App\Http\Controllers\Terminal::class)
+    ->name('terminal.init');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -38,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/stapo', [StaPoController::class, 'index'])->name('stapo.index');
 
     Route::get('/admin/printers', [PrinterController::class, 'index'])->name('printers.index');
+    Route::get('/admin/areas', \App\Livewire\Admin\AreaIndex::class)->name('admin.areas');
+    Route::get('/admin/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
 });
 
 require __DIR__.'/auth.php';
