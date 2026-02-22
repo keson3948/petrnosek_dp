@@ -1,10 +1,10 @@
 <div>
-    <x-mary-header title="Terminály" subtitle="Správa terminálů (Terminals)" separator progress-indicator>
+    <x-mary-header title="Terminály" separator progress-indicator>
         <x-slot:middle class="!justify-end">
             <x-mary-input icon="o-magnifying-glass" wire:model.live="search" placeholder="Hledat..." />
         </x-slot:middle>
         <x-slot:actions>
-            <x-mary-button icon="o-plus" class="btn-primary" wire:click="create" label="Nový terminál" responsive />
+            <x-mary-button icon="o-plus" class="btn-primary" wire:click="create" responsive />
         </x-slot:actions>
     </x-mary-header>
 
@@ -27,7 +27,7 @@
         </x-mary-table>
     </x-mary-card>
 
-    <x-mary-drawer wire:model="drawer" title="{{ $terminal ? 'Úprava terminálu' : 'Nový terminál' }}" right separator with-close-button class="lg:w-1/3">
+    <x-mary-modal wire:model="drawer" title="{{ $terminal ? 'Úprava terminálu' : 'Nový terminál' }}" separator with-close-button>
         <x-mary-form wire:submit="save">
             <x-mary-select label="Oblast" icon="o-map-pin" :options="$areas" wire:model="area_id" placeholder="Vyberte oblast..." />
 
@@ -42,5 +42,5 @@
                 <x-mary-button label="Uložit" class="btn-primary" type="submit" spinner="save" />
             </x-slot:actions>
         </x-mary-form>
-    </x-mary-drawer>
+    </x-mary-modal>
 </div>
