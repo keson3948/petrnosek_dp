@@ -107,11 +107,13 @@
 
                     <x-mary-menu-separator/>
 
-                    <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
-                    <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
-                    <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
+                    @role('Admin')
+                        <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
+                        <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
+                        <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
 
-                    <x-mary-menu-separator/>
+                        <x-mary-menu-separator/>
+                    @endrole
 
                     <x-mary-menu-item icon="o-user" title="Profil" link="{{ route('profile') }}" />
                 </x-mary-menu>

@@ -39,10 +39,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/stadokl/{id}', [StaDoklController::class, 'show'])->name('stadokl.show')->where('id', '.*');
     Route::get('/stadokl-label', [DokladLabelController::class, 'show'])->name('stadokl.label');
     Route::get('/stapo', [StaPoController::class, 'index'])->name('stapo.index');
+    Route::get('/qr-result/{code}', \App\Livewire\QrScannerResult::class)->name('qr.result');
 
-    Route::get('/admin/printers', [PrinterController::class, 'index'])->name('printers.index');
-    Route::get('/admin/areas', \App\Livewire\Admin\AreaIndex::class)->name('admin.areas');
-    Route::get('/admin/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
+    // --- ADMIN  ---
+    Route::middleware(['role:Admin'])->prefix('admin')->group(function () {
+        Route::get('/printers', [PrinterController::class, 'index'])->name('printers.index');
+        Route::get('/areas', \App\Livewire\Admin\AreaIndex::class)->name('admin.areas');
+        Route::get('/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
+    });
 });
 
 require __DIR__.'/auth.php';

@@ -13,10 +13,7 @@ class GlobalQrScanner extends Component
     #[On('qr-scanned')]
     public function processQrCode($code)
     {
-        // Tuto metodu můžete dále rozšiřovat o přesměrování (redirect),
-        // vyhledání v databázi, atd., podle toho co je obsahem kódu.
-        
-        $this->success("Naskenován QR kód: " . $code, timeout: 5000);
+        return $this->redirectRoute('qr.result', ['code' => base64_encode($code)], navigate: true);
     }
 
     public function render()

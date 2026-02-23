@@ -29,6 +29,11 @@ class Printers extends Component
         ['id' => '6', 'name' => 'Portrait Reverse (6)'],
     ];
 
+    public function boot()
+    {
+        abort_if(!auth()->user()->hasRole('Admin'), 403);
+    }
+
     public function mount()
     {
         $this->refresh();

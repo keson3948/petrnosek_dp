@@ -19,13 +19,17 @@ class AreaIndex extends Component
     public bool $drawer = false;
 
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
-    
+
     public ?Area $area = null;
 
     public string $name = '';
     public string $code = '';
     public ?string $description = '';
 
+    public function boot()
+    {
+        abort_if(!auth()->user()->hasRole('Admin'), 403);
+    }
     public function rules(): array
     {
         return [

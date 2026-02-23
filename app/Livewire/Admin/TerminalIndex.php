@@ -29,6 +29,11 @@ class TerminalIndex extends Component
     public ?string $ip_address = '';
     public bool $is_active = true;
 
+    public function boot()
+    {
+        abort_if(!auth()->user()->hasRole('Admin'), 403);
+    }
+
     public function rules(): array
     {
         return [
