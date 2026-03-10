@@ -7,6 +7,7 @@ use Livewire\Volt\Component;
 new class extends Component
 {
     public string $password = '';
+    public bool $showModal = false;
 
     /**
      * Delete the currently authenticated user.
@@ -23,47 +24,33 @@ new class extends Component
     }
 }; ?>
 
-<section class="space-y-6">
-    <x-danger-button
-        x-data=""
-        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >{{ __('Delete Account') }}</x-danger-button>
+<section>
+    <x-mary-button
+        label="Smazat účet"
+        icon="o-trash"
+        class="btn-error text-white"
+        @click="$wire.showModal = true"
+    />
 
-    <x-modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable>
-        <form wire:submit="deleteUser" class="p-6">
-
-            <h2 class="text-lg font-medium text-gray-900">
-                {{ __('Are you sure you want to delete your account?') }}
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+    <x-mary-modal wire:model="showModal" title="Opravdu chcete smazat svůj účet?" box-class="max-w-2xl">
+        <x-mary-form wire:submit="deleteUser">
+            <p class="text-sm text-gray-600">
+                Po smazání účtu budou veškerá data trvale odstraněna. Pro potvrzení, že si přejete trvale smazat svůj účet, zadejte prosím své heslo.
             </p>
 
-            <div class="mt-6">
-                <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
+            <x-mary-input
+                label="Heslo"
+                wire:model="password"
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Zadejte své heslo"
+            />
 
-                <x-text-input
-                    wire:model="password"
-                    id="password"
-                    name="password"
-                    type="password"
-                    class="mt-1 block w-3/4"
-                    placeholder="{{ __('Password') }}"
-                />
-
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
-                </x-secondary-button>
-
-                <x-danger-button class="ms-3">
-                    {{ __('Delete Account') }}
-                </x-danger-button>
-            </div>
-        </form>
-    </x-modal>
+            <x-slot:actions>
+                <x-mary-button label="Zrušit" @click="$wire.showModal = false" />
+                <x-mary-button label="Smazat účet" class="btn-error text-white" type="submit" spinner="deleteUser" />
+            </x-slot:actions>
+        </x-mary-form>
+    </x-mary-modal>
 </section>

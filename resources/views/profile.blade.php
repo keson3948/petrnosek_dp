@@ -1,11 +1,11 @@
 <x-app-layout>
-    <x-mary-header title="Profil" separator></x-mary-header>
+    <x-mary-header title="Můj profil" separator></x-mary-header>
 
     <div class="space-y-6">
         <x-mary-card
-            title="Profile Information"
+            title="Informace o profilu"
             separator
-            subtitle="Update your account's profile information and email address."
+            subtitle="Zde si můžete upravit své jméno nebo e-mailovou adresu."
         >
             <livewire:profile.update-profile-information-form/>
 
@@ -13,19 +13,28 @@
 
 
         <x-mary-card
-            title="Update Password"
+            title="Změna hesla"
             separator
-            subtitle="Ensure your account is using a long, random password to stay secure."
+            subtitle="Ujistěte se, že používáte dostatečně dlouhé a bezpečné heslo."
         >
             <livewire:profile.update-password-form/>
 
         </x-mary-card>
 
+        <x-mary-card
+            title="Zaslání odkazu pro obnovu hesla"
+            separator
+            subtitle="Pokud si nepamatujete heslo, můžete si nechat zaslat odkaz na jeho resetování do e-mailu."
+        >
+            <livewire:profile.send-password-reset-link/>
+
+        </x-mary-card>
+
 
         <x-mary-card
-            title="Delete Account"
+            title="Smazání účtu"
             separator
-            subtitle="Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain."
+            subtitle="Po smazání účtu budou veškerá data trvale odstraněna a tento proces nelze vrátit zpět."
         >
             <livewire:profile.delete-user-form/>
 
