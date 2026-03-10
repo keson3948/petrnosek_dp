@@ -31,7 +31,7 @@ class TerminalIndex extends Component
 
     public function boot()
     {
-        abort_if(!auth()->user()->hasRole('Admin'), 403);
+        abort_if(!auth()->user()->can('manage terminals'), 403);
     }
 
     public function rules(): array

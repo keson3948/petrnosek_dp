@@ -28,7 +28,7 @@ class AreaIndex extends Component
 
     public function boot()
     {
-        abort_if(!auth()->user()->hasRole('Admin'), 403);
+        abort_if(!auth()->user()->can('manage areas'), 403);
     }
     public function rules(): array
     {

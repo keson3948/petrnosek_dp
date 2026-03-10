@@ -106,14 +106,18 @@
                     <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
 
                     <x-mary-menu-separator/>
-
-                    @role('Admin')
+                    @can('manage users')
+                        <x-mary-menu-item icon="o-users" title="Uživatelé" link="{{ route('admin.users') }}" />
+                    @endcan
+                    @can('manage areas')
                         <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
+                    @endcan
+                    @can('manage terminals')
                         <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
+                    @endcan
+                    @can('manage printers')
                         <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
-
-                        <x-mary-menu-separator/>
-                    @endrole
+                    @endcan
 
                     <x-mary-menu-item icon="o-user" title="Profil" link="{{ route('profile') }}" />
                 </x-mary-menu>

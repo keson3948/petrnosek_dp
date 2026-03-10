@@ -9,7 +9,6 @@ class Terminal extends Model
 {
     protected $fillable = ['area_id', 'name', 'slug', 'ip_address', 'is_active', 'last_seen_at'];
 
-
     protected $casts = [
         'last_seen_at' => 'datetime',
         'is_active' => 'boolean',

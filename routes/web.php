@@ -42,10 +42,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/qr-result/{code}', \App\Livewire\QrScannerResult::class)->name('qr.result');
 
     // --- ADMIN  ---
-    Route::middleware(['role:Admin'])->prefix('admin')->group(function () {
+    Route::middleware(['permission:manage terminals|manage printers|manage areas|manage users'])->prefix('admin')->group(function () {
         Route::get('/printers', [PrinterController::class, 'index'])->name('printers.index');
         Route::get('/areas', \App\Livewire\Admin\AreaIndex::class)->name('admin.areas');
         Route::get('/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
+        Route::get('/users', \App\Livewire\Admin\UserIndex::class)->name('admin.users');
+        Route::get('/users/{user}/edit', \App\Livewire\Admin\UserEdit::class)->name('admin.users.edit');
     });
 });
 

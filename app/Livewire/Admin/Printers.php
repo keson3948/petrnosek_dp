@@ -31,7 +31,7 @@ class Printers extends Component
 
     public function boot()
     {
-        abort_if(!auth()->user()->hasRole('Admin'), 403);
+        abort_if(!auth()->user()->can('manage printers'), 403);
     }
 
     public function mount()
