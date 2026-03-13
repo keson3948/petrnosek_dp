@@ -1,5 +1,5 @@
 <div>
-    <x-mary-header title="Správa tiskáren" subtitle="Nastavení štítkovaček a parametrů">
+    <x-mary-header title="Správa tiskáren" separator>
         <x-slot:middle class="!justify-end">
             <x-mary-input icon="o-magnifying-glass" placeholder="Hledat..." />
         </x-slot:middle>

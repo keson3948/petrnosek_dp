@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -55,10 +56,26 @@ class User extends Authenticatable
         return $this->belongsTo(Subjekt::class, 'klic_subjektu', 'KlicSubjektu');
     }
 
+    public function productionRecords()
+    {
+        return $this->hasMany(ProductionRecord::class, 'user_id');
+    }
+
     protected static function booted()
     {
         static::created(function ($user) {
             $user->assignRole('Operator');
         });
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

@@ -1,9 +1,7 @@
 <div>
     <x-mary-header separator>
-        {{-- 1. Vlastní slot pro nadpis --}}
         <x-slot:title>
             <div class="flex items-center gap-3">
-                {{-- Tlačítko Zpět (kulaté, jen ikonka) --}}
                 <x-mary-button
                     icon="o-arrow-left"
                     class="btn-circle btn-ghost btn-sm"
@@ -11,12 +9,10 @@
                     tooltip-bottom="Zpět na seznam"
                 />
 
-                {{-- Samotný text nadpisu --}}
                 <span>Detail Dokladu: {{ $staDokl->doklad->KlicDokla ?? 'N/A' }}</span>
             </div>
         </x-slot:title>
 
-        {{-- Akce vpravo (zůstane tam jen tisk) --}}
         <x-slot:actions>
             <livewire:doklad.print-doklad-label
                 :dokladId="$staDokl->doklad->KlicDokla ?? $staDokl->Doklad"

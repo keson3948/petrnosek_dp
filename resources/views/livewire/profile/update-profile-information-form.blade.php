@@ -66,9 +66,9 @@ new class extends Component
 
 <section>
     <x-mary-form wire:submit="updateProfileInformation" class="space-y-3">
-        <x-mary-input label="Jméno a příjmení" wire:model="name" id="name" name="name" type="text" class="block" required autofocus autocomplete="name" />
+        <x-mary-input label="Jméno a příjmení" wire:model="name" id="name" name="name" type="text" class="block" required autofocus autocomplete="name" disabled/>
 
-        <x-mary-input label="E-mailová adresa" wire:model="email" id="email" name="email" type="email" class="block" required autocomplete="username" />
+        <x-mary-input label="E-mailová adresa" wire:model="email" id="email" name="email" type="email" class="block" required autocomplete="username" disabled/>
 
         @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
             <div>
