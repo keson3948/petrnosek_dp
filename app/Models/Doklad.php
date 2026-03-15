@@ -7,12 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Doklad extends Model
 {
     protected $connection = 'firebird';
+
     protected $table = 'ecd_Dokl';
 
     protected $primaryKey = 'KlicDokla';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     public $timestamps = false;
+
     protected $guarded = [];
 
     public function vlastniOsoba()
@@ -23,6 +28,11 @@ class Doklad extends Model
     public function rodicZakazka()
     {
         return $this->belongsTo(Doklad::class, 'Zakazka', 'SysPrimKlicDokladu');
+    }
+
+    public function staDoklad()
+    {
+        return $this->belongsTo(StaDokl::class, 'SysPrimKlicDokladu', 'Doklad');
     }
 
     public function radky()
@@ -49,7 +59,7 @@ class Doklad extends Model
     {
         $value = parent::getAttribute($key);
 
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+        if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
             return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
         }
 

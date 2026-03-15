@@ -100,6 +100,7 @@
 
                     <x-mary-menu-item icon="o-home" title="Dashboard" link="{{ route('dashboard') }}" />
                     <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
+                    <x-mary-menu-item icon="o-cog" title="Operace" link="{{ route('operace.index') }}" />
                     <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
                     <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
                     <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />

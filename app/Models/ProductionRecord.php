@@ -11,6 +11,7 @@ class ProductionRecord extends Model
         'user_id',
         'machine_id',
         'order_number',
+        'vp_number',
         'drawing_number',
         'operation_id',
         'processed_quantity',
@@ -19,6 +20,7 @@ class ProductionRecord extends Model
         'ended_at',
         'total_paused_seconds',
         'last_paused_at',
+        'worked_minutes',
         'notes',
     ];
 

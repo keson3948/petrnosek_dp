@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasMany(ProductionRecord::class, 'user_id');
     }
 
+    public function machines()
+    {
+        return $this->hasMany(UserMachine::class);
+    }
+
     protected static function booted()
     {
         static::created(function ($user) {

@@ -10,7 +10,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class PrintLabelJob implements ShouldQueue
 {
@@ -19,13 +18,13 @@ class PrintLabelJob implements ShouldQueue
     public $tries = 3; // Zkusit 3x při chybě
 
     protected $printerId;
-    protected $filePath;
+    protected $pdfContent;
     protected $copies;
 
-    public function __construct($printerId, $filePath, $copies = 1)
+    public function __construct($printerId, string $pdfContent, $copies = 1)
     {
         $this->printerId = $printerId;
-        $this->filePath = $filePath;
+        $this->pdfContent = $pdfContent;
         $this->copies = $copies;
     }
 
@@ -33,15 +32,15 @@ class PrintLabelJob implements ShouldQueue
     {
         $printer = Printer::find($this->printerId);
 
-        if (!$printer || !Storage::exists($this->filePath)) {
-            Log::error("Tisk selhal: Tiskárna nebo soubor neexistuje.");
+        if (!$printer) {
+            Log::error("Tisk selhal: Tiskárna neexistuje.");
             return;
         }
 
         $url = config('services.print_server.url', 'http://host.docker.internal:9100/print');
 
         $response = Http::attach(
-            'file', Storage::get($this->filePath), 'label.pdf'
+            'file', base64_decode($this->pdfContent), 'label.pdf'
         )->post($url, [
             'printer_system_name' => $printer->system_name,
             'copies' => $this->copies,
@@ -53,7 +52,5 @@ class PrintLabelJob implements ShouldQueue
         if ($response->failed()) {
             throw new \Exception("Python Print Service Error: " . $response->body());
         }
-
-        Storage::delete($this->filePath);
     }
 }

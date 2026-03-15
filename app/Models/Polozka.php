@@ -6,20 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Polozka extends Model
 {
-    protected $connection = 'firebird';  // <- důležité
-    protected $table = 'ecp_Polozky';    // jméno tabulky ve Firebirdu
+    protected $connection = 'firebird';
 
-    protected $primaryKey = 'KlicPoloz'; // pokud tvůj PK není 'id'
-    public $incrementing = false;        // pokud PK není auto increment
+    protected $table = 'ecp_Polozky';
+
+    protected $primaryKey = 'KlicPoloz';
+
+    public $incrementing = false;
+
     protected $keyType = 'string';
-    public $timestamps = false;          // Firebird většinou nemá created_at/updated_at
+
+    public $timestamps = false;
+
     protected $guarded = [];
 
     public function getAttribute($key)
     {
         $value = parent::getAttribute($key);
 
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+        if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
             return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
         }
 

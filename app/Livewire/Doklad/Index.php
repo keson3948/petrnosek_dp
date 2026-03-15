@@ -9,7 +9,6 @@ class Index extends Component
 {
     public Collection $staDoklady;
 
-    // Definujeme hlavičky jako vlastnost komponenty
     public function headers(): array
     {
         return [
@@ -33,7 +32,6 @@ class Index extends Component
         $id = $row['Doklad'] ?? null;
 
         if (! $id) {
-            // Log error nebo return, pokud by ID chybělo
             return;
         }
 

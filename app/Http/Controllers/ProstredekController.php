@@ -10,6 +10,7 @@ class ProstredekController extends Controller
     public function index()
     {
         $prostredky = Prostredek::dbcnt(730550)
+            ->where('KlicProstredku', '>=', '10000')
             ->orderBy('KlicProstredku')
             ->limit(30)
             ->get();
