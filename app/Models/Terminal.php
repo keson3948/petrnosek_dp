@@ -7,16 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Terminal extends Model
 {
-    protected $fillable = ['area_id', 'name', 'slug', 'ip_address', 'is_active', 'last_seen_at'];
+    protected $fillable = ['klic_pracoviste', 'name', 'slug', 'ip_address', 'is_active', 'last_seen_at'];
 
     protected $casts = [
         'last_seen_at' => 'datetime',
         'is_active' => 'boolean',
     ];
 
-    public function area(): BelongsTo
+    public function pracoviste(): BelongsTo
     {
-        return $this->belongsTo(Area::class);
+        return $this->belongsTo(Pracoviste::class, 'klic_pracoviste', 'KlicPracoviste');
     }
 
     public function scopeActive($query)

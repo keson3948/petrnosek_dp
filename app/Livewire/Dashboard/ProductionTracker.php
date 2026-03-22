@@ -3,9 +3,9 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\Doklad;
-use App\Models\MachineOperation;
+use App\Models\PrednOperProstr;
 use App\Models\ProductionRecord;
-use App\Models\UserMachine;
+use App\Models\PrednOsobProstr;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -285,9 +285,9 @@ class ProductionTracker extends Component
     public function selectMachine(string $machineKey, string $machineName)
     {
         $this->edit_machine_id = $machineKey;
-        $operations = MachineOperation::where('machine_key', $machineKey)->get();
+        $operations = PrednOperProstr::forProstredek($machineKey)->get();
         if ($operations->count() === 1) {
-            $this->edit_operation_id = $operations->first()->operation_key;
+            $this->edit_operation_id = trim($operations->first()->Operace);
         } else {
             $this->edit_operation_id = '';
         }
@@ -317,7 +317,20 @@ class ProductionTracker extends Component
 
     public function getUserMachinesProperty()
     {
-        return UserMachine::where('user_id', auth()->id())->get();
+        $klicSubjektu = auth()->user()->klic_subjektu;
+        if (!$klicSubjektu) {
+            return collect();
+        }
+
+        return PrednOsobProstr::forOsoba($klicSubjektu)
+            ->with('prostredek')
+            ->orderBy('Priorita')
+            ->get()
+            ->map(function ($r) {
+                $r->machine_key = trim($r->Prrostredek ?? '');
+                $r->machine_name = trim($r->prostredek?->NazevUplny ?? '');
+                return $r;
+            });
     }
 
     public function getMachineOperationsProperty()
@@ -326,7 +339,14 @@ class ProductionTracker extends Component
             return collect();
         }
 
-        return MachineOperation::where('machine_key', $this->edit_machine_id)->get();
+        return PrednOperProstr::forProstredek($this->edit_machine_id)
+            ->with('operace')
+            ->get()
+            ->map(function ($r) {
+                $r->operation_key = trim($r->Operace ?? '');
+                $r->operation_name = trim($r->operace?->Nazev1 ?? '');
+                return $r;
+            });
     }
 
     public function openEditTime(int $id)

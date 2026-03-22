@@ -1,10 +1,7 @@
 <?php
 
-use App\Models\Subjekt;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -19,34 +16,14 @@ class extends Component {
             'izo' => ['required', 'string', 'max:10']
         ]);
 
-        $izo = $this->izo;
-
-        $subjekt = Subjekt::where('Izo', $izo)->first();
-
-        if (!$subjekt) {
-            $this->addError('izo', 'Neplatný čip.');
-            $this->izo = '';
-            return;
-        }
-
-        $user = User::where('izo', $izo)->first();
+        $user = User::where('izo', $this->izo)
+            ->where('is_active', true)
+            ->first();
 
         if (!$user) {
-            $user = User::create([
-                'name' => trim($subjekt->Prijmeni . ' ' . $subjekt->Jmeno),
-                'email' => $subjekt->emailKontakt->Hodnota ?? ($izo . '@rfid.local'),
-                'password' => Hash::make(Str::random(16)),
-                'izo' => $izo,
-                'klic_subjektu' => $subjekt->KlicSubjektu,
-            ]);
-        } else {
-            $newName = trim($subjekt->Prijmeni . ' ' . $subjekt->Jmeno);
-            if ($user->klic_subjektu !== $subjekt->KlicSubjektu || $user->name !== $newName) {
-                $user->update([
-                    'klic_subjektu' => $subjekt->KlicSubjektu,
-                    'name' => $newName
-                ]);
-            }
+            $this->addError('izo', 'Neplatný nebo zablokovaný čip.');
+            $this->izo = '';
+            return;
         }
 
         Auth::login($user);

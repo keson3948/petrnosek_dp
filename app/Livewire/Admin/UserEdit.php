@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\PrednOsobProstr;
+use App\Models\Prostredek;
 use App\Models\User;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Mary\Traits\Toast;
 use Spatie\Permission\Models\Role;
@@ -25,6 +28,9 @@ class UserEdit extends Component
     public array $selectedRoles = [];
 
     public bool $confirmModal = false;
+
+    public string $machineKey = '';
+    public bool $machineModal = false;
 
     public function boot()
     {
@@ -87,10 +93,89 @@ class UserEdit extends Component
         $this->confirmModal = false;
     }
 
+    public function createMachine(): void
+    {
+        $this->reset('machineKey');
+        $this->resetValidation('machineKey');
+        $this->machineModal = true;
+    }
+
+    public function saveMachine(): void
+    {
+        $this->validate([
+            'machineKey' => 'required|string|max:15',
+        ]);
+
+        $osoba = $this->user->klic_subjektu;
+
+        $exists = PrednOsobProstr::where('Osoba', $osoba)
+            ->where('Prrostredek', $this->machineKey)
+            ->exists();
+
+        if ($exists) {
+            $this->addError('machineKey', 'Tento stroj je již přiřazen.');
+            return;
+        }
+
+        $nextId = (PrednOsobProstr::max('ID') ?? 0) + 1;
+        $nextPriority = (PrednOsobProstr::where('Osoba', $osoba)->max('Priorita') ?? -1) + 1;
+
+        PrednOsobProstr::create([
+            'ID' => $nextId,
+            'Osoba' => $osoba,
+            'Prrostredek' => $this->machineKey,
+            'Priorita' => $nextPriority,
+        ]);
+
+        $this->machineModal = false;
+        $this->success('Stroj přiřazen.');
+    }
+
+    public function removeMachine(int $id): void
+    {
+        PrednOsobProstr::where('ID', $id)->delete();
+        $this->warning('Stroj odebrán.');
+    }
+
+    #[Renderless]
+    public function reorderMachines(array $ids): void
+    {
+        foreach ($ids as $index => $id) {
+            PrednOsobProstr::where('ID', $id)->update(['Priorita' => $index]);
+        }
+    }
+
     public function render()
     {
+        $machines = collect();
+        $prostredkyOptions = collect();
+
+        if ($this->user->klic_subjektu) {
+            $machines = PrednOsobProstr::forOsoba($this->user->klic_subjektu)
+                ->with('prostredek')
+                ->get()
+                ->map(function ($r) {
+                    $r->prostredek_kod = trim($r->Prrostredek ?? '');
+                    $r->prostredek_nazev = trim($r->prostredek?->NazevUplny ?? '');
+                    return $r;
+                })
+                ->sortBy('Priorita')
+                ->values();
+
+            $prostredkyOptions = Prostredek::dbcnt(730550)
+                ->where('KlicProstredku', '>=', '10000')
+                ->orderBy('KlicProstredku')
+                ->get()
+                ->map(fn($p) => [
+                    'id' => trim($p->KlicProstredku),
+                    'name' => trim($p->KlicProstredku) . ' — ' . trim($p->NazevUplny ?? ''),
+                ]);
+        }
+
         return view('livewire.admin.user-edit', [
             'allRoles' => Role::all(),
+            'machines' => $machines,
+            'prostredkyOptions' => $prostredkyOptions,
         ]);
     }
 }

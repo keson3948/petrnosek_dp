@@ -9,8 +9,9 @@ use App\Http\Controllers\StaDoklController;
 use App\Http\Controllers\StaPoController;
 use App\Http\Controllers\SubjektController;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
-Route::view('/', 'welcome');
+Volt::route('/', 'welcome')->name('welcome');
 
 Route::get('/terminal/{token}', \App\Http\Controllers\Terminal::class)
     ->name('terminal.init');
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
         Route::get('/users', \App\Livewire\Admin\UserIndex::class)->name('admin.users');
         Route::get('/users/{user}/edit', \App\Livewire\Admin\UserEdit::class)->name('admin.users.edit');
+        Route::get('/machine-operations', \App\Livewire\Admin\MachineOperationIndex::class)->name('admin.machine-operations');
     });
 });
 

@@ -29,7 +29,7 @@
 
     <x-mary-modal wire:model="drawer" title="{{ $terminal ? 'Úprava terminálu' : 'Nový terminál' }}" separator with-close-button>
         <x-mary-form wire:submit="save">
-            <x-mary-select label="Oblast" icon="o-map-pin" :options="$areas" wire:model="area_id" placeholder="Vyberte oblast..." />
+            <x-mary-select label="Pracoviště" icon="o-map-pin" :options="$pracoviste" wire:model="klic_pracoviste" placeholder="Vyberte pracoviště..." />
 
             <x-mary-input label="Název" wire:model="name" />
             <x-mary-input label="Identifikátor (Slug)" wire:model="slug" />

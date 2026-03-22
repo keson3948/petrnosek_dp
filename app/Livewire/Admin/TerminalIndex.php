@@ -3,7 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Terminal;
-use App\Models\Area;
+use App\Models\Pracoviste;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -23,7 +23,7 @@ class TerminalIndex extends Component
 
     public ?Terminal $terminal = null;
 
-    public $area_id = null;
+    public ?string $klic_pracoviste = null;
     public string $name = '';
     public string $slug = '';
     public ?string $ip_address = '';
@@ -37,7 +37,7 @@ class TerminalIndex extends Component
     public function rules(): array
     {
         return [
-            'area_id' => 'required|exists:areas,id',
+            'klic_pracoviste' => 'nullable|string|max:15',
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:terminals,slug,' . ($this->terminal?->id ?? 'NULL'),
             'ip_address' => 'nullable|ip',
@@ -47,7 +47,7 @@ class TerminalIndex extends Component
 
     public function create(): void
     {
-        $this->reset(['terminal', 'area_id', 'name', 'slug', 'ip_address', 'is_active']);
+        $this->reset(['terminal', 'klic_pracoviste', 'name', 'slug', 'ip_address', 'is_active']);
         $this->resetValidation();
         $this->is_active = true;
         $this->drawer = true;
@@ -57,7 +57,7 @@ class TerminalIndex extends Component
     {
         $this->resetValidation();
         $this->terminal = $terminal;
-        $this->area_id = $terminal->area_id;
+        $this->klic_pracoviste = $terminal->klic_pracoviste;
         $this->name = $terminal->name;
         $this->slug = $terminal->slug;
         $this->ip_address = $terminal->ip_address;
@@ -71,7 +71,7 @@ class TerminalIndex extends Component
 
         if ($this->terminal) {
             $this->terminal->update([
-                'area_id' => $this->area_id,
+                'klic_pracoviste' => $this->klic_pracoviste,
                 'name' => $this->name,
                 'slug' => $this->slug,
                 'ip_address' => $this->ip_address,
@@ -80,7 +80,7 @@ class TerminalIndex extends Component
             $this->success('Terminál upraven.');
         } else {
             Terminal::create([
-                'area_id' => $this->area_id,
+                'klic_pracoviste' => $this->klic_pracoviste,
                 'name' => $this->name,
                 'slug' => $this->slug,
                 'ip_address' => $this->ip_address,
@@ -105,22 +105,29 @@ class TerminalIndex extends Component
             ['key' => 'name', 'label' => 'Název'],
             ['key' => 'slug', 'label' => 'Identifikátor (Slug)'],
             ['key' => 'ip_address', 'label' => 'IP adresa'],
-            ['key' => 'area.name', 'label' => 'Oblast', 'sortable' => false],
+            ['key' => 'klic_pracoviste', 'label' => 'Pracoviště'],
             ['key' => 'is_active', 'label' => 'Aktivní'],
         ];
 
         $terminals = Terminal::query()
-            ->with('area')
             ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%{$this->search}%")
                                                       ->orWhere('slug', 'like', "%{$this->search}%")
                                                       ->orWhere('ip_address', 'like', "%{$this->search}%"))
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
             ->paginate(10);
 
+        // Build pracoviště options for select dropdown
+        $pracoviste = Pracoviste::all()->map(function ($p) {
+            return [
+                'id' => trim($p->KlicPracoviste),
+                'name' => trim($p->NazevUplny),
+            ];
+        });
+
         return view('livewire.admin.terminal-index', [
             'terminals' => $terminals,
             'headers' => $headers,
-            'areas' => Area::all(),
+            'pracoviste' => $pracoviste,
         ]);
     }
 }

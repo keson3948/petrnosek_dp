@@ -25,6 +25,8 @@ class User extends Authenticatable
         'password',
         'izo',
         'klic_subjektu',
+        'manager_id',
+        'is_active',
     ];
 
     /**
@@ -47,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -61,9 +64,25 @@ class User extends Authenticatable
         return $this->hasMany(ProductionRecord::class, 'user_id');
     }
 
-    public function machines()
+    public function assignedMachines()
     {
-        return $this->hasMany(UserMachine::class);
+        if (!$this->klic_subjektu) {
+            return collect();
+        }
+
+        return PrednOsobProstr::forOsoba($this->klic_subjektu)
+            ->with('prostredek')
+            ->get();
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function subordinates()
+    {
+        return $this->hasMany(User::class, 'manager_id');
     }
 
     protected static function booted()
