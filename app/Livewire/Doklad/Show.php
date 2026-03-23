@@ -19,6 +19,8 @@ class Show extends Component
     {
         return [
             ['key' => 'CisloRadk', 'label' => 'Č. řádku'],
+            ['key' => 'EntitaRad', 'label' => 'Entita'],
+            ['key' => 'Pozice', 'label' => 'Pozice'],
             ['key' => 'Polozka', 'label' => 'Položka'],
             ['key' => 'TxtRadku', 'label' => 'Text'],
             ['key' => 'MnozstviZMJ', 'label' => 'Množství', 'class' => 'text-right'], // Zarovnání doprava

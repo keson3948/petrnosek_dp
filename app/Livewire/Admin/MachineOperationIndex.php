@@ -97,7 +97,7 @@ class MachineOperationIndex extends Component
 
         // Build options for selects
         $prostredkyOptions = Prostredek::dbcnt(730550)
-            ->where('KlicProstredku', '>=', '10000')
+            ->where('KlicProstredku', 'like', '20%')
             ->orderBy('KlicProstredku')
             ->get()
             ->map(fn($p) => [

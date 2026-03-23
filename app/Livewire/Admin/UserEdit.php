@@ -147,30 +147,26 @@ class UserEdit extends Component
 
     public function render()
     {
-        $machines = collect();
-        $prostredkyOptions = collect();
+        $machines = $this->user->assignedMachines()
+            ->with('prostredek')
+            ->orderBy('Priorita')
+            ->get()
+            ->map(function ($r) {
+                $r->prostredek_kod = trim($r->Prrostredek ?? '');
+                $r->prostredek_nazev = trim($r->prostredek?->NazevUplny ?? '');
+                return $r;
+            });
 
-        if ($this->user->klic_subjektu) {
-            $machines = PrednOsobProstr::forOsoba($this->user->klic_subjektu)
-                ->with('prostredek')
-                ->get()
-                ->map(function ($r) {
-                    $r->prostredek_kod = trim($r->Prrostredek ?? '');
-                    $r->prostredek_nazev = trim($r->prostredek?->NazevUplny ?? '');
-                    return $r;
-                })
-                ->sortBy('Priorita')
-                ->values();
-
-            $prostredkyOptions = Prostredek::dbcnt(730550)
+        $prostredkyOptions = $this->user->klic_subjektu
+            ? Prostredek::dbcnt(730550)
                 ->where('KlicProstredku', '>=', '10000')
                 ->orderBy('KlicProstredku')
                 ->get()
                 ->map(fn($p) => [
                     'id' => trim($p->KlicProstredku),
                     'name' => trim($p->KlicProstredku) . ' — ' . trim($p->NazevUplny ?? ''),
-                ]);
-        }
+                ])
+            : collect();
 
         return view('livewire.admin.user-edit', [
             'allRoles' => Role::all(),

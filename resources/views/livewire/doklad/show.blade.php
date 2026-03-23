@@ -49,6 +49,11 @@
                     <div class="text-xs text-gray-500 font-bold uppercase">Vyhodnocení</div>
                     <div>{{ $staDokl->Vyhodnoceni ?? '-' }}</div>
                 </div>
+
+                <div class="col-span-2">
+                    <div class="text-xs text-gray-500 font-bold uppercase">SysPrimKlicDokladu</div>
+                    <div>{{ $staDokl->doklad->SysPrimKlicDokladu ?? '-' }}</div>
+                </div>
             </div>
         </x-mary-card>
 

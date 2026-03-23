@@ -66,13 +66,7 @@ class User extends Authenticatable
 
     public function assignedMachines()
     {
-        if (!$this->klic_subjektu) {
-            return collect();
-        }
-
-        return PrednOsobProstr::forOsoba($this->klic_subjektu)
-            ->with('prostredek')
-            ->get();
+        return $this->hasMany(PrednOsobProstr::class, 'Osoba', 'klic_subjektu');
     }
 
     public function manager()
