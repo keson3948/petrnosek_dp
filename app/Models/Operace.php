@@ -14,7 +14,7 @@ class Operace extends Polozka
     protected static function booted()
     {
         static::addGlobalScope('jen_operace', function (Builder $builder) {
-            $builder->where('KlicPoloz', '>=', '0090')
+            $builder->where('KlicPoloz', 'like', 'VO%')
                 ->where('StavPolozkyNakupuAProdeje', '<>', '939073-XX')
                 ->where('Skupina', 'OPERACE');
         });
