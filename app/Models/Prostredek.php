@@ -18,6 +18,16 @@ class Prostredek extends Model
     {
         return $query->where('DBCNTID', $id);
     }
+
+    public function pracoviste()
+    {
+        return $this->belongsTo(Pracoviste::class, 'Pracoviste', 'KlicPracoviste');
+    }
+
+    public function assignedOperations()
+    {
+        return $this->hasMany(PrednOperProstr::class, 'Prostredek', 'KlicProstredku');
+    }
     public function getAttribute($key)
     {
         $value = parent::getAttribute($key);

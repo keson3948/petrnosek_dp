@@ -48,7 +48,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/terminals', \App\Livewire\Admin\TerminalIndex::class)->name('admin.terminals');
         Route::get('/users', \App\Livewire\Admin\UserIndex::class)->name('admin.users');
         Route::get('/users/{user}/edit', \App\Livewire\Admin\UserEdit::class)->name('admin.users.edit');
-        Route::get('/machine-operations', \App\Livewire\Admin\MachineOperationIndex::class)->name('admin.machine-operations');
+        Route::get('/machines', \App\Livewire\Admin\MachineIndex::class)->name('admin.machines');
+        Route::get('/machines/{machineKey}/edit', \App\Livewire\Admin\MachineEdit::class)->name('admin.machines.edit');
     });
 });
 

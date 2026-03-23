@@ -117,7 +117,7 @@
                         <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
                     @endcan
                     @can('manage areas')
-                        <x-mary-menu-item icon="o-wrench-screwdriver" title="Stroje a operace" link="{{ route('admin.machine-operations') }}" />
+                        <x-mary-menu-item icon="o-wrench-screwdriver" title="Stroje" link="{{ route('admin.machines') }}" />
                     @endcan
                     @can('manage printers')
                         <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />

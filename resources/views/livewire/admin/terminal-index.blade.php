@@ -20,7 +20,7 @@
 
             @scope('actions', $terminal)
                 <div class="flex items-center gap-2">
-                    <x-mary-button icon="o-pencil" wire:click="edit({{ $terminal->id }})" class="btn-ghost btn-sm text-blue-500" />
+                    <x-mary-button icon="o-pencil" wire:click="edit({{ $terminal->id }})" class="btn-ghost btn-sm" />
                     <x-mary-button icon="o-trash" wire:click="delete({{ $terminal->id }})" wire:confirm="Opravdu smazat?" class="btn-ghost btn-sm text-red-500" />
                 </div>
             @endscope
