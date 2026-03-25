@@ -105,6 +105,9 @@
                     <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
                     <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />
                     <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
+                    @can('manage zasobovani')
+                        <x-mary-menu-item icon="o-truck" title="Zásobování" link="{{ route('zasobovac.index') }}" />
+                    @endcan
 
                     <x-mary-menu-separator/>
                     @can('manage users')

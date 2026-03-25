@@ -21,12 +21,16 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage printers']);
         Permission::firstOrCreate(['name' => 'manage areas']);
         Permission::firstOrCreate(['name' => 'manage users']);
+        Permission::firstOrCreate(['name' => 'manage zasobovani']);
 
         $roleOperator = Role::firstOrCreate(['name' => 'Operator']);
         //$roleOperator->givePermissionTo(['view terminals', 'view items']);
 
         $roleAdmin = Role::firstOrCreate(['name' => 'Admin']);
         $roleAdmin->givePermissionTo(Permission::all());
+
+        $roleZasobovac = Role::firstOrCreate(['name' => 'Zásobovač']);
+        $roleZasobovac->givePermissionTo('manage zasobovani');
 
         $user = User::firstOrCreate([
             'email' => 'admin@mps.cz',

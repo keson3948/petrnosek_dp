@@ -117,7 +117,7 @@ class UserEdit extends Component
             return;
         }
 
-        $nextId = (PrednOsobProstr::max('ID') ?? 0) + 1;
+        $nextId = PrednOsobProstr::nextId();
         $nextPriority = (PrednOsobProstr::where('Osoba', $osoba)->max('Priorita') ?? -1) + 1;
 
         PrednOsobProstr::create([

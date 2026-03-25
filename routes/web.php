@@ -41,6 +41,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/operace', \App\Livewire\Operace\Index::class)->name('operace.index');
     Route::get('/qr-result/{code}', \App\Livewire\QrScannerResult::class)->name('qr.result');
 
+    // --- ZÁSOBOVAČ ---
+    Route::middleware(['permission:manage zasobovani'])->group(function () {
+        Route::get('/zasobovac', \App\Livewire\Zasobovac\Index::class)->name('zasobovac.index');
+        Route::get('/zasobovac/{id}', \App\Livewire\Zasobovac\Show::class)->name('zasobovac.show')->where('id', '.*');
+    });
+
     // --- ADMIN  ---
     Route::middleware(['permission:manage terminals|manage printers|manage areas|manage users'])->prefix('admin')->group(function () {
         Route::get('/printers', [PrinterController::class, 'index'])->name('printers.index');

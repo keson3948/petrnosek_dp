@@ -5,15 +5,14 @@ namespace App\Models;
 use App\Models\Traits\HasFirebirdGenerator;
 use Illuminate\Database\Eloquent\Model;
 
-class PrednOsobProstr extends Model
+class EvPodsestav extends Model
 {
     use HasFirebirdGenerator;
 
-    protected static string $generator = 'apc_IdOsobyKProstredkum';
+    protected static string $generator = 'apc_IdEvidencePodsestav';
 
     protected $connection = 'firebird';
-    protected $table = 'apc_PrednOsobProstr';
-
+    protected $table = 'acp_EvPodsestav';
     protected $primaryKey = 'ID';
     public $incrementing = false;
     protected $keyType = 'int';
@@ -29,15 +28,5 @@ class PrednOsobProstr extends Model
         }
 
         return $value;
-    }
-
-    public function prostredek()
-    {
-        return $this->belongsTo(Prostredek::class, 'Prrostredek', 'KlicProstredku');
-    }
-
-    public function scopeForOsoba($query, $key)
-    {
-        return $query->where('Osoba', $key);
     }
 }

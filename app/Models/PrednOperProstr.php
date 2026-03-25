@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdGenerator;
 use Illuminate\Database\Eloquent\Model;
 
 class PrednOperProstr extends Model
 {
+    use HasFirebirdGenerator;
+
+    protected static string $generator = 'apc_IdOperaceKProstredkum';
+
     protected $connection = 'firebird';
     protected $table = 'apc_PrednOperProstr';
 

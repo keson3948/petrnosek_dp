@@ -14,6 +14,21 @@ class DoklRadek extends Model
     public $timestamps = false;
     protected $guarded = [];
 
+    public function evPodsestavy()
+    {
+        return $this->hasMany(EvPodsestav::class, 'EntitaRadkuVP', 'EntitaRad');
+    }
+
+    public function materialPolozka()
+    {
+        return $this->belongsTo(Polozka::class, 'Material', 'KlicPoloz');
+    }
+
+    public function povrchoUpPolozka()
+    {
+        return $this->belongsTo(Polozka::class, 'PovrchoUp', 'KlicPoloz');
+    }
+
     public function getAttribute($key)
     {
         $value = parent::getAttribute($key);

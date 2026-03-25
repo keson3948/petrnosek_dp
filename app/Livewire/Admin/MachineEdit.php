@@ -69,7 +69,7 @@ class MachineEdit extends Component
             return;
         }
 
-        $nextId = (PrednOperProstr::max('ID') ?? 0) + 1;
+        $nextId = PrednOperProstr::nextId();
         $nextPriority = (PrednOperProstr::where('Prostredek', $this->machineKey)->max('Priorita') ?? -1) + 1;
 
         PrednOperProstr::create([
