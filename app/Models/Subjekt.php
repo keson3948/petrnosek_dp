@@ -7,19 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class Subjekt extends Model
 {
     protected $connection = 'firebird';
+
     protected $table = 'eca_Subjekty';
 
     protected $primaryKey = 'KlicSubjektu';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     public $timestamps = false;
+
     protected $guarded = [];
 
     public function getAttribute($key)
     {
         $value = parent::getAttribute($key);
 
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
+        if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
             return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
         }
 
@@ -61,5 +66,20 @@ class Subjekt extends Model
         return $this->hasOne(KoUdaj::class, 'KlicSubjektu', 'KlicSubjektu')
             ->where('DruhKontaktnihoUdaje', 'EMAIL')
             ->orderBy('Poradi');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'klic_subjektu', 'KlicSubjektu');
+    }
+
+    public function skupinaSubjektu()
+    {
+        return $this->belongsTo(SkupinaSubjektu::class, 'SkupinSubjektu', 'KlicSkupi');
+    }
+
+    public function isMistr(): bool
+    {
+        return (int) $this->SkupinSubjektu === 1050;
     }
 }

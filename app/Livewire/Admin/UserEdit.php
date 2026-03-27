@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\PrednOsobProstr;
 use App\Models\Prostredek;
+use App\Models\Subjekt;
 use App\Models\User;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,9 @@ class UserEdit extends Component
     public string $machineKey = '';
     public bool $machineModal = false;
 
+    public ?string $color = null;
+    public ?int $cislo_mistra = null;
+
     public function boot()
     {
         abort_if(! auth()->user()->can('manage users'), 403);
@@ -44,6 +48,8 @@ class UserEdit extends Component
         $this->email = $user->email;
         $this->izo = $user->izo;
         $this->klic_subjektu = $user->klic_subjektu;
+        $this->color = $user->color;
+        $this->cislo_mistra = $user->cislo_mistra;
 
         $this->selectedRoles = $user->roles->pluck('id')->toArray();
     }
@@ -54,8 +60,10 @@ class UserEdit extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($this->user->id)],
             'izo' => ['nullable', 'string', 'max:255'],
-            'klic_subjektu' => ['nullable', 'string', 'max:255'], // Optional: could add an exists rule if we are certain about Firebird connection 'exists:firebird.eca_Subjekty,KlicSubjektu'
-            'selectedRoles' => ['array']
+            'klic_subjektu' => ['nullable', 'string', 'max:255'],
+            'selectedRoles' => ['array'],
+            'color' => ['nullable', 'string', 'max:20'],
+            'cislo_mistra' => ['nullable', 'integer', 'min:1', 'max:9999'],
         ];
     }
 
@@ -68,6 +76,8 @@ class UserEdit extends Component
             'email' => $this->email,
             'izo' => $this->izo,
             'klic_subjektu' => $this->klic_subjektu,
+            'color' => $this->color,
+            'cislo_mistra' => $this->cislo_mistra,
         ]);
 
         $roles = Role::whereIn('id', $this->selectedRoles)->get();
@@ -147,6 +157,11 @@ class UserEdit extends Component
 
     public function render()
     {
+        $subjekt = $this->user->klic_subjektu
+            ? Subjekt::with('skupinaSubjektu')
+                ->find($this->user->klic_subjektu)
+            : null;
+
         $machines = $this->user->assignedMachines()
             ->with('prostredek')
             ->orderBy('Priorita')
@@ -172,6 +187,7 @@ class UserEdit extends Component
             'allRoles' => Role::all(),
             'machines' => $machines,
             'prostredkyOptions' => $prostredkyOptions,
+            'subjekt' => $subjekt,
         ]);
     }
 }

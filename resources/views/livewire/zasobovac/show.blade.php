@@ -15,29 +15,84 @@
 
     {{-- Info karta --}}
     <x-mary-card shadow class="mb-8">
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-            <div>
-                <div class="text-xs text-gray-400 font-bold uppercase">Výrobní příkaz č.</div>
-                <div class="text-lg font-bold">{{ trim($staDokl->doklad->KlicDokla ?? '') }} / {{ trim($staDokl->doklad->MPSProjekt ?? '-') }}</div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {{-- Levá polovina: kolečko + VP + mistr + garant --}}
+            <div class="flex items-start gap-5">
+                <div
+                    class="shrink-0 w-16 h-16 rounded-full"
+                    style="background-color: {{ $mistrUser?->color ?? '#6b7280' }}"
+                ></div>
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Výrobní příkaz č.</div>
+                    <div class="text-3xl font-bold leading-tight">
+                        {{ trim($staDokl->doklad->KlicDokla ?? '') }} / {{ trim($staDokl->doklad->MPSProjekt ?? '-') }}
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-xs text-gray-400 uppercase font-bold">Mistr</span>
+                        <span class="font-semibold">
+                            {{ trim($staDokl->doklad->vlastniOsoba->Prijmeni ?? '-') }}
+                            @if($mistrUser?->cislo_mistra)
+                                <span class="text-xs text-gray-400 font-normal ml-1">#{{ $mistrUser->cislo_mistra }}</span>
+                            @endif
+                        </span>
+                    </div>
+                    @if(trim($staDokl->doklad->rodicZakazka?->vlastniOsoba?->Prijmeni ?? '') !== '')
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span class="text-xs text-gray-400 uppercase font-bold">Garant</span>
+                            <span class="font-semibold">{{ trim($staDokl->doklad->rodicZakazka->vlastniOsoba->Prijmeni) }}</span>
+                        </div>
+                    @endif
+                </div>
             </div>
-            <div>
-                <div class="text-xs text-gray-400 font-bold uppercase">Vystaveno</div>
-                <div class="text-lg font-semibold">{{ $staDokl->doklad->DatVystav ? \Carbon\Carbon::parse($staDokl->doklad->DatVystav)->format('d.m.Y') : '-' }}</div>
+
+            {{-- Pravá polovina: vystaveno + zakázka + projekt + cena + hmotnost --}}
+            <div class="grid grid-cols-2 gap-x-6 gap-y-3 content-start">
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Vystaveno</div>
+                    <div class="text-lg font-semibold">
+                        {{ $staDokl->doklad->DatVystav ? \Carbon\Carbon::parse($staDokl->doklad->DatVystav)->format('d.m.Y') : '-' }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Cena VP</div>
+                    <div class="text-lg font-semibold">
+                        {{ $staDokl->doklad->ZaklDanCelkVM1D !== null ? number_format((float) $staDokl->doklad->ZaklDanCelkVM1D, 2, ',', ' ') . ' Kč' : '-' }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Obch. zakázka</div>
+                    <div class="text-lg font-semibold">{{ trim($staDokl->doklad->rodicZakazka->KlicDokla ?? '-') }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Hmotnost</div>
+                    <div class="text-lg font-semibold">
+                        {{ $staDokl->doklad->NettoKg !== null ? number_format((float) $staDokl->doklad->NettoKg, 2, ',', ' ') . ' kg' : '-' }}
+                    </div>
+                </div>
+
+                  <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Int. projekt</div>
+                    <div class="text-lg font-semibold font-mono">{{ trim($staDokl->doklad->rodicZakazka->SpecifiSy ?? '-') }}</div>
+                </div>
             </div>
-            <div>
-                <div class="text-xs text-gray-400 font-bold uppercase">Obch. zakázka</div>
-                <div class="text-lg font-semibold">{{ trim($staDokl->doklad->rodicZakazka->KlicDokla ?? '-') }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-gray-400 font-bold uppercase">Int. projekt</div>
-                <div class="text-lg font-semibold font-mono">{{ trim($staDokl->doklad->rodicZakazka->SpecifiSy ?? '-') }}</div>
-            </div>
-            <div>
-                <div class="text-xs text-gray-400 font-bold uppercase">Mistr</div>
-                <div class="text-lg font-semibold">{{ trim($staDokl->doklad->vlastniOsoba->Prijmeni ?? '-') }}</div>
-            </div>
+
         </div>
     </x-mary-card>
+
+    {{-- Interní poznámka --}}
+    @if(trim($staDokl->doklad->InterniPoznamka ?? '') !== '')
+        <x-mary-card shadow class="mb-8">
+            <div class="flex items-start gap-3">
+                <x-mary-icon name="o-chat-bubble-left-ellipsis" class="w-5 h-5 text-base-content/40 shrink-0 mt-0.5" />
+                <div>
+                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Poznámka</div>
+                    <div class="text-sm">{{ trim($staDokl->doklad->InterniPoznamka) }}</div>
+                </div>
+            </div>
+        </x-mary-card>
+    @endif
 
     {{-- Položky dokladu s accordion --}}
     <x-mary-card title="Položky dokladu" shadow>

@@ -36,7 +36,7 @@ class Show extends Component
 
     public function mount($id)
     {
-        $this->staDokl = StaDokl::with(['doklad.vlastniOsoba', 'doklad.rodicZakazka'])
+        $this->staDokl = StaDokl::with(['doklad.vlastniOsoba', 'doklad.rodicZakazka.vlastniOsoba'])
             ->where('Doklad', $id)
             ->typPohybu('EC_ZAKVYR')
             ->firstOrFail();
@@ -188,6 +188,7 @@ class Show extends Component
         return view('livewire.zasobovac.show', [
             'radky' => $radky,
             'printers' => Printer::where('is_active', true)->get(),
+            'mistrUser' => $this->staDokl->doklad->vlastniOsoba?->user,
         ]);
     }
 }

@@ -19,6 +19,8 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'name',
         'email',
@@ -27,6 +29,8 @@ class User extends Authenticatable
         'klic_subjektu',
         'manager_id',
         'is_active',
+        'color',
+        'cislo_mistra',
     ];
 
     /**

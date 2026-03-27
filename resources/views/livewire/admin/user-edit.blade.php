@@ -17,6 +17,48 @@
                     <x-mary-input label="Klíč Subjektu" wire:model="klic_subjektu" placeholder="Např. 12345" />
                 </div>
 
+                {{-- Skupina subjektu z Economy --}}
+                @if($subjekt)
+                    <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <x-mary-icon name="o-user-group" class="w-5 h-5 text-base-content/60 shrink-0" />
+                        <div>
+                            <div class="text-xs text-base-content/60">Skupina subjektu (Economy)</div>
+                            <div class="font-semibold">
+                                @if($subjekt->skupinaSubjektu)
+                                    {{ $subjekt->skupinaSubjektu->NazevUplny ?? $subjekt->skupinaSubjektu->Zkratka ?? '—' }}
+                                    <span class="text-xs text-base-content/50 ml-1">({{ $subjekt->SkupinSubjektu }})</span>
+                                @elseif($subjekt->SkupinSubjektu)
+                                    <span class="text-base-content/60">{{ $subjekt->SkupinSubjektu }}</span>
+                                @else
+                                    <span class="text-base-content/40">—</span>
+                                @endif
+                            </div>
+                        </div>
+                        @if($subjekt->isMistr())
+                            <x-mary-badge value="Mistr" class="badge-warning ml-auto" />
+                        @endif
+                    </div>
+                @endif
+
+                {{-- Nastavení mistra (jen pokud je mistr) --}}
+                @if($subjekt?->isMistr())
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-mary-colorpicker
+                            label="Barva mistra"
+                            wire:model="color"
+                            hint="Barva pro vizuální rozlišení v aplikaci"
+                        />
+                        <x-mary-input
+                            label="Číslo mistra"
+                            wire:model="cislo_mistra"
+                            type="number"
+                            min="1"
+                            max="9999"
+                            hint="Např. Mistr Bořil = 3"
+                        />
+                    </div>
+                @endif
+
                 <x-mary-choices
                     label="Role uživatele"
                     wire:model="selectedRoles"
