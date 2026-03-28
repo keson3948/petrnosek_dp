@@ -23,11 +23,23 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage users']);
         Permission::firstOrCreate(['name' => 'manage zasobovani']);
 
+        // Layout permission
+        Permission::firstOrCreate(['name' => 'simplified layout']);
+
+        // Per-page permissions
+        Permission::firstOrCreate(['name' => 'view polozky']);
+        Permission::firstOrCreate(['name' => 'view operace']);
+        Permission::firstOrCreate(['name' => 'view subjekty']);
+        Permission::firstOrCreate(['name' => 'view prostredky']);
+        Permission::firstOrCreate(['name' => 'view stadokl']);
+        Permission::firstOrCreate(['name' => 'view stapo']);
+        Permission::firstOrCreate(['name' => 'edit profile']);
+
         $roleOperator = Role::firstOrCreate(['name' => 'Operator']);
-        //$roleOperator->givePermissionTo(['view terminals', 'view items']);
+        $roleOperator->givePermissionTo('simplified layout');
 
         $roleAdmin = Role::firstOrCreate(['name' => 'Admin']);
-        $roleAdmin->givePermissionTo(Permission::all());
+        $roleAdmin->syncPermissions(Permission::where('name', '!=', 'simplified layout')->get());
 
         $roleZasobovac = Role::firstOrCreate(['name' => 'Zásobovač']);
         $roleZasobovac->givePermissionTo('manage zasobovani');

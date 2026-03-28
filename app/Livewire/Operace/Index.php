@@ -13,6 +13,11 @@ class Index extends Component
 {
     use WithPagination;
 
+    public function boot()
+    {
+        abort_if(! auth()->user()->can('view operace'), 403);
+    }
+
     public function render()
     {
         $operace = Operace::with(['stavDokladu', 'staPo'])

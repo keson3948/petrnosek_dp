@@ -27,6 +27,8 @@ new class extends Component
      */
     public function updateProfileInformation(): void
     {
+        abort_if(! Auth::user()->can('edit profile'), 403);
+
         $user = Auth::user();
 
         $validated = $this->validate([
@@ -66,9 +68,9 @@ new class extends Component
 
 <section>
     <x-mary-form wire:submit="updateProfileInformation" class="space-y-3">
-        <x-mary-input label="Jméno a příjmení" wire:model="name" id="name" name="name" type="text" class="block" required autofocus autocomplete="name" disabled/>
+        <x-mary-input label="Jméno a příjmení" wire:model="name" id="name" name="name" type="text" class="block" required autofocus autocomplete="name" :disabled="! auth()->user()->can('edit profile')"/>
 
-        <x-mary-input label="E-mailová adresa" wire:model="email" id="email" name="email" type="email" class="block" required autocomplete="username" disabled/>
+        <x-mary-input label="E-mailová adresa" wire:model="email" id="email" name="email" type="email" class="block" required autocomplete="username" :disabled="! auth()->user()->can('edit profile')"/>
 
         @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
             <div>
@@ -88,8 +90,10 @@ new class extends Component
             </div>
         @endif
 
-        <x-slot:actions>
-            <x-mary-button label="Uložit změny" class="btn-primary" type="submit" spinner="updateProfileInformation" />
-        </x-slot:actions>
+        @can('edit profile')
+            <x-slot:actions>
+                <x-mary-button label="Uložit změny" class="btn-primary" type="submit" spinner="updateProfileInformation" />
+            </x-slot:actions>
+        @endcan
     </x-mary-form>
 </section>

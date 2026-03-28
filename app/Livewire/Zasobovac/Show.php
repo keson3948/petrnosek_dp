@@ -95,6 +95,7 @@ class Show extends Component
         ];
 
         $this->success('Záznam uložen.');
+        $this->dispatch('entry-saved', rowIndex: $rowIndex);
     }
 
     public function startEdit(int $evPodsId): void

@@ -31,14 +31,16 @@
         </x-mary-card>
 
 
-        <x-mary-card
-            title="Smazání účtu"
-            separator
-            subtitle="Po smazání účtu budou veškerá data trvale odstraněna a tento proces nelze vrátit zpět."
-        >
-            <livewire:profile.delete-user-form/>
+        @can('edit profile')
+            <x-mary-card
+                title="Smazání účtu"
+                separator
+                subtitle="Po smazání účtu budou veškerá data trvale odstraněna a tento proces nelze vrátit zpět."
+            >
+                <livewire:profile.delete-user-form/>
 
-        </x-mary-card>
+            </x-mary-card>
+        @endcan
     </div>
 
 

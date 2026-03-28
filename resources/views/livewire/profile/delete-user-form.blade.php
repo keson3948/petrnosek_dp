@@ -14,6 +14,8 @@ new class extends Component
      */
     public function deleteUser(Logout $logout): void
     {
+        abort_if(! Auth::user()->can('edit profile'), 403);
+
         $this->validate([
             'password' => ['required', 'string', 'current_password'],
         ]);

@@ -13,11 +13,9 @@
         </x-slot:title>
     </x-mary-header>
 
-    {{-- Info karta --}}
     <x-mary-card shadow class="mb-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            {{-- Levá polovina: kolečko + VP + mistr + garant --}}
             <div class="flex items-start gap-5">
                 <div
                     class="shrink-0 w-16 h-16 rounded-full"
@@ -25,24 +23,22 @@
                 ></div>
                 <div>
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Výrobní příkaz č.</div>
-                    <div class="text-3xl font-bold leading-tight">
-                        {{ trim($staDokl->doklad->KlicDokla ?? '') }} / {{ trim($staDokl->doklad->MPSProjekt ?? '-') }}
+                    <div class="text-3xl font-medium leading-tight">
+                        {{ trim($staDokl->doklad->KlicDokla ?? '') }} / <span class="text-4xl font-extrabold">{{ trim($staDokl->doklad->MPSProjekt ?? '-') }}</span>
                     </div>
-                    <div class="mt-2 flex items-baseline gap-2">
-                        <span class="text-xs text-gray-400 uppercase font-bold">Mistr</span>
+                    <div class="mt-2 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1">
+                        <span class="text-xs text-gray-400 uppercase font-bold w-14">Mistr</span>
                         <span class="font-semibold">
                             {{ trim($staDokl->doklad->vlastniOsoba->Prijmeni ?? '-') }}
                             @if($mistrUser?->cislo_mistra)
                                 <span class="text-xs text-gray-400 font-normal ml-1">#{{ $mistrUser->cislo_mistra }}</span>
                             @endif
                         </span>
-                    </div>
-                    @if(trim($staDokl->doklad->rodicZakazka?->vlastniOsoba?->Prijmeni ?? '') !== '')
-                        <div class="mt-1 flex items-baseline gap-2">
-                            <span class="text-xs text-gray-400 uppercase font-bold">Garant</span>
+                        @if(trim($staDokl->doklad->rodicZakazka?->vlastniOsoba?->Prijmeni ?? '') !== '')
+                            <span class="text-xs text-gray-400 uppercase font-bold w-14">Garant</span>
                             <span class="font-semibold">{{ trim($staDokl->doklad->rodicZakazka->vlastniOsoba->Prijmeni) }}</span>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -68,7 +64,7 @@
                 <div>
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Hmotnost</div>
                     <div class="text-lg font-semibold">
-                        {{ $staDokl->doklad->NettoKg !== null ? number_format((float) $staDokl->doklad->NettoKg, 2, ',', ' ') . ' kg' : '-' }}
+                        {{ $staDokl->doklad->NettoKg && (float) $staDokl->doklad->NettoKg > 0 ? number_format((float) $staDokl->doklad->NettoKg, 2, ',', ' ') . ' kg' : '-' }}
                     </div>
                 </div>
 
@@ -88,7 +84,7 @@
                 <x-mary-icon name="o-chat-bubble-left-ellipsis" class="w-5 h-5 text-base-content/40 shrink-0 mt-0.5" />
                 <div>
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Poznámka</div>
-                    <div class="text-sm">{{ trim($staDokl->doklad->InterniPoznamka) }}</div>
+                    <div class="text-sm whitespace-pre">{{ trim($staDokl->doklad->InterniPoznamka) }}</div>
                 </div>
             </div>
         </x-mary-card>
@@ -146,7 +142,7 @@
                         <div class="px-4 py-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
                             <div class="lg:col-span-3">
                                 <div class="text-[10px] text-gray-400 uppercase font-bold">Text řádku</div>
-                                <div class="text-xs text-gray-600">{{ $radek->TxtRadku ?? '-' }}</div>
+                                <div class="text-xs text-gray-600">{{ $radek->TxtRadku ? preg_replace('/[\r\n]+/', '; ', trim($radek->TxtRadku)) : '-' }}</div>
                             </div>
                             <div>
                                 <div class="text-[10px] text-gray-400 uppercase font-bold">Kontrakt</div>
@@ -172,13 +168,13 @@
                                 @if($radek->RozsahPoz)
                                     <div class="lg:col-span-4">
                                         <div class="text-[10px] text-gray-400 uppercase font-bold">Rozsah pozic</div>
-                                        <div class="text-xs text-gray-500 italic">{{ $radek->RozsahPoz }}</div>
+                                        <div class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->RozsahPoz)) }}</div>
                                     </div>
                                 @endif
                                 @if($radek->Poznamka)
                                     <div class="lg:col-span-4">
                                         <div class="text-[10px] text-gray-400 uppercase font-bold">Poznámka</div>
-                                        <div class="text-xs text-gray-500 italic">{{ $radek->Poznamka }}</div>
+                                        <div class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->Poznamka)) }}</div>
                                     </div>
                                 @endif
                             </div>
@@ -186,7 +182,13 @@
                     </div>
                 </x-slot:heading>
                 <x-slot:content>
-                    <div class="space-y-3 pt-3">
+                    <div class="space-y-3 pt-3"
+                         x-init="
+                            const cb = $el.closest('.collapse')?.querySelector('input[type=checkbox], input[type=radio]');
+                            if (cb) cb.addEventListener('change', () => {
+                                if (cb.checked) setTimeout(() => $el.querySelector('input')?.focus(), 150);
+                            });
+                         ">
                         @foreach($radek->evPodsestavy as $index_ev => $ev)
                             @if($editingId === $ev->ID)
                                 {{-- Editační režim --}}
@@ -251,16 +253,16 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <x-mary-button
-                                            icon="o-pencil"
-                                            class="btn-sm btn-ghost"
-                                            wire:click="startEdit({{ $ev->ID }})"
-                                            tooltip="Upravit"
-                                        />
-                                        <x-mary-button
                                             icon="o-qr-code"
                                             class="btn-sm btn-ghost"
                                             wire:click="openPrintModal({{ $ev->ID }})"
                                             tooltip="Tisk QR štítku"
+                                        />
+                                        <x-mary-button
+                                            icon="o-pencil"
+                                            class="btn-sm btn-ghost"
+                                            wire:click="startEdit({{ $ev->ID }})"
+                                            tooltip="Upravit"
                                         />
                                         <x-mary-button
                                             icon="o-trash"
@@ -276,7 +278,10 @@
 
                         {{-- Formulář pro nový záznam --}}
                         <x-mary-card title="Přidat nový záznam" class="p-2 bg-primary/5 border border-primary/20">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
+                                 @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
+                                 @entry-saved.window="if ($event.detail.rowIndex === {{ $index }}) $nextTick(() => $el.querySelector('input')?.focus())"
+                            >
                                 <x-mary-input
                                     label="Číslo výkresu *"
                                     wire:model="newEntries.{{ $index }}.CisloVykresu"

@@ -14,37 +14,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen font-sans antialiased bg-base-200"
-        x-data="{
-            barcode: '',
-            lastTime: 0,
-            handleKeydown(e) {
-                const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-                if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
-                    return;
-                }
-
-                const currentTime = new Date().getTime();
-
-                if (currentTime - this.lastTime > 50) {
-                    this.barcode = '';
-                }
-
-                this.lastTime = currentTime;
-
-                if (e.key === 'Enter' && this.barcode.length > 0) {
-                    Livewire.dispatch('qr-scanned', { code: this.barcode });
-                    this.barcode = '';
-                    return;
-                }
-
-                if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-                    this.barcode += e.key;
-                }
-            }
-        }"
-        @keydown.window="handleKeydown"
-    >
+    @cannot('simplified layout')
+        <x-barcode-body class="min-h-screen font-sans antialiased bg-base-200">
         {{-- NAVBAR mobile only --}}
         <x-mary-nav sticky class="lg:hidden">
             <x-slot:brand>
@@ -86,9 +57,10 @@
                     @if($user = auth()->user())
                         <x-mary-menu-separator/>
 
-                        <x-mary-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
+                        <x-mary-list-item :item="$user" value="name" no-separator no-hover class="-mx-2 !-my-2 rounded">
                             <x-slot:avatar>
-                                <x-mary-avatar placeholder="US" class="!w-10"/>
+                                {{-- Inciály použijeme jméno uživatele, pokud není nastaveno, použijeme první písmeno jména a příjmení --}}
+                                <x-mary-avatar placeholder="{{ substr($user->name, 0, 1)  }}" class="!w-10"/>
                             </x-slot:avatar>
                             <x-slot:actions>
                                 <x-logout-button></x-logout-button>
@@ -99,32 +71,51 @@
                     @endif
 
                     <x-mary-menu-item icon="o-home" title="Dashboard" link="{{ route('dashboard') }}" />
-                    <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
-                    <x-mary-menu-item icon="o-cog" title="Operace" link="{{ route('operace.index') }}" />
-                    <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
-                    <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
-                    <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />
-                    <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
+
+                    @cannot('simplified layout')
+                        @can('view polozky')
+                            <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
+                        @endcan
+                        @can('view operace')
+                            <x-mary-menu-item icon="o-cog" title="Operace" link="{{ route('operace.index') }}" />
+                        @endcan
+                        @can('view subjekty')
+                            <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
+                        @endcan
+                        @can('view prostredky')
+                            <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
+                        @endcan
+                        @can('view stadokl')
+                            <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />
+                        @endcan
+                        @can('view stapo')
+                            <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
+                        @endcan
+                    @endcannot
+
                     @can('manage zasobovani')
                         <x-mary-menu-item icon="o-truck" title="Zásobování" link="{{ route('zasobovac.index') }}" />
                     @endcan
 
                     <x-mary-menu-separator/>
-                    @can('manage users')
-                        <x-mary-menu-item icon="o-users" title="Uživatelé" link="{{ route('admin.users') }}" />
-                    @endcan
-                    @can('manage areas')
-                        <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
-                    @endcan
-                    @can('manage terminals')
-                        <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
-                    @endcan
-                    @can('manage areas')
-                        <x-mary-menu-item icon="o-wrench-screwdriver" title="Stroje" link="{{ route('admin.machines') }}" />
-                    @endcan
-                    @can('manage printers')
-                        <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
-                    @endcan
+
+                    @cannot('simplified layout')
+                        @can('manage users')
+                            <x-mary-menu-item icon="o-users" title="Uživatelé" link="{{ route('admin.users') }}" />
+                        @endcan
+                        @can('manage areas')
+                            <x-mary-menu-item icon="o-map-pin" title="Oblasti" link="{{ route('admin.areas') }}" />
+                        @endcan
+                        @can('manage terminals')
+                            <x-mary-menu-item icon="o-device-phone-mobile" title="Terminály" link="{{ route('admin.terminals') }}" />
+                        @endcan
+                        @can('manage areas')
+                            <x-mary-menu-item icon="o-wrench-screwdriver" title="Stroje" link="{{ route('admin.machines') }}" />
+                        @endcan
+                        @can('manage printers')
+                            <x-mary-menu-item icon="o-printer" title="Tiskárny" link="{{ route('printers.index') }}" />
+                        @endcan
+                    @endcannot
 
                     <x-mary-menu-item icon="o-user" title="Profil" link="{{ route('profile') }}" />
                 </x-mary-menu>
@@ -141,5 +132,52 @@
 
         <livewire:global-qr-scanner />
 
-    </body>
+        </x-barcode-body>
+    @endcannot
+    @can('simplified layout')
+        <x-barcode-body class="font-sans antialiased bg-base-200 min-h-screen">
+
+        {{-- The navbar with `sticky` and `full-width` --}}
+        <x-mary-nav sticky full-width>
+
+            <x-slot:brand>
+                {{-- Drawer toggle for "main-drawer" --}}
+                <label for="main-drawer" class="lg:hidden mr-3">
+                    <x-mary-icon name="o-bars-3" class="cursor-pointer" />
+                </label>
+
+                {{-- Brand --}}
+                <div class="flex items-center gap-2">
+                    <x-application-logo class="w-8 h-8" />
+                    @auth
+                        <span class="font-semibold text-sm">{{ auth()->user()->name }}</span>
+                    @endauth
+                </div>
+            </x-slot:brand>
+
+            {{-- Right side actions --}}
+            <x-slot:actions>
+                <x-mary-button label="Dashboard" icon="o-home" link="{{ route('dashboard') }}" class="btn-ghost btn-sm {{ request()->routeIs('dashboard') ? 'btn-active' : '' }}" responsive />
+                <x-mary-button label="Profil" icon="o-user" link="{{ route('profile') }}" class="btn-ghost btn-sm {{ request()->routeIs('profile') ? 'btn-active' : '' }}" responsive />
+                <x-logout-button />
+            </x-slot:actions>
+        </x-mary-nav>
+
+        {{-- The main content with `full-width` --}}
+        <x-mary-main with-nav full-width>
+
+            {{-- The `$slot` goes here --}}
+            <x-slot:content>
+                {{ $slot }}
+            </x-slot:content>
+        </x-mary-main>
+
+        {{--  TOAST area --}}
+        <x-mary-toast />
+
+        <livewire:global-qr-scanner />
+
+        </x-barcode-body>
+    @endcan
+
 </html>
