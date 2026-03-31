@@ -4,6 +4,7 @@ namespace App\Livewire\Zasobovac;
 
 use App\Jobs\PrintLabelJob;
 use App\Models\EvPodsestav;
+use App\Models\Polozka;
 use App\Models\Printer;
 use App\Models\StaDokl;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -24,11 +25,6 @@ class Show extends Component
     public ?int $editingId = null;
     public array $editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
 
-    public bool $printModal = false;
-    public ?int $printEvPodsId = null;
-    public $selectedPrinterId;
-    public int $copies = 1;
-
     public function boot()
     {
         abort_if(! auth()->user()->can('manage zasobovani'), 403);
@@ -36,21 +32,21 @@ class Show extends Component
 
     public function mount($id)
     {
-        $this->staDokl = StaDokl::with(['doklad.vlastniOsoba', 'doklad.rodicZakazka.vlastniOsoba'])
+        $this->staDokl = StaDokl::with([
+                'doklad.vlastniOsoba',
+                'doklad.rodicZakazka.vlastniOsoba',
+                'doklad.radky',
+            ])
             ->where('Doklad', $id)
             ->typPohybu('EC_ZAKVYR')
             ->firstOrFail();
 
         $this->initNewEntries();
-
-        $printer = Printer::where('is_active', true)->where('is_default', true)->first()
-            ?? Printer::where('is_active', true)->first();
-        $this->selectedPrinterId = $printer?->id;
     }
 
     protected function initNewEntries(): void
     {
-        $radky = $this->staDokl->doklad->radky ?? collect();
+        $radky = $this->staDokl->doklad->radky;
 
         foreach ($radky as $index => $radek) {
             if (! isset($this->newEntries[$index])) {
@@ -76,11 +72,15 @@ class Show extends Component
         $entry = $this->newEntries[$rowIndex];
         $now = now()->format('Y-m-d H:i:s');
 
+        $nextPods = $radek->evPodsestavy->count() + 1;
+        $oznaceni = $radek->CisloRadk . '.' . $nextPods;
+
         EvPodsestav::create([
             'ID' => EvPodsestav::nextId(),
             'VyrobniPrikaz' => $radek->SysPrimKlicDokladu,
             'EntitaRadkuVP' => $radek->EntitaRad,
             'Pozice' => $radek->Pozice,
+            'OznaceniPodsestavy' => $oznaceni,
             'CisloVykresu' => $entry['CisloVykresu'],
             'Mnozstvi' => (float) $entry['Mnozstvi'],
             'Poznamka' => $entry['Poznamka'] ?: null,
@@ -93,6 +93,7 @@ class Show extends Component
             'Mnozstvi' => '',
             'Poznamka' => '',
         ];
+
 
         $this->success('Záznam uložen.');
         $this->dispatch('entry-saved', rowIndex: $rowIndex);
@@ -134,61 +135,99 @@ class Show extends Component
 
         $this->editingId = null;
         $this->editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
+
         $this->success('Záznam upraven.');
     }
 
     public function deleteEntry(int $evPodsId): void
     {
         EvPodsestav::where('ID', $evPodsId)->delete();
+
         $this->success('Záznam smazán.');
     }
 
-    public function openPrintModal(int $evPodsId): void
+    public function printLabel(int $evPodsId): void
     {
-        $this->printEvPodsId = $evPodsId;
-        $this->copies = 1;
-        $this->printModal = true;
-    }
+        $user = auth()->user();
 
-    public function printLabel(): void
-    {
-        $this->validate([
-            'selectedPrinterId' => 'required|exists:printers,id',
-            'copies' => 'required|integer|min:1',
-        ]);
+        if (! $user->can('can print')) {
+            $this->error('Nemáte oprávnění k tisku.');
+            return;
+        }
 
-        $this->printModal = false;
+        if (! $user->printer_id) {
+            $this->warning('Nemáte nastavenou preferovanou tiskárnu. Nastavte ji prosím v profilu.');
+            return;
+        }
 
-        $evPods = EvPodsestav::find($this->printEvPodsId);
+        $printer = Printer::find($user->printer_id);
+
+        if (! $printer || ! $printer->is_active) {
+            $this->error('Vaše preferovaná tiskárna není aktivní. Změňte ji prosím v profilu.');
+            return;
+        }
+
+        $evPods = EvPodsestav::find($evPodsId);
+
+        if (! $evPods) {
+            $this->error('Záznam nebyl nalezen.');
+            return;
+        }
+
+        $radek = $this->staDokl->doklad->radky->first(
+            fn ($r) => $r->EntitaRad == $evPods->EntitaRadkuVP
+        );
+
+        $mistrUser = $this->staDokl->doklad->vlastniOsoba?->user;
+
+        $qrUrl = url('/qr') . '?p=' . $evPods->ID;
 
         $qrCode = base64_encode(
             QrCode::format('png')->size(200)->margin(0)
-                ->generate("https://jobtrack.cz?v={$this->printEvPodsId}&r=1&p=1")
+                ->generate($qrUrl)
         );
 
         $data = [
-            'id' => $this->printEvPodsId,
-            'projekt' => $evPods->CisloVykresu ?? '',
             'qrCode' => $qrCode,
-            'author' => auth()->user()->name,
-            'date' => date('d.m.Y H:i'),
+            'mpsProjekt' => trim($this->staDokl->doklad->MPSProjekt ?? ''),
+            'klicDokla' => trim($this->staDokl->doklad->KlicDokla ?? ''),
+            'pozice' => trim($evPods->Pozice ?? '-'),
+            'cisloPodsestavy' => trim($evPods->OznaceniPodsestavy ?? '-'),
+            'mnozstvi' => (int) ($evPods->Mnozstvi ?? 1),
+            'mistrCislo' => $mistrUser?->cislo_mistra,
         ];
 
         $customPaper = [0, 0, 170, 81];
         $pdf = Pdf::loadView('pdf.pdf-label', $data)->setPaper($customPaper);
 
-        PrintLabelJob::dispatch($this->selectedPrinterId, base64_encode($pdf->output()), $this->copies);
+        PrintLabelJob::dispatch($printer->id, base64_encode($pdf->output()), 1);
 
         $this->success('Tisk byl zařazen do fronty.');
     }
 
     public function render()
     {
-        $radky = $this->staDokl->doklad->radky()->with(['evPodsestavy', 'materialPolozka', 'povrchoUpPolozka'])->get();
+        $radky = $this->staDokl->doklad->radky;
+
+        $radky->load('evPodsestavy');
+
+        $polozkyKeys = $radky->pluck('Material')
+            ->merge($radky->pluck('PovrchoUp'))
+            ->map(fn ($v) => trim($v ?? ''))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $polozky = Polozka::whereIn('KlicPoloz', $polozkyKeys)->get()
+            ->keyBy(fn ($p) => trim($p->KlicPoloz));
+
+        foreach ($radky as $radek) {
+            $radek->setRelation('materialPolozka', $polozky[trim($radek->Material ?? '')] ?? null);
+            $radek->setRelation('povrchoUpPolozka', $polozky[trim($radek->PovrchoUp ?? '')] ?? null);
+        }
 
         return view('livewire.zasobovac.show', [
-            'radky' => $radky,
-            'printers' => Printer::where('is_active', true)->get(),
+            'radky' => $this->staDokl->doklad->radky,
             'mistrUser' => $this->staDokl->doklad->vlastniOsoba?->user,
         ]);
     }

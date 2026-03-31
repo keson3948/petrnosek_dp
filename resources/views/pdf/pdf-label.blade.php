@@ -4,64 +4,59 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
         @page {
-            margin: 0px; 
+            margin: 0px;
             padding: 0px;
         }
         body {
-            font-family: DejaVu Sans, sans-serif; /* Supports UTF-8 */
+            font-family: DejaVu Sans, sans-serif;
             margin: 0px;
             padding: 0px;
+        }
+        .circle-table {
+            width: 23px;
+            height: 23px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #000;
+            align-items: center;
+            justify-content: center;
+            display: flex;
+        }
+        .circle-table td {
             text-align: center;
-        }
-        .container {
-            width: 100%;
-            display: block;
-            text-align: center;
-            padding-left: 5px;
-            padding-top: 5px; 
-        }
-        .qr {
-            width: 80px; /* Adjust visual size on paper */
-            height: auto;
-            margin: 0 auto;
-        }
-        .info {
-            font-size: 11px;
+            vertical-align: middle;
+            font-size: 14px;
             font-weight: bold;
-        }
-        .date {
-            font-size: 9px;
+            color: #fff;
+            padding: 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <!-- QR Code Column -->
-                <td style="width: 35%; vertical-align: middle; text-align: center; padding: 0;">
-                    <img src="data:image/png;base64, {{ $qrCode }}" class="qr" alt="QR Code" style="min-width: 90px; max-width: 110px; height: auto;">
-                </td>
-                
-                <!-- Text Info Column -->
-                <td style="width: 65%; vertical-align: middle; text-align: left; padding-left: 5px;">
-                    <div class="info" style="font-size: 30px; line-height: 1; margin: 0;">
-                        {{ $projekt }}
-                    </div>
-                    <div class="info" style="font-size: 15px; line-height: 1; margin: 0;">
-                        {{ $id }}
-                    </div>
-                    <div class="info" style="font-size: 15px; line-height: 1; margin: 0;">
-                        1 ks
-                    </div>
-                    @if(isset($author))
-                        <div class="date" style="font-size: 10px; line-height: 1; margin: 0;">
-                            G: {{ $author }}
-                        </div>
-                    @endif
-                </td>
-            </tr>
-        </table>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; padding-top: 7px; padding-left: 5px;">
+        <tr>
+            <td style="width: 30%; vertical-align: middle; text-align: left; padding: 0; padding-right: 4px">
+                <img src="data:image/png;base64, {{ $qrCode }}" style="width: 94px; height: 94px;" alt="QR">
+            </td>
+            <td style="width: 70%; vertical-align: top; text-align: left; padding-left: 3px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0; display: inline">
+                            <div style="font-size: 28px; font-weight: bold; line-height: 0.9;">{{ $mpsProjekt }}</div>
+
+                        </td>
+                        <td style="padding-right: 5px; padding-top: 2px; text-align: left; vertical-align: top;">
+                            @if($mistrCislo)
+                                <div class="circle-table" style=" text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #fff; padding-top: -2px"><span>{{ $mistrCislo }}</span></div>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+                <div style="font-size: 15px; font-weight: bold; line-height: 0.9;">{{ $klicDokla }}</div>
+                <div style="font-size: 18px; font-weight: bold; line-height: 0.9;">{{ $pozice }} / {{ $cisloPodsestavy }}</div>
+                <div style="font-size: 18px; font-weight: bold; line-height: 0.9;">{{ $mnozstvi }} ks</div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

@@ -9,7 +9,7 @@
                 class="w-48"
             />
             <x-mary-input icon="o-magnifying-glass" wire:model.live.debounce.300ms="search"
-                          placeholder="Hledat doklad, projekt..." clearable/>
+                          placeholder="Hledat doklad, projekt..." clearable maxlength="10"/>
         </x-slot:actions>
     </x-mary-header>
 

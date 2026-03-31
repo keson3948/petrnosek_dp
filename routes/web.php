@@ -55,8 +55,11 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['permission:view operace'])->group(function () {
         Route::get('/operace', \App\Livewire\Operace\Index::class)->name('operace.index');
+        Route::get('/operace/podsestava/{id}', \App\Livewire\Operace\PodsestavaShow::class)->name('operace.podsestava');
         Route::get('/qr-result/{code}', \App\Livewire\QrScannerResult::class)->name('qr.result');
     });
+
+    Route::get('/qr', \App\Livewire\QrRedirect::class)->name('qr.redirect');
 
     // --- ZÁSOBOVAČ ---
     Route::middleware(['permission:manage zasobovani'])->group(function () {

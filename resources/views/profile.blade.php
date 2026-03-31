@@ -11,6 +11,15 @@
 
         </x-mary-card>
 
+        @can('can print')
+            <x-mary-card
+                title="Preferovaná tiskárna"
+                separator
+                subtitle="Vyberte tiskárnu, která bude použita pro tisk QR štítků."
+            >
+                <livewire:profile.update-printer-preference/>
+            </x-mary-card>
+        @endcan
 
         <x-mary-card
             title="Změna hesla"

@@ -29,24 +29,6 @@ class Index extends Component
         abort_if(! auth()->user()->can('manage zasobovani'), 403);
     }
 
-    public function mount()
-    {
-        $this->mistrOptions = StaDokl::with('doklad.vlastniOsoba')
-            ->typPohybu('EC_ZAKVYR')
-            ->vyhodnoceni(1)
-            ->whereHas('doklad', fn (Builder $q) => $q->tdfDocType(410008)->dbcnt(10904)->docYear(2025))
-            ->get()
-            ->map(fn ($s) => [
-                'id' => trim($s->doklad->vlastniOsoba?->KlicSubjektu ?? ''),
-                'name' => trim($s->doklad->vlastniOsoba?->Prijmeni ?? ''),
-            ])
-            ->filter(fn ($m) => $m['id'] !== '' && $m['name'] !== '')
-            ->unique('id')
-            ->sortBy('name')
-            ->values()
-            ->toArray();
-    }
-
     public function headers(): array
     {
         return [
@@ -64,6 +46,20 @@ class Index extends Component
     public function render()
     {
         $staDoklady = $this->loadStaDoklady();
+
+        if (empty($this->mistrOptions)) {
+            $this->mistrOptions = $staDoklady
+                ->map(fn ($s) => [
+                    'id' => trim($s->doklad->vlastniOsoba?->KlicSubjektu ?? ''),
+                    'name' => trim($s->doklad->vlastniOsoba?->Prijmeni ?? ''),
+                ])
+                ->filter(fn ($m) => $m['id'] !== '' && $m['name'] !== '')
+                ->unique('id')
+                ->sortBy('name')
+                ->values()
+                ->toArray();
+        }
+
         $mistrUsers = $this->loadMistrUsers($staDoklady);
         $rows = $this->transformRows($staDoklady, $mistrUsers);
 
@@ -75,7 +71,17 @@ class Index extends Component
 
     protected function loadStaDoklady(): Collection
     {
-        return StaDokl::with(['doklad.vlastniOsoba', 'doklad.rodicZakazka.vlastniOsoba'])
+        return StaDokl::with([
+                'doklad' => fn ($q) => $q->select([
+                    'SysPrimKlicDokladu', 'KlicDokla', 'MPSProjekt',
+                    'VlastniOsoba', 'Zakazka', 'TerminDatum',
+                ]),
+                'doklad.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
+                'doklad.rodicZakazka' => fn ($q) => $q->select([
+                    'SysPrimKlicDokladu', 'KlicDokla', 'SpecifiSy', 'VlastniOsoba',
+                ]),
+                'doklad.rodicZakazka.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
+            ])
             ->typPohybu('EC_ZAKVYR')
             ->vyhodnoceni(1)
             ->whereHas('doklad', function (Builder $q) {
@@ -85,8 +91,9 @@ class Index extends Component
 
                 if ($this->search) {
                     $q->where(function (Builder $sq) {
-                        $sq->where('KlicDokla', 'like', "%{$this->search}%")
-                            ->orWhere('MPSProjekt', 'like', "%{$this->search}%");
+                        $term = mb_substr(mb_strtoupper(trim($this->search)), 0, 10);
+                        $sq->where('KlicDokla', 'like', "%{$term}%")
+                            ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(50)) LIKE ?', ["%{$term}%"]);
                     });
                 }
 

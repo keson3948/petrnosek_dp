@@ -31,6 +31,7 @@ class User extends Authenticatable
         'is_active',
         'color',
         'cislo_mistra',
+        'printer_id',
     ];
 
     /**
@@ -57,6 +58,11 @@ class User extends Authenticatable
         ];
     }
 
+
+    public function printer()
+    {
+        return $this->belongsTo(Printer::class);
+    }
 
     public function subjekt()
     {

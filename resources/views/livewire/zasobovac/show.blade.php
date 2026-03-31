@@ -42,7 +42,6 @@
                 </div>
             </div>
 
-            {{-- Pravá polovina: vystaveno + zakázka + projekt + cena + hmotnost --}}
             <div class="grid grid-cols-2 gap-x-6 gap-y-3 content-start">
                 <div>
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Vystaveno</div>
@@ -77,7 +76,7 @@
         </div>
     </x-mary-card>
 
-    {{-- Interní poznámka --}}
+
     @if(trim($staDokl->doklad->InterniPoznamka ?? '') !== '')
         <x-mary-card shadow class="mb-8">
             <div class="flex items-start gap-3">
@@ -90,7 +89,6 @@
         </x-mary-card>
     @endif
 
-    {{-- Položky dokladu s accordion --}}
     <x-mary-card title="Položky dokladu" shadow>
         @forelse($radky as $index => $radek)
             <x-mary-collapse class="mb-3 border border-base-200 bg-white rounded-lg">
@@ -99,7 +97,7 @@
                         $datum = $radek->TermiDoda ?? $radek->TerminDatum ?? null;
                     @endphp
                     <div class="w-full -mx-4 -my-2">
-                        {{-- Řádek 1: hlavička se šedým pozadím --}}
+
                         <div class="bg-primary/5 px-4 py-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
                             <div class="flex gap-2">
                                 <div>
@@ -138,7 +136,6 @@
                             </div>
                         </div>
 
-                        {{-- Řádek 2: doplňkové info --}}
                         <div class="px-4 py-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
                             <div class="lg:col-span-3">
                                 <div class="text-[10px] text-gray-400 uppercase font-bold">Text řádku</div>
@@ -162,7 +159,6 @@
                             </div>
                         </div>
 
-                        {{-- Řádek 3: memo poznámky (jen když existují) --}}
                         @if($radek->RozsahPoz || $radek->Poznamka)
                             <div class="px-4 py-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-x-4 gap-y-1">
                                 @if($radek->RozsahPoz)
@@ -191,7 +187,6 @@
                          ">
                         @foreach($radek->evPodsestavy as $index_ev => $ev)
                             @if($editingId === $ev->ID)
-                                {{-- Editační režim --}}
                                 <div class="p-3 rounded-lg bg-warning/5 border border-warning/30">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <x-mary-input
@@ -229,12 +224,11 @@
                                     </div>
                                 </div>
                             @else
-                                {{-- Zobrazení --}}
                                 <div class="flex items-center justify-between p-3 rounded-lg bg-base-100 border border-base-200">
                                     <div class="flex items-center gap-6">
                                         <div>
                                             <div class="text-xs text-gray-400 uppercase">Č. PODSESTAVY</div>
-                                            <div class="font-semibold">{{$radek->CisloRadk}}.{{$index_ev+1}}</div>
+                                            <div class="font-semibold">{{ trim($ev->OznaceniPodsestavy ?? $radek->CisloRadk . '.' . ($index_ev + 1)) }}</div>
                                         </div>
                                         <div>
                                             <div class="text-xs text-gray-400 uppercase">Číslo výkresu</div>
@@ -252,12 +246,15 @@
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <x-mary-button
-                                            icon="o-qr-code"
-                                            class="btn-sm btn-ghost"
-                                            wire:click="openPrintModal({{ $ev->ID }})"
-                                            tooltip="Tisk QR štítku"
-                                        />
+                                        @can('can print')
+                                            <x-mary-button
+                                                icon="o-qr-code"
+                                                class="btn-sm btn-ghost"
+                                                wire:click="printLabel({{ $ev->ID }})"
+                                                spinner="printLabel({{ $ev->ID }})"
+                                                tooltip="Tisk QR štítku"
+                                            />
+                                        @endcan
                                         <x-mary-button
                                             icon="o-pencil"
                                             class="btn-sm btn-ghost"
@@ -276,7 +273,6 @@
                             @endif
                         @endforeach
 
-                        {{-- Formulář pro nový záznam --}}
                         <x-mary-card title="Přidat nový záznam" class="p-2 bg-primary/5 border border-primary/20">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
                                  @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
@@ -321,29 +317,4 @@
         @endforelse
     </x-mary-card>
 
-    {{-- Print modal --}}
-    <x-mary-modal wire:model="printModal" title="Tisk štítku podsestavy" subtitle="Vyberte tiskárnu a počet kopií">
-        <x-mary-form no-separator wire:submit="printLabel">
-            <x-mary-select
-                label="Tiskárna"
-                icon="o-printer"
-                :options="$printers"
-                option-label="name"
-                option-value="id"
-                wire:model="selectedPrinterId"
-                placeholder="Vyberte tiskárnu..."
-            />
-            <x-mary-input
-                label="Počet kopií"
-                wire:model="copies"
-                icon="o-hashtag"
-                type="number"
-                min="1"
-            />
-            <x-slot:actions>
-                <x-mary-button label="Zrušit" @click="$wire.printModal = false" />
-                <x-mary-button label="Tisk" icon="o-printer" class="btn-primary" type="submit" spinner="printLabel" />
-            </x-slot:actions>
-        </x-mary-form>
-    </x-mary-modal>
 </div>
