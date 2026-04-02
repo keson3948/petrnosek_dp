@@ -20,11 +20,15 @@ class GlobalQrScanner extends Component
         if (isset($parsed['path']) && str_contains($parsed['path'], '/qr')) {
             parse_str($parsed['query'] ?? '', $params);
 
+            if (isset($params['d'])) {
+                return redirect()->route('dashboard', ['d' => $params['d']]);
+            }
+
             if (isset($params['p'])) {
                 $evPods = EvPodsestav::find((int) $params['p']);
 
                 if ($evPods) {
-                    return $this->redirectRoute('operace.podsestava', ['id' => $evPods->ID], navigate: true);
+                    return redirect()->route('dashboard', ['start' => $evPods->ID]);
                 }
 
                 $this->error('Podsestava nebyla nalezena.');

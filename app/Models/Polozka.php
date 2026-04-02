@@ -25,7 +25,11 @@ class Polozka extends Model
         $value = parent::getAttribute($key);
 
         if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
+            $value = iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
+        }
+
+        if (is_string($value) && $key === $this->getKeyName()) {
+            return trim($value);
         }
 
         return $value;

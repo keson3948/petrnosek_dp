@@ -13,11 +13,16 @@ class QrRedirect extends Component
     {
         $p = request()->query('p');
 
+        if ($d = request()->query('d')) {
+            $params = str_contains($d, '.') ? ['d' => $d] : ['d' => $d];
+            return redirect()->route('dashboard', $params);
+        }
+
         if ($p) {
             $evPods = EvPodsestav::find((int) $p);
 
             if ($evPods) {
-                return $this->redirectRoute('operace.podsestava', ['id' => $evPods->ID], navigate: true);
+                return redirect()->route('dashboard', ['start' => $evPods->ID]);
             }
 
             session()->flash('error', 'Podsestava nebyla nalezena.');

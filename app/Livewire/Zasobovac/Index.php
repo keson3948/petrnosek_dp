@@ -87,7 +87,7 @@ class Index extends Component
             ->whereHas('doklad', function (Builder $q) {
                 $q->tdfDocType(410008)
                     ->dbcnt(10904)
-                    ->docYear(2025);
+                    ->docYear(2022);
 
                 if ($this->search) {
                     $q->where(function (Builder $sq) {

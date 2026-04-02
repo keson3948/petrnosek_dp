@@ -10,8 +10,7 @@ class ProductionRecord extends Model
     protected $fillable = [
         'user_id',
         'machine_id',
-        'order_number',
-        'vp_number',
+        'SysPrimKlicDokladu',
         'drawing_number',
         'operation_id',
         'processed_quantity',
@@ -22,6 +21,8 @@ class ProductionRecord extends Model
         'last_paused_at',
         'worked_minutes',
         'notes',
+        'ev_podsestav_id',
+        'doklad_radek_entita',
     ];
 
     protected $casts = [
@@ -33,5 +34,24 @@ class ProductionRecord extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Vztah na Doklad (Firebird) přes SysPrimKlicDokladu.
+     * Pozn.: cross-database vztah — eager loading funguje, ale join ne.
+     */
+    public function doklad()
+    {
+        return $this->belongsTo(Doklad::class, 'SysPrimKlicDokladu', 'SysPrimKlicDokladu');
+    }
+
+    public function machine()
+    {
+        return $this->belongsTo(Prostredek::class, 'machine_id', 'KlicProstredku');
+    }
+
+    public function operation()
+    {
+        return $this->belongsTo(Operace::class, 'operation_id', 'KlicPoloz');
     }
 }
