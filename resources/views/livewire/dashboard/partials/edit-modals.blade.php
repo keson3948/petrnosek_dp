@@ -2,11 +2,11 @@
 <x-mary-modal wire:model="showEditVpModal" title="Upravit výrobní příkaz" separator>
     <div class="flex flex-col">
         {{-- Vybraný VP --}}
-        @if($edit_klicDokla && !$vpSearch)
+        @if($edit_vp_sysPrimKlic && !$vpSearch)
             <div class="mb-4 p-3 border-2 border-primary bg-primary/10 rounded-lg flex items-center justify-between">
                 <div>
                     <div class="text-xs text-gray-500">Vybraný VP</div>
-                    <div class="font-bold font-mono text-lg text-primary">{{ $edit_klicDokla }}</div>
+                    <div class="font-bold font-mono text-lg text-primary">{{ $edit_vp_label }}</div>
                 </div>
                 <div class="flex items-center gap-2">
                     <x-mary-icon name="o-check-circle" class="w-6 h-6 text-primary" />
@@ -29,9 +29,9 @@
         @if($this->vpSearchResults->count() > 0)
             <div class="mt-4 space-y-2 overflow-y-auto max-h-72">
                 @foreach($this->vpSearchResults as $doklad)
-                    @php $isSelected = $edit_klicDokla === trim($doklad->KlicDokla); @endphp
+                    @php $isSelected = $edit_vp_sysPrimKlic === trim($doklad->SysPrimKlicDokladu); @endphp
                     <button type="button"
-                        wire:click="selectVp('{{ addslashes(trim($doklad->KlicDokla)) }}')"
+                        wire:click="selectVp('{{ addslashes(trim($doklad->SysPrimKlicDokladu)) }}', '{{ addslashes(trim($doklad->KlicDokla)) }}')"
                         class="w-full min-h-[3.5rem] p-3 text-left border-2 rounded-lg transition-colors flex items-center justify-between {{ $isSelected ? 'border-primary bg-primary/10' : 'border-base-200 hover:border-primary/30' }}">
                         <div>
                             <div class="font-bold font-mono text-lg {{ $isSelected ? 'text-primary' : '' }}">{{ trim($doklad->KlicDokla) }}</div>
@@ -51,7 +51,7 @@
             <div class="text-center border-2 border-dashed border-base-200 rounded-lg text-gray-500 py-8 mt-4">
                 Žádný výrobní příkaz nenalezen.
             </div>
-        @elseif(!$edit_klicDokla)
+        @elseif(!$edit_vp_sysPrimKlic)
             <div class="text-center text-gray-400 py-6 text-sm mt-4">
                 Zadejte alespoň 2 znaky pro vyhledávání
             </div>
@@ -252,38 +252,58 @@
 
 {{-- ====== MODAL: Upravit množství ====== --}}
 <x-mary-modal wire:model="showEditQuantityModal" title="Upravit množství" separator>
-    <div class="flex flex-col items-center py-4">
+    <div x-data="{ qty: @entangle('edit_quantity_init') }" class="flex flex-col items-center py-4">
         <div class="flex items-center gap-4">
-            <x-mary-button icon="o-minus" wire:click="adjustQuantity(-10)" class="btn-lg">-10</x-mary-button>
-            <x-mary-button icon="o-minus" wire:click="adjustQuantity(-1)" class="btn-lg" />
-            <div class="text-5xl font-bold w-28 text-center tabular-nums">
-                {{ $edit_quantity }}
-            </div>
-            <x-mary-button icon="o-plus" wire:click="adjustQuantity(1)" class="btn-lg" />
-            <x-mary-button icon="o-plus" wire:click="adjustQuantity(10)" class="btn-lg">+10</x-mary-button>
+            <button type="button" @click="qty = Math.max(0, qty - 10)" class="btn btn-lg">-10</button>
+            <button type="button" @click="qty = Math.max(0, qty - 1)" class="btn btn-lg">
+                <x-mary-icon name="o-minus" class="w-5 h-5" />
+            </button>
+            <div class="text-5xl font-bold w-28 text-center tabular-nums" x-text="qty"></div>
+            <button type="button" @click="qty++" class="btn btn-lg">
+                <x-mary-icon name="o-plus" class="w-5 h-5" />
+            </button>
+            <button type="button" @click="qty += 10" class="btn btn-lg">+10</button>
         </div>
         <div class="text-sm text-gray-500 mt-3">kusů</div>
+
+        <div class="w-full flex justify-end gap-2 mt-6">
+            <x-mary-button label="Zrušit" @click="$wire.showEditQuantityModal = false" />
+            <x-mary-button label="Uložit" class="btn-primary" @click="$wire.saveEditQuantity(qty)" />
+        </div>
     </div>
-    <x-slot:actions>
-        <x-mary-button label="Zrušit" @click="$wire.showEditQuantityModal = false" />
-        <x-mary-button label="Uložit" class="btn-primary" wire:click="saveEditQuantity" spinner="saveEditQuantity" />
-    </x-slot:actions>
 </x-mary-modal>
 
 {{-- ====== MODAL: Upravit čas ====== --}}
 <x-mary-modal wire:model="showEditTimeModal" title="Upravit odpracovaný čas" separator>
-    <x-mary-form wire:submit="saveEditTime">
-        <x-mary-input label="Začátek" type="datetime-local" wire:model="edit_started_at" />
+    <div x-data="{
+        h: @js($edit_time_init['hours'] ?? 0),
+        m: @js($edit_time_init['minutes'] ?? 0),
+        startedAt: @js($edit_time_init['started_at'] ?? ''),
+        addH(d) { this.h = Math.max(0, this.h + d) },
+        addM(d) {
+            let n = this.m + d;
+            if (n >= 60) { this.h++; n -= 60; }
+            else if (n < 0) { if (this.h > 0) { this.h--; n += 60; } else { n = 0; } }
+            this.m = n;
+        },
+        pad(v) { return String(v).padStart(2, '0'); }
+    }">
+        <div class="mb-4">
+            <label class="label"><span class="label-text font-semibold">Začátek</span></label>
+            <input type="datetime-local" x-model="startedAt" class="input input-bordered input-lg w-full" />
+        </div>
 
         <label class="label"><span class="label-text font-semibold">Odpracovaná doba</span></label>
         <div class="flex items-center justify-center gap-6 py-4">
             <div class="flex flex-col items-center">
                 <span class="text-xs text-gray-400 uppercase mb-2">Hodiny</span>
-                <x-mary-button icon="o-plus" wire:click="adjustHours(1)"></x-mary-button>
-                <div class="text-5xl font-bold my-3 w-20 text-center tabular-nums">
-                    {{ str_pad($edit_hours, 2, '0', STR_PAD_LEFT) }}
-                </div>
-                <x-mary-button icon="o-minus" wire:click="adjustHours(-1)"></x-mary-button>
+                <button type="button" @click="addH(1)" class="btn">
+                    <x-mary-icon name="o-plus" class="w-5 h-5" />
+                </button>
+                <div class="text-5xl font-bold my-3 w-20 text-center tabular-nums" x-text="pad(h)"></div>
+                <button type="button" @click="addH(-1)" class="btn">
+                    <x-mary-icon name="o-minus" class="w-5 h-5" />
+                </button>
             </div>
 
             <div class="text-5xl font-bold text-gray-300 mt-6">:</div>
@@ -291,26 +311,24 @@
             <div class="flex flex-col items-center">
                 <span class="text-xs text-gray-400 uppercase mb-2">Minuty</span>
                 <div class="flex gap-2">
-                    <x-mary-button wire:click="adjustMinutes(10)">+10</x-mary-button>
-                    <x-mary-button type="button" wire:click="adjustMinutes(1)">+1</x-mary-button>
+                    <button type="button" @click="addM(10)" class="btn">+10</button>
+                    <button type="button" @click="addM(1)" class="btn">+1</button>
                 </div>
-                <div class="text-5xl font-bold my-3 w-20 text-center tabular-nums">
-                    {{ str_pad($edit_minutes, 2, '0', STR_PAD_LEFT) }}
-                </div>
+                <div class="text-5xl font-bold my-3 w-20 text-center tabular-nums" x-text="pad(m)"></div>
                 <div class="flex gap-2">
-                    <x-mary-button type="button" wire:click="adjustMinutes(-10)">-10</x-mary-button>
-                    <x-mary-button type="button" wire:click="adjustMinutes(-1)">-1</x-mary-button>
+                    <button type="button" @click="addM(-10)" class="btn">-10</button>
+                    <button type="button" @click="addM(-1)" class="btn">-1</button>
                 </div>
             </div>
         </div>
 
         <div class="text-center text-sm text-gray-500 mt-2">
-            Celkem: {{ $edit_hours }} hodin {{ $edit_minutes }} minut
+            Celkem: <span x-text="h"></span> hodin <span x-text="m"></span> minut
         </div>
 
-        <x-slot:actions>
+        <div class="flex justify-end gap-2 mt-6">
             <x-mary-button label="Zrušit" @click="$wire.showEditTimeModal = false" />
-            <x-mary-button label="Uložit" class="btn-primary" type="submit" spinner="saveEditTime" />
-        </x-slot:actions>
-    </x-mary-form>
+            <button type="button" class="btn btn-primary" @click="$wire.saveEditTime(h, m, startedAt)">Uložit</button>
+        </div>
+    </div>
 </x-mary-modal>

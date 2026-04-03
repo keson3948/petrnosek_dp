@@ -35,7 +35,7 @@
             </div>
 
             {{-- Summary breadcrumb --}}
-            @if($startStep >= 2 && $selectedDokladKey)
+            @if($startStep >= 2 && $selectedSysPrimKlic)
                 @php $summaryDoklad = $this->selectedDoklad; @endphp
                 <div class="bg-base-200 rounded-lg px-4 py-3 shrink-0 mb-4 space-y-1">
                     <div class="text-xl font-bold leading-tight truncate">

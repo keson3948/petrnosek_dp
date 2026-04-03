@@ -24,8 +24,6 @@ class StartDrawer extends Component
     public int $minStep = 1;
 
     // Selections
-    public ?string $selectedDokladKey = null;
-
     public ?string $selectedSysPrimKlic = null;
 
     public ?int $selectedDokladRadekEntita = null;
@@ -98,12 +96,7 @@ class StartDrawer extends Component
 
         $vp = trim($evPods->VyrobniPrikaz ?? '');
         if ($vp) {
-            $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
-                ->where('SysPrimKlicDokladu', $vp)
-                ->first();
-            $this->selectedDokladKey = $doklad ? trim($doklad->KlicDokla) : null;
             $this->selectedSysPrimKlic = $vp;
-
             if ($this->selectedDokladRadekEntita) {
                 $this->pozice_radku = trim($evPods->Pozice ?? '');
             }
@@ -130,18 +123,15 @@ class StartDrawer extends Component
             $sysPrimKlic = $d;
         }
 
-        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
-            ->where('ZakakaMPSJeUkoncena', 0)
-            ->where('SysPrimKlicDokladu', $sysPrimKlic)
-            ->first();
+        $this->selectedSysPrimKlic = $sysPrimKlic;
+
+        $doklad = $this->selectedDoklad;
         if (! $doklad) {
+            $this->selectedSysPrimKlic = null;
             $this->error('Výrobní příkaz nebyl nalezen.');
 
             return;
         }
-
-        $this->selectedDokladKey = trim($doklad->KlicDokla);
-        $this->selectedSysPrimKlic = $sysPrimKlic;
 
         if ($radekEntita) {
             $this->selectedDokladRadekEntita = $radekEntita;
@@ -169,7 +159,7 @@ class StartDrawer extends Component
         $this->resetValidation();
         $this->reset([
             'operation_id', 'machine_id', 'drawing_number',
-            'evPodsestavId', 'podSearch', 'selectedDokladKey', 'selectedSysPrimKlic',
+            'evPodsestavId', 'podSearch', 'selectedSysPrimKlic',
             'selectedDokladRadekEntita', 'podsFilter', 'radekFilter',
             'pracoviste_id', 'pozice_radku',
         ]);
@@ -204,7 +194,6 @@ class StartDrawer extends Component
 
         $nextId = ProductionRecord::nextId();
 
-        // Pro jistotu fallback, pokud nebyl naplněn prostredek
         $pracovisteId = $this->pracoviste_id;
         if (! $pracovisteId && $this->machine_id) {
             $prostredek = Prostredek::where('KlicProstredku', $this->machine_id)->first();
@@ -269,7 +258,7 @@ class StartDrawer extends Component
 
     private function advanceFromStep1(): void
     {
-        if (! $this->selectedDokladKey) {
+        if (! $this->selectedSysPrimKlic) {
             $this->addError('podSearch', 'Vyberte výrobní příkaz.');
 
             return;
@@ -340,11 +329,9 @@ class StartDrawer extends Component
     // Selection Actions
     // ==========================================
 
-    public function selectDoklad(string $klicDokla): void
+    public function selectDoklad(string $sysPrimKlic): void
     {
-        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)->where('ZakakaMPSJeUkoncena', 0)->where('SysPrimKlicDokladu', $klicDokla)->first();
-        $this->selectedDokladKey = $klicDokla;
-        $this->selectedSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu ?? '') : null;
+        $this->selectedSysPrimKlic = $sysPrimKlic;
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
         $this->drawing_number = '';
@@ -355,7 +342,6 @@ class StartDrawer extends Component
 
     public function clearDoklad(): void
     {
-        $this->selectedDokladKey = null;
         $this->selectedSysPrimKlic = null;
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
@@ -515,7 +501,7 @@ class StartDrawer extends Component
     #[Computed]
     public function selectedRadekPodsestavy()
     {
-        if (! $this->selectedDokladKey || ! $this->selectedDokladRadekEntita) {
+        if (! $this->selectedSysPrimKlic || ! $this->selectedDokladRadekEntita) {
             return collect();
         }
 

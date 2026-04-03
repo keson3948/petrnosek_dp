@@ -1,10 +1,10 @@
 <div class="flex flex-col h-full">
     {{-- Zobrazení vybraného dokladu (při návratu zpět) --}}
-    @if($selectedDokladKey && !$podSearch)
+    @if($selectedSysPrimKlic && !$podSearch)
         <div class="mb-4 p-3 border-2 border-primary bg-primary/10 rounded-lg flex items-center justify-between shrink-0">
             <div>
                 <div class="text-xs text-gray-500">Vybraný VP</div>
-                <div class="font-bold font-mono text-lg text-primary">{{ $selectedDokladKey }}</div>
+                <div class="font-bold font-mono text-lg text-primary">{{ trim($this->selectedDoklad?->KlicDokla ?? '') }}</div>
             </div>
             <div class="flex items-center gap-2">
                 <x-mary-icon name="o-check-circle" class="w-6 h-6 text-primary" />
@@ -27,7 +27,7 @@
     @if($this->podSearchResults->count() > 0)
         <div class="mt-4 space-y-2">
             @foreach($this->podSearchResults as $doklad)
-                @php $isSelected = $selectedDokladKey === trim($doklad->KlicDokla); @endphp
+                @php $isSelected = $selectedSysPrimKlic === trim($doklad->SysPrimKlicDokladu); @endphp
                 <button type="button"
                     wire:click="selectDoklad('{{ addslashes(trim($doklad->SysPrimKlicDokladu)) }}')"
                     class="w-full min-h-[3.5rem] p-3 text-left border-2 rounded-lg transition-colors flex items-center justify-between {{ $isSelected ? 'border-primary bg-primary/10' : 'border-base-200 hover:border-primary/30' }}">
@@ -49,7 +49,7 @@
         <div class="text-center border-2 border-dashed border-base-200 rounded-lg text-gray-500 py-8 mt-4 flex-1 flex items-center justify-center">
             Žádný výrobní příkaz nenalezen.
         </div>
-    @elseif(!$selectedDokladKey)
+    @elseif(!$selectedSysPrimKlic)
         <div class="text-center text-gray-400 py-10 text-sm flex-1 flex items-center justify-center">
             Zadejte alespoň 2 znaky pro vyhledávání
         </div>

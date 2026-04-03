@@ -42,7 +42,7 @@
                             {{-- Operátor + čas zahájení --}}
                             <div class="w-28 min-w-0 hidden md:block">
                                 <div class="text-sm truncate">{{ auth()->user()->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $record->started_at->format('H:i') }}</div>
+                                <div class="text-xs text-gray-500">{{ $record->started_at?->format('H:i') }}</div>
                             </div>
 
                             {{-- Odpracovaný čas --}}
@@ -120,11 +120,11 @@
                                             @if($workedH !== null)
                                                 {{ $workedH }}h {{ $workedM }}min
                                             @else
-                                                {{ $record->started_at->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                                {{ $record->started_at?->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
                                             @endif
                                         </div>
                                         <div class="text-xs text-gray-400">
-                                            {{ $record->started_at->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                            {{ $record->started_at?->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
                                             @if($record->total_paused_seconds > 0)
                                                 (Pauza: {{ gmdate("H:i:s", $record->total_paused_seconds) }})
                                             @endif
@@ -197,7 +197,7 @@
                                 {{-- Operátor + datum --}}
                                 <div class="w-28 min-w-0 hidden md:block">
                                     <div class="text-sm truncate">{{ auth()->user()->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $record->started_at->format('d.m.') }}</div>
+                                    <div class="text-xs text-gray-500">{{ $record->started_at?->format('d.m.') }}</div>
                                 </div>
 
                                 {{-- Odpracovaný čas --}}
@@ -275,11 +275,11 @@
                                                 @if($workedH !== null)
                                                     {{ $workedH }}h {{ $workedM }}min
                                                 @else
-                                                    {{ $record->started_at->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                                    {{ $record->started_at?->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
                                                 @endif
                                             </div>
                                             <div class="text-xs text-gray-400">
-                                                {{ $record->started_at->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                                {{ $record->started_at?->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
                                             </div>
                                         </div>
                                         <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">

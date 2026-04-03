@@ -21,7 +21,9 @@ class History extends Component
     // VP edit
     public bool $showEditVpModal = false;
 
-    public string $edit_klicDokla = '';
+    public string $edit_vp_sysPrimKlic = '';
+
+    public string $edit_vp_label = '';
 
     public string $vpSearch = '';
 
@@ -35,11 +37,7 @@ class History extends Component
     // Time edit
     public bool $showEditTimeModal = false;
 
-    public $edit_hours = 0;
-
-    public $edit_minutes = 0;
-
-    public $edit_started_at = '';
+    public $edit_time_init = [];
 
     public $mistriDict = [];
 
@@ -64,7 +62,7 @@ class History extends Component
     // Množství edit
     public bool $showEditQuantityModal = false;
 
-    public $edit_quantity = 0;
+    public int $edit_quantity_init = 0;
 
     // Poznámka edit
     public bool $showEditNotesModal = false;
@@ -169,7 +167,8 @@ class History extends Component
     {
         $record = $this->findEditRecord($id);
         $this->editRecordId = (int) $record->ID;
-        $this->edit_klicDokla = $record->doklad ? trim($record->doklad->KlicDokla) : '';
+        $this->edit_vp_sysPrimKlic = $record->ZakVP_SysPrimKlic ?? '';
+        $this->edit_vp_label = $record->doklad ? trim($record->doklad->KlicDokla) : '';
         $this->vpSearch = '';
         $this->resetValidation();
         $this->showEditVpModal = true;
@@ -197,38 +196,37 @@ class History extends Component
             ->get();
     }
 
-    public function selectVp(string $klicDokla)
+    public function selectVp(string $sysPrimKlic, string $label)
     {
-        $this->edit_klicDokla = $klicDokla;
+        $this->edit_vp_sysPrimKlic = $sysPrimKlic;
+        $this->edit_vp_label = $label;
         $this->vpSearch = '';
     }
 
     public function clearVpSelection()
     {
-        $this->edit_klicDokla = '';
+        $this->edit_vp_sysPrimKlic = '';
+        $this->edit_vp_label = '';
     }
 
     public function saveEditVp()
     {
-        if (! $this->edit_klicDokla) {
+        if (! $this->edit_vp_sysPrimKlic) {
             $this->addError('vpSearch', 'Vyberte výrobní příkaz.');
 
             return;
         }
 
         $record = $this->findEditRecordForSave();
-
-        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)->where('ZakakaMPSJeUkoncena', 0)->where('KlicDokla', $this->edit_klicDokla)->first();
-        $newSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu) : $this->edit_klicDokla;
         $oldSysPrimKlic = $record->ZakVP_SysPrimKlic;
 
         $updateData = [
-            'ZakVP_SysPrimKlic' => $newSysPrimKlic,
+            'ZakVP_SysPrimKlic' => $this->edit_vp_sysPrimKlic,
             'SYSTIMEST' => now(),
         ];
 
         // VP se změnilo → resetovat řádek, podsestavu i výkres
-        if ($newSysPrimKlic !== $oldSysPrimKlic) {
+        if ($this->edit_vp_sysPrimKlic !== $oldSysPrimKlic) {
             $updateData['ZakVP_radek_entita'] = null;
             $updateData['ZakVP_pozice_radku'] = null;
             $updateData['ev_podsestav_id'] = null;
@@ -430,25 +428,18 @@ class History extends Component
     {
         $record = $this->findEditRecord($id);
         $this->editRecordId = (int) $record->ID;
-        $this->edit_quantity = (int) ($record->processed_quantity ?? 0);
+        $this->edit_quantity_init = (int) ($record->processed_quantity ?? 0);
         $this->resetValidation();
         $this->showEditQuantityModal = true;
     }
 
-    public function adjustQuantity(int $delta)
+    public function saveEditQuantity(int $quantity)
     {
-        $this->edit_quantity = max(0, $this->edit_quantity + $delta);
-    }
-
-    public function saveEditQuantity()
-    {
-        $this->validate([
-            'edit_quantity' => 'required|integer|min:0',
-        ]);
+        $quantity = max(0, $quantity);
 
         $record = $this->findEditRecordForSave();
         $record->update([
-            'processed_quantity' => $this->edit_quantity,
+            'processed_quantity' => $quantity,
             'SYSTIMEST' => now(),
         ]);
 
@@ -489,55 +480,35 @@ class History extends Component
     {
         $record = $this->findEditRecord($id);
         $this->editRecordId = (int) $record->ID;
-        $this->edit_started_at = $record->started_at?->format('Y-m-d\TH:i');
 
         $workedMinutes = 0;
         if ($record->started_at && $record->ended_at) {
             $workedMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
         }
 
-        $this->edit_hours = intdiv($workedMinutes, 60);
-        $this->edit_minutes = $workedMinutes % 60;
+        $this->edit_time_init = [
+            'started_at' => $record->started_at?->format('Y-m-d\TH:i') ?? '',
+            'hours' => intdiv($workedMinutes, 60),
+            'minutes' => $workedMinutes % 60,
+        ];
 
         $this->resetValidation();
         $this->showEditTimeModal = true;
     }
 
-    public function adjustHours(int $delta)
-    {
-        $this->edit_hours = max(0, $this->edit_hours + $delta);
-    }
-
-    public function adjustMinutes(int $delta)
-    {
-        $newMinutes = $this->edit_minutes + $delta;
-        if ($newMinutes >= 60) {
-            $this->edit_hours++;
-            $newMinutes -= 60;
-        } elseif ($newMinutes < 0) {
-            if ($this->edit_hours > 0) {
-                $this->edit_hours--;
-                $newMinutes += 60;
-            } else {
-                $newMinutes = 0;
-            }
-        }
-        $this->edit_minutes = $newMinutes;
-    }
-
-    public function saveEditTime()
+    public function saveEditTime(int $hours, int $minutes, string $startedAt)
     {
         $record = $this->findEditRecordForSave();
 
-        $workedMinutes = ($this->edit_hours * 60) + $this->edit_minutes;
+        $workedMinutes = ($hours * 60) + $minutes;
 
         $updateData = [
-            'started_at' => $this->edit_started_at,
+            'started_at' => $startedAt,
             'SYSTIMEST' => now(),
         ];
 
-        if ($this->edit_started_at) {
-            $start = \Carbon\Carbon::parse($this->edit_started_at);
+        if ($startedAt) {
+            $start = \Carbon\Carbon::parse($startedAt);
             $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
             $updateData['ended_at'] = $start->copy()->addMinutes($totalMinutes);
         }
