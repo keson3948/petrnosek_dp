@@ -71,7 +71,7 @@ class User extends Authenticatable
 
     public function productionRecords()
     {
-        return $this->hasMany(ProductionRecord::class, 'user_id');
+        return $this->hasMany(ProductionRecord::class, 'user_id', 'klic_subjektu');
     }
 
     public function assignedMachines()

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class Prostredek extends Model
 {
+    use HasFirebirdAttributes;
+
     protected $connection = 'firebird';
     protected $table = 'ecc_Prostredky';
     protected $primaryKey = 'KlicProstredku';
@@ -27,19 +30,5 @@ class Prostredek extends Model
     public function assignedOperations()
     {
         return $this->hasMany(PrednOperProstr::class, 'Prostredek', 'KlicProstredku');
-    }
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            $value = iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        if (is_string($value) && $key === $this->getKeyName()) {
-            return trim($value);
-        }
-
-        return $value;
     }
 }

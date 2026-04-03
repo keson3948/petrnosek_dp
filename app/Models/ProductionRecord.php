@@ -2,27 +2,52 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
+use App\Models\Traits\HasFirebirdGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductionRecord extends Model
 {
+    use HasFirebirdAttributes, HasFirebirdGenerator;
+
+    protected $connection = 'firebird';
+
+    protected $table = 'apc_ZaznOper';
+
+    protected $primaryKey = 'ID';
+
+    public $incrementing = false;
+
+    protected static string $generator = 'apc_IdZaznamyOperaciJbT';
+
+    const CREATED_AT = 'CTSMP';
+
+    const UPDATED_AT = 'SYSTIMEST';
+
     protected $fillable = [
-        'user_id',
+        'ID',
         'machine_id',
-        'SysPrimKlicDokladu',
-        'drawing_number',
-        'operation_id',
-        'processed_quantity',
-        'status',
+        'user_id',
         'started_at',
         'ended_at',
-        'total_paused_seconds',
-        'last_paused_at',
-        'worked_minutes',
+        'pracoviste_id',
+        'ZakVP_SysPrimKlic',
+        'drawing_number',
+        'ZakVP_pozice_radku',
+        'operation_id',
+        'processed_quantity',
+        'time_Prevzeti_Pol',
+        'time_Dokonceni_Pol',
+        'status',
         'notes',
         'ev_podsestav_id',
-        'doklad_radek_entita',
+        'ZakVP_radek_entita',
+        'total_paused_min',
+        'last_paused_at',
+        'CUSR',
+        'UPUSR',
+        'UPCNT',
     ];
 
     protected $casts = [
@@ -33,16 +58,12 @@ class ProductionRecord extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'klic_subjektu');
     }
 
-    /**
-     * Vztah na Doklad (Firebird) přes SysPrimKlicDokladu.
-     * Pozn.: cross-database vztah — eager loading funguje, ale join ne.
-     */
     public function doklad()
     {
-        return $this->belongsTo(Doklad::class, 'SysPrimKlicDokladu', 'SysPrimKlicDokladu');
+        return $this->belongsTo(Doklad::class, 'ZakVP_SysPrimKlic', 'SysPrimKlicDokladu');
     }
 
     public function machine()

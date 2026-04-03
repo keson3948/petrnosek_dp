@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class StaDokl extends Model
 {
+    use HasFirebirdAttributes;
+
     protected $connection = 'firebird';
     protected $table = 'ecd_StaDokl';
     protected $primaryKey = 'Doklad';
@@ -27,16 +30,5 @@ class StaDokl extends Model
     public function scopeVyhodnoceni($query, $val)
     {
         return $query->where('Vyhodnoceni', $val);
-    }
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
     }
 }

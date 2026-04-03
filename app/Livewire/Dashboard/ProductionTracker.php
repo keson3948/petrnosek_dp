@@ -19,7 +19,7 @@ class ProductionTracker extends Component
     public function checkActiveRecord(): void
     {
         $this->hasActiveRecord = auth()->user()->productionRecords()
-            ->whereIn('status', ['in_progress', 'paused'])
+            ->whereIn('status', [0, 1])
             ->exists();
     }
 

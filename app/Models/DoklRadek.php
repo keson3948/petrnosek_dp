@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class DoklRadek extends Model
 {
+    use HasFirebirdAttributes;
+
     protected $connection = 'firebird';
     protected $table = 'ecd_Dokl_Rad';
     protected $primaryKey = null;
@@ -27,16 +30,5 @@ class DoklRadek extends Model
     public function povrchoUpPolozka()
     {
         return $this->belongsTo(Polozka::class, 'PovrchoUp', 'KlicPoloz');
-    }
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
     }
 }

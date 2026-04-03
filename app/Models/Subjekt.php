@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class Subjekt extends Model
 {
+    use HasFirebirdAttributes;
+
+    protected static array $trimAttributes = ['KlicSubjektu'];
+
     protected $connection = 'firebird';
 
     protected $table = 'eca_Subjekty';
@@ -19,17 +24,6 @@ class Subjekt extends Model
     public $timestamps = false;
 
     protected $guarded = [];
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
-    }
 
     public function druhSubjektu()
     {

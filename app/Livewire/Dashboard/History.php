@@ -3,10 +3,11 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\Doklad;
-use App\Models\PrednOsobProstr;
+use App\Models\DoklRadek;
+use App\Models\EvPodsestav;
 use App\Models\PrednOperProstr;
+use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
-use App\Models\User;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -18,32 +19,58 @@ class History extends Component
     // --- Edit Modals ---
     public ?int $editRecordId = null;
 
-    // VP (KlicDokla / SysPrimKlicDokladu) edit
+    // VP edit
     public bool $showEditVpModal = false;
 
     public string $edit_klicDokla = '';
 
     public string $vpSearch = '';
 
+    // Machine / Operation edit
     public bool $showEditMachineOpModal = false;
 
     public ?string $edit_machine_id = '';
 
     public string $edit_operation_id = '';
 
+    // Time edit
     public bool $showEditTimeModal = false;
 
-    public int $edit_hours = 0;
+    public $edit_hours = 0;
 
-    public int $edit_minutes = 0;
+    public $edit_minutes = 0;
 
-    public ?string $edit_started_at = null;
+    public $edit_started_at = '';
 
-    public bool $showOrderListInline = false;
+    public $mistriDict = [];
 
-    public string $orderListSearch = '';
+    // Řádek / Podsestava edit
+    public bool $showEditRadekPodsModal = false;
 
-    public string $orderListTarget = 'order'; // 'order' or 'vp'
+    public ?int $edit_radek_entita = null;
+
+    public ?int $edit_ev_podsestav_id = null;
+
+    public ?string $edit_pozice_radku = null;
+
+    public ?string $edit_drawing_number = null;
+
+    public ?string $edit_sysPrimKlic = null;
+
+    // Výkres edit
+    public bool $showEditDrawingModal = false;
+
+    public string $edit_drawing_only = '';
+
+    // Množství edit
+    public bool $showEditQuantityModal = false;
+
+    public $edit_quantity = 0;
+
+    // Poznámka edit
+    public bool $showEditNotesModal = false;
+
+    public string $edit_notes = '';
 
     #[On('operation-completed')]
     public function refresh(): void
@@ -75,128 +102,158 @@ class History extends Component
         $todayStart = now()->startOfDay();
         $fiveDaysAgo = now()->subDays(5)->startOfDay();
 
-        // Eager-load doklad, machine a operation. 
-        // Modely Prostredek a Polozka interně ořezávají mezery u PK, takže in-memory dictionary poběží bezchybně.
         $allCompleted = auth()->user()->productionRecords()
             ->with(['doklad.vlastniOsoba', 'machine', 'operation'])
-            ->where('status', 'completed')
+            ->where('status', 2)
             ->where('ended_at', '>=', $fiveDaysAgo)
             ->orderByDesc('ended_at')
             ->get();
 
-        $today = $allCompleted->filter(fn ($r) => $r->ended_at >= $todayStart);
+        $mistrKeys = $allCompleted->map(fn ($r) => trim($r->doklad?->VlastniOsoba ?? ''))->filter()->unique();
+        if ($mistrKeys->isNotEmpty()) {
+            $this->mistriDict = \App\Models\User::whereIn('klic_subjektu', $mistrKeys)
+                ->get()
+                ->keyBy(fn ($u) => trim($u->klic_subjektu))
+                ->all();
+        }
+
+        $today = $allCompleted->filter(fn ($r) => $r->ended_at->isToday())->values();
         $historical = $allCompleted->filter(fn ($r) => $r->ended_at < $todayStart);
-
-        // Resolve mistr (User) from doklad->vlastniOsoba->KlicSubjektu
-        $klicSubjektuList = $allCompleted
-            ->map(fn ($r) => trim($r->doklad?->vlastniOsoba?->KlicSubjektu ?? ''))
-            ->filter()->unique()->values();
-
-        $users = $klicSubjektuList->isNotEmpty()
-            ? User::whereIn('klic_subjektu', $klicSubjektuList)->get()->keyBy('klic_subjektu')
-            : collect();
 
         return view('livewire.dashboard.history', [
             'today' => $today,
             'historical' => $historical,
-            'mistrUsers' => $users,
         ]);
     }
 
-    /**
-     * Helper pro blade – spočítá info o záznamu.
-     */
-    public function getRecordInfo(ProductionRecord $record, $mistrUsers): array
+    public function getRecordInfo(ProductionRecord $record): array
     {
-        $workedH = $record->worked_minutes !== null ? intdiv($record->worked_minutes, 60) : null;
-        $workedM = $record->worked_minutes !== null ? $record->worked_minutes % 60 : null;
+        $workedH = null;
+        $workedM = null;
 
-        $klicSubjektu = trim($record->doklad?->vlastniOsoba?->KlicSubjektu ?? '');
-        $mistr = $klicSubjektu ? ($mistrUsers[$klicSubjektu] ?? null) : null;
-        $mistrColor = $mistr?->color ?? '#6b7280';
-        $mistrCislo = $mistr?->cislo_mistra ?? '??';
+        if ($record->started_at && $record->ended_at) {
+            $totalMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
+            $workedH = intdiv($totalMinutes, 60);
+            $workedM = $totalMinutes % 60;
+        }
+
+        $mistrKey = trim($record->doklad?->VlastniOsoba ?? '');
+        $mistr = $mistrKey ? ($this->mistriDict[$mistrKey] ?? null) : null;
 
         return [
             'workedH' => $workedH,
             'workedM' => $workedM,
-            'mistr' => $mistr,
-            'mistrColor' => $mistrColor,
-            'mistrCislo' => $mistrCislo,
+            'mistrColor' => $mistr?->color ?? 'gray',
+            'mistrCislo' => $mistr?->cislo_mistra ?? '?',
         ];
     }
 
+    // ==========================================
+    // Helper – find record safely
+    // ==========================================
+
+    private function findEditRecord(int $id): ProductionRecord
+    {
+        return auth()->user()->productionRecords()->findOrFail($id);
+    }
+
+    private function findEditRecordForSave(): ProductionRecord
+    {
+        return ProductionRecord::where('user_id', auth()->user()->klic_subjektu)->findOrFail($this->editRecordId);
+    }
+
+    // ==========================================
+    // VP Edit (search + select only)
+    // ==========================================
+
     public function openEditVp(int $id)
     {
-        $record = auth()->user()->productionRecords()->with('doklad')->findOrFail($id);
-        $this->editRecordId = $record->id;
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
         $this->edit_klicDokla = $record->doklad ? trim($record->doklad->KlicDokla) : '';
         $this->vpSearch = '';
         $this->resetValidation();
         $this->showEditVpModal = true;
     }
 
+    public function getVpSearchResultsProperty()
+    {
+        if (mb_strlen(trim($this->vpSearch)) < 2) {
+            return collect();
+        }
+
+        $term = mb_substr(mb_strtoupper(trim($this->vpSearch)), 0, 10);
+
+        return Doklad::dbcnt(10904)
+            ->whereHas('staDoklad', fn ($q) => $q->where('TypPohybu', 'EC_ZAKVYR')->where('Vyhodnoceni', 1))
+            ->where(fn ($q) => $q
+                ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+                ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+            )
+            ->orderByDesc('KlicDokla')
+            ->limit(8)
+            ->get();
+    }
+
+    public function selectVp(string $klicDokla)
+    {
+        $this->edit_klicDokla = $klicDokla;
+        $this->vpSearch = '';
+    }
+
+    public function clearVpSelection()
+    {
+        $this->edit_klicDokla = '';
+    }
+
     public function saveEditVp()
     {
-        $this->validate(['edit_klicDokla' => 'required|string|max:255']);
-        $record = ProductionRecord::where('user_id', auth()->id())->findOrFail($this->editRecordId);
+        if (! $this->edit_klicDokla) {
+            $this->addError('vpSearch', 'Vyberte výrobní příkaz.');
 
-        // Resolve SysPrimKlicDokladu from KlicDokla
-        $sysPrimKlic = Doklad::where('KlicDokla', $this->edit_klicDokla)->value('SysPrimKlicDokladu');
-        $record->update(['SysPrimKlicDokladu' => $sysPrimKlic ?? $this->edit_klicDokla]);
+            return;
+        }
+
+        $record = $this->findEditRecordForSave();
+
+        $doklad = Doklad::where('KlicDokla', $this->edit_klicDokla)->first();
+        $newSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu) : $this->edit_klicDokla;
+        $oldSysPrimKlic = $record->ZakVP_SysPrimKlic;
+
+        $updateData = [
+            'ZakVP_SysPrimKlic' => $newSysPrimKlic,
+            'SYSTIMEST' => now(),
+        ];
+
+        // VP se změnilo → resetovat řádek, podsestavu i výkres
+        if ($newSysPrimKlic !== $oldSysPrimKlic) {
+            $updateData['ZakVP_radek_entita'] = null;
+            $updateData['ZakVP_pozice_radku'] = null;
+            $updateData['ev_podsestav_id'] = null;
+            $updateData['drawing_number'] = null;
+        }
+
+        $record->update($updateData);
 
         $this->showEditVpModal = false;
         $this->success('VP uložen.');
     }
 
-
-
-    public function openOrderList(string $target = 'order')
-    {
-        $this->orderListTarget = $target;
-        $this->orderListSearch = '';
-        $this->showOrderListInline = true;
-    }
-
-    public function selectOrder(string $klicDokla, string $nazev)
-    {
-        $this->edit_klicDokla = $klicDokla;
-        $this->showOrderListInline = false;
-    }
-
-    public function closeOrderList()
-    {
-        $this->showOrderListInline = false;
-    }
-
-    public function getOrderListProperty()
-    {
-        $query = Doklad::dbcnt(10904)
-            ->whereHas('staDoklad', function ($q) {
-                $q->where('TypPohybu', '=', 'EC_ZAKVYR')
-                    ->where('Vyhodnoceni', '=', '1');
-            })
-            ->orderByDesc('KlicDokla');
-
-        if ($this->orderListSearch) {
-            $query->where(function ($q) {
-                $q->where('KlicDokla', 'like', '%'.$this->orderListSearch.'%');
-            });
-        }
-
-        return $query->paginate(15);
-    }
+    // ==========================================
+    // Machine / Operation Edit
+    // ==========================================
 
     public function openEditMachineOp(int $id)
     {
-        $record = auth()->user()->productionRecords()->findOrFail($id);
-        $this->editRecordId = $record->id;
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
         $this->edit_machine_id = $record->machine_id ?? '';
         $this->edit_operation_id = $record->operation_id ?? '';
         $this->resetValidation();
         $this->showEditMachineOpModal = true;
     }
 
-    public function selectMachine(string $machineKey, string $machineName)
+    public function selectMachine(string $machineKey)
     {
         $this->edit_machine_id = $machineKey;
         $operations = PrednOperProstr::forProstredek($machineKey)->get();
@@ -219,10 +276,11 @@ class History extends Component
             'edit_operation_id' => 'required|string|max:255',
         ]);
 
-        $record = ProductionRecord::where('user_id', auth()->id())->findOrFail($this->editRecordId);
+        $record = $this->findEditRecordForSave();
         $record->update([
             'machine_id' => $this->edit_machine_id,
             'operation_id' => $this->edit_operation_id,
+            'SYSTIMEST' => now(),
         ]);
 
         $this->showEditMachineOpModal = false;
@@ -246,20 +304,196 @@ class History extends Component
             });
     }
 
-    public function openEditTime(int $id)
-    {
-        $record = auth()->user()->productionRecords()->findOrFail($id);
-        $this->editRecordId = $record->id;
-        $this->edit_started_at = $record->started_at?->format('Y-m-d\TH:i');
+    // ==========================================
+    // Řádek / Podsestava Edit
+    // ==========================================
 
-        $workedMinutes = $record->worked_minutes;
-        if ($workedMinutes === null && $record->started_at && $record->ended_at) {
-            $totalSeconds = $record->ended_at->diffInSeconds($record->started_at) - ($record->total_paused_seconds ?? 0);
-            $workedMinutes = (int) round($totalSeconds / 60);
+    public function openEditRadekPodsestava(int $id)
+    {
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
+        $this->edit_sysPrimKlic = $record->ZakVP_SysPrimKlic;
+        $this->edit_radek_entita = $record->ZakVP_radek_entita ? (int) $record->ZakVP_radek_entita : null;
+        $this->edit_ev_podsestav_id = $record->ev_podsestav_id ? (int) $record->ev_podsestav_id : null;
+        $this->edit_pozice_radku = $record->ZakVP_pozice_radku;
+        $this->edit_drawing_number = $record->drawing_number;
+        $this->resetValidation();
+        $this->showEditRadekPodsModal = true;
+    }
+
+    public function getEditRadkyProperty()
+    {
+        if (! $this->edit_sysPrimKlic) {
+            return collect();
         }
 
-        $this->edit_hours = intdiv($workedMinutes ?? 0, 60);
-        $this->edit_minutes = ($workedMinutes ?? 0) % 60;
+        $doklad = Doklad::where('SysPrimKlicDokladu', $this->edit_sysPrimKlic)
+            ->with(['radky.materialPolozka', 'radky.evPodsestavy'])
+            ->first();
+
+        return $doklad ? $doklad->radky : collect();
+    }
+
+    public function getEditPodsestavyProperty()
+    {
+        if (! $this->edit_radek_entita) {
+            return collect();
+        }
+
+        return EvPodsestav::where('EntitaRadkuVP', $this->edit_radek_entita)->get();
+    }
+
+    public function editSelectRadek(int $entitaRad)
+    {
+        $this->edit_radek_entita = $entitaRad;
+        // Změna řádku → resetovat podsestavu a výkres
+        $this->edit_ev_podsestav_id = null;
+        $this->edit_drawing_number = null;
+
+        $radek = $this->editRadky->firstWhere('EntitaRad', $entitaRad);
+        $this->edit_pozice_radku = $radek ? $radek->Pozice : null;
+    }
+
+    public function editClearRadek()
+    {
+        $this->edit_radek_entita = null;
+        $this->edit_ev_podsestav_id = null;
+        $this->edit_pozice_radku = null;
+        $this->edit_drawing_number = null;
+    }
+
+    public function editSelectPodsestava(int $id)
+    {
+        $this->edit_ev_podsestav_id = $id;
+        $evPods = EvPodsestav::find($id);
+        if ($evPods) {
+            // Podsestava se změnila → aktualizovat výkres z podsestavy
+            $this->edit_drawing_number = trim($evPods->CisloVykresu ?? '');
+        }
+    }
+
+    public function editClearPodsestava()
+    {
+        $this->edit_ev_podsestav_id = null;
+        $this->edit_drawing_number = null;
+    }
+
+    public function saveEditRadekPodsestava()
+    {
+        $record = $this->findEditRecordForSave();
+        $record->update([
+            'ZakVP_radek_entita' => $this->edit_radek_entita,
+            'ZakVP_pozice_radku' => $this->edit_pozice_radku,
+            'ev_podsestav_id' => $this->edit_ev_podsestav_id,
+            'drawing_number' => $this->edit_drawing_number,
+            'SYSTIMEST' => now(),
+        ]);
+
+        $this->showEditRadekPodsModal = false;
+        $this->success('Řádek a podsestava uloženy.');
+    }
+
+    // ==========================================
+    // Výkres Edit
+    // ==========================================
+
+    public function openEditDrawing(int $id)
+    {
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
+        $this->edit_drawing_only = $record->drawing_number ?? '';
+        $this->resetValidation();
+        $this->showEditDrawingModal = true;
+    }
+
+    public function saveEditDrawing()
+    {
+        $record = $this->findEditRecordForSave();
+        $record->update([
+            'drawing_number' => $this->edit_drawing_only ?: null,
+            'SYSTIMEST' => now(),
+        ]);
+
+        $this->showEditDrawingModal = false;
+        $this->success('Výkres uložen.');
+    }
+
+    // ==========================================
+    // Množství Edit
+    // ==========================================
+
+    public function openEditQuantity(int $id)
+    {
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
+        $this->edit_quantity = (int) ($record->processed_quantity ?? 0);
+        $this->resetValidation();
+        $this->showEditQuantityModal = true;
+    }
+
+    public function adjustQuantity(int $delta)
+    {
+        $this->edit_quantity = max(0, $this->edit_quantity + $delta);
+    }
+
+    public function saveEditQuantity()
+    {
+        $this->validate([
+            'edit_quantity' => 'required|integer|min:0',
+        ]);
+
+        $record = $this->findEditRecordForSave();
+        $record->update([
+            'processed_quantity' => $this->edit_quantity,
+            'SYSTIMEST' => now(),
+        ]);
+
+        $this->showEditQuantityModal = false;
+        $this->success('Množství uloženo.');
+    }
+
+    // ==========================================
+    // Poznámka Edit
+    // ==========================================
+
+    public function openEditNotes(int $id)
+    {
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
+        $this->edit_notes = $record->notes ?? '';
+        $this->resetValidation();
+        $this->showEditNotesModal = true;
+    }
+
+    public function saveEditNotes()
+    {
+        $record = $this->findEditRecordForSave();
+        $record->update([
+            'notes' => $this->edit_notes ?: null,
+            'SYSTIMEST' => now(),
+        ]);
+
+        $this->showEditNotesModal = false;
+        $this->success('Poznámka uložena.');
+    }
+
+    // ==========================================
+    // Time Edit
+    // ==========================================
+
+    public function openEditTime(int $id)
+    {
+        $record = $this->findEditRecord($id);
+        $this->editRecordId = (int) $record->ID;
+        $this->edit_started_at = $record->started_at?->format('Y-m-d\TH:i');
+
+        $workedMinutes = 0;
+        if ($record->started_at && $record->ended_at) {
+            $workedMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
+        }
+
+        $this->edit_hours = intdiv($workedMinutes, 60);
+        $this->edit_minutes = $workedMinutes % 60;
 
         $this->resetValidation();
         $this->showEditTimeModal = true;
@@ -289,19 +523,19 @@ class History extends Component
 
     public function saveEditTime()
     {
-        $record = ProductionRecord::where('user_id', auth()->id())->findOrFail($this->editRecordId);
+        $record = $this->findEditRecordForSave();
 
         $workedMinutes = ($this->edit_hours * 60) + $this->edit_minutes;
 
         $updateData = [
-            'worked_minutes' => $workedMinutes,
             'started_at' => $this->edit_started_at,
+            'SYSTIMEST' => now(),
         ];
 
         if ($this->edit_started_at) {
             $start = \Carbon\Carbon::parse($this->edit_started_at);
-            $totalSeconds = ($workedMinutes * 60) + ($record->total_paused_seconds ?? 0);
-            $updateData['ended_at'] = $start->addSeconds($totalSeconds);
+            $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
+            $updateData['ended_at'] = $start->copy()->addMinutes($totalMinutes);
         }
 
         $record->update($updateData);
@@ -310,4 +544,3 @@ class History extends Component
         $this->success('Čas uložen.');
     }
 }
-

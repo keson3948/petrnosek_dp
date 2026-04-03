@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class Doklad extends Model
 {
+    use HasFirebirdAttributes;
+
+    protected static array $trimAttributes = ['KlicDokla', 'SysPrimKlicDokladu'];
+
     protected $connection = 'firebird';
 
     protected $table = 'ecd_Dokl';
@@ -55,14 +60,4 @@ class Doklad extends Model
         return $query->where('DocYear', '>=', $year);
     }
 
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
-    }
 }

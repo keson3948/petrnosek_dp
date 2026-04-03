@@ -29,16 +29,17 @@ class ActiveRecord extends Component
     public function loadActiveRecord(): void
     {
         $this->activeRecord = auth()->user()->productionRecords()
-            ->whereIn('status', ['in_progress', 'paused'])
+            ->whereIn('status', [0, 1])
             ->first();
     }
 
     public function pauseOperation(): void
     {
-        if ($this->activeRecord?->status === 'in_progress') {
+        if ($this->activeRecord?->status === 0) {
             $this->activeRecord->update([
-                'status' => 'paused',
+                'status' => 1,
                 'last_paused_at' => now(),
+                'SYSTIMEST' => now(),
             ]);
             $this->loadActiveRecord();
             $this->warning('Záznam pozastaven.');
@@ -47,13 +48,15 @@ class ActiveRecord extends Component
 
     public function resumeOperation(): void
     {
-        if ($this->activeRecord?->status === 'paused') {
-            $pauseDuration = now()->diffInSeconds($this->activeRecord->last_paused_at);
+        if ($this->activeRecord?->status === 1) {
+            $lastPausedAt = \Carbon\Carbon::parse($this->activeRecord->last_paused_at);
+            $pauseDuration = (int) $lastPausedAt->diffInMinutes(now());
 
             $this->activeRecord->update([
-                'status' => 'in_progress',
-                'total_paused_seconds' => $this->activeRecord->total_paused_seconds + $pauseDuration,
+                'status' => 0,
+                'total_paused_min' => $this->activeRecord->total_paused_min + $pauseDuration,
                 'last_paused_at' => null,
+                'SYSTIMEST' => now(),
             ]);
             $this->loadActiveRecord();
             $this->info('Práce obnovena.');
@@ -79,22 +82,21 @@ class ActiveRecord extends Component
             return;
         }
 
-        if ($this->activeRecord->status === 'paused') {
-            $pauseDuration = now()->diffInSeconds($this->activeRecord->last_paused_at);
-            $this->activeRecord->total_paused_seconds += $pauseDuration;
+        if ($this->activeRecord->status === 1) {
+            $lastPausedAt = \Carbon\Carbon::parse($this->activeRecord->last_paused_at);
+            $pauseDuration = (int) $lastPausedAt->diffInMinutes(now());
+            $this->activeRecord->total_paused_min += $pauseDuration;
         }
 
         $endedAt = now();
-        $totalSeconds = $endedAt->diffInSeconds($this->activeRecord->started_at) - $this->activeRecord->total_paused_seconds;
-        $workedMinutes = (int) round($totalSeconds / 60);
 
         $this->activeRecord->update([
-            'status' => 'completed',
+            'status' => 2,
             'ended_at' => $endedAt,
             'processed_quantity' => $this->processed_quantity,
             'notes' => $this->notes,
             'last_paused_at' => null,
-            'worked_minutes' => $workedMinutes,
+            'SYSTIMEST' => now(),
         ]);
 
         $this->activeRecord = null;
@@ -108,7 +110,7 @@ class ActiveRecord extends Component
         return view('livewire.dashboard.active-record', [
             'klicDokla' => $this->activeRecord?->doklad
                 ? trim($this->activeRecord->doklad->KlicDokla)
-                : $this->activeRecord?->SysPrimKlicDokladu,
+                : $this->activeRecord?->ZakVP_SysPrimKlic,
         ]);
     }
 }

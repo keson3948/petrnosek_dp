@@ -11,6 +11,16 @@
                 <span>Výrobní příkaz: {{ $staDokl->doklad->KlicDokla ?? 'N/A' }}</span>
             </div>
         </x-slot:title>
+        <x-slot:actions>
+            @can('can print')
+                <x-mary-button
+                    icon="o-qr-code"
+                    class="btn-square"
+                    wire:click="openPrintModal('doklad')"
+                    tooltip-bottom="Tisk QR kódu VP"
+                />
+            @endcan
+        </x-slot:actions>
     </x-mary-header>
 
     <x-mary-card shadow class="mb-8">
@@ -91,7 +101,19 @@
 
     <x-mary-card title="Položky dokladu" shadow>
         @forelse($radky as $index => $radek)
-            <x-mary-collapse class="mb-3 border border-base-200 bg-white rounded-lg">
+            <div class="mb-3 flex items-start gap-2">
+            @can('can print')
+                <x-mary-button
+                    type="button"
+                    wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
+                    class="btn-sm btn-square"
+                    title="Tisk QR řádku"
+                    tooltip="Tisk QR řádku"
+                    icon="o-qr-code"
+                >
+                </x-mary-button>
+            @endcan
+            <x-mary-collapse class="flex-1 border border-base-200 bg-white rounded-lg">
                 <x-slot:heading class="bg-primary/5">
                     @php
                         $datum = $radek->TermiDoda ?? $radek->TerminDatum ?? null;
@@ -108,7 +130,6 @@
                                         @endif
                                     </div>
                                 </div>
-
                             </div>
                             <div>
                                 <div class="text-[10px] text-gray-400 uppercase font-bold">Položka</div>
@@ -250,9 +271,9 @@
                                             <x-mary-button
                                                 icon="o-qr-code"
                                                 class="btn-sm btn-ghost"
-                                                wire:click="printLabel({{ $ev->ID }})"
-                                                spinner="printLabel({{ $ev->ID }})"
-                                                tooltip="Tisk QR štítku"
+                                                wire:click="printPodsestava({{ $ev->ID }})"
+                                                spinner="printPodsestava({{ $ev->ID }})"
+                                                tooltip="Tisk QR štítku podsestavy"
                                             />
                                         @endcan
                                         <x-mary-button
@@ -309,6 +330,7 @@
                     </div>
                 </x-slot:content>
             </x-mary-collapse>
+            </div>
         @empty
             <div class="text-center py-10 text-gray-500">
                 <x-mary-icon name="o-inbox" class="w-12 h-12 mx-auto text-gray-300" />
@@ -316,5 +338,41 @@
             </div>
         @endforelse
     </x-mary-card>
+
+    {{-- Print modal --}}
+    <x-mary-modal wire:model="showPrintModal" title="Tisk QR štítku" separator>
+        <div class="space-y-4">
+            <div class="text-sm text-gray-500">
+                @if($printType === 'doklad')
+                    Tisk QR kódu celého výrobního příkazu <span class="font-bold">{{ $staDokl->doklad->KlicDokla }}</span>
+                @elseif($printType === 'radek')
+                    Tisk QR kódu řádku VP
+                @elseif($printType === 'podsestava')
+                    Tisk QR kódu podsestavy
+                @endif
+            </div>
+
+            <x-mary-input
+                label="Počet kusů"
+                type="number"
+                wire:model="printCopies"
+                min="1"
+                max="100"
+                class="input-lg"
+                autofocus
+            />
+        </div>
+
+        <x-slot:actions>
+            <x-mary-button label="Zrušit" @click="$wire.showPrintModal = false" />
+            <x-mary-button
+                label="Tisknout"
+                icon="o-printer"
+                class="btn-primary"
+                wire:click="confirmPrint"
+                spinner="confirmPrint"
+            />
+        </x-slot:actions>
+    </x-mary-modal>
 
 </div>

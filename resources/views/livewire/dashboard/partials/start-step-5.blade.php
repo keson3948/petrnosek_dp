@@ -1,6 +1,6 @@
 <div class="flex flex-col h-full">
     <div class="mb-6 shrink-0">
-        <label class="label"><span class="label-text font-bold text-base text-gray-700">Váš Stroj</span></label>
+        <label class="label"><span class="label-text font-bold text-base text-gray-700 pb-2">Stroj</span></label>
         @if($this->userMachines->count() > 0)
             <div class="space-y-2">
                 @foreach($this->userMachines as $machine)
@@ -13,12 +13,12 @@
                 @endforeach
             </div>
         @else
-            <x-mary-input wire:model="machine_id" placeholder="Zadejte stroj ručně" class="input-lg" />
+            <x-mary-input wire:model.live.debounce.300ms="machine_id" placeholder="Zadejte stroj" class="input-lg" />
         @endif
     </div>
 
     <div class="flex-1 flex flex-col overflow-hidden">
-        <label class="label shrink-0"><span class="label-text font-bold text-base text-gray-700">Operace (úkon) *</span></label>
+        <label class="label shrink-0"><span class="label-text font-bold text-base text-gray-700 pb-2">Operace</span></label>
         @if($machine_id && $this->startMachineOperations->count() > 0)
             <div class="space-y-2 overflow-y-auto pr-2">
                 @foreach($this->startMachineOperations as $op)
@@ -30,11 +30,8 @@
                     </button>
                 @endforeach
             </div>
-        @elseif($machine_id)
-            <x-mary-input wire:model="operation_id" placeholder="Zadejte operaci ručně" class="input-lg" />
         @else
-            <div class="text-xs text-gray-500 py-2">Pro zobrazení dostupných operací nejprve vyberte (nebo zadejte) stroj.</div>
-            <x-mary-input wire:model="operation_id" placeholder="Nebo zadejte ručně..." class="input-lg" disabled="{{ empty($machine_id) ? 'true' : 'false' }}" />
+            <x-mary-input wire:model="operation_id" placeholder="Zadejte operaci" class="input-lg" />
         @endif
     </div>
 </div>

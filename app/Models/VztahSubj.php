@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class VztahSubj extends Model
 {
+    use HasFirebirdAttributes;
+
     protected $connection = 'firebird';
     protected $table = 'eca_VztahSubj';
 
@@ -14,17 +17,6 @@ class VztahSubj extends Model
     protected $keyType = 'int';
     public $timestamps = false;
     protected $guarded = [];
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
-    }
 
     public function employee()
     {

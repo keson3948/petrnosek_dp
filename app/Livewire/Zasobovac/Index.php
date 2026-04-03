@@ -72,16 +72,16 @@ class Index extends Component
     protected function loadStaDoklady(): Collection
     {
         return StaDokl::with([
-                'doklad' => fn ($q) => $q->select([
-                    'SysPrimKlicDokladu', 'KlicDokla', 'MPSProjekt',
-                    'VlastniOsoba', 'Zakazka', 'TerminDatum',
-                ]),
-                'doklad.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
-                'doklad.rodicZakazka' => fn ($q) => $q->select([
-                    'SysPrimKlicDokladu', 'KlicDokla', 'SpecifiSy', 'VlastniOsoba',
-                ]),
-                'doklad.rodicZakazka.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
-            ])
+            'doklad' => fn ($q) => $q->select([
+                'SysPrimKlicDokladu', 'KlicDokla', 'MPSProjekt',
+                'VlastniOsoba', 'Zakazka', 'TerminDatum',
+            ]),
+            'doklad.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
+            'doklad.rodicZakazka' => fn ($q) => $q->select([
+                'SysPrimKlicDokladu', 'KlicDokla', 'SpecifiSy', 'VlastniOsoba',
+            ]),
+            'doklad.rodicZakazka.vlastniOsoba' => fn ($q) => $q->select(['KlicSubjektu', 'Prijmeni']),
+        ])
             ->typPohybu('EC_ZAKVYR')
             ->vyhodnoceni(1)
             ->whereHas('doklad', function (Builder $q) {

@@ -7,6 +7,7 @@ use App\Models\EvPodsestav;
 use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
+use App\Models\Prostredek;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -20,8 +21,12 @@ class StartDrawer extends Component
 
     public int $startStep = 1;
 
+    public int $minStep = 1;
+
     // Selections
     public ?string $selectedDokladKey = null;
+
+    public ?string $selectedSysPrimKlic = null;
 
     public ?int $selectedDokladRadekEntita = null;
 
@@ -32,6 +37,10 @@ class StartDrawer extends Component
 
     public ?string $machine_id = '';
 
+    public ?string $pracoviste_id = null;
+
+    public ?string $pozice_radku = null;
+
     public string $operation_id = '';
 
     // Filters
@@ -40,8 +49,6 @@ class StartDrawer extends Component
     public string $radekFilter = '';
 
     public string $podsFilter = '';
-
-
 
     // QR params (passed from parent)
     public ?string $qrStart = null;
@@ -52,6 +59,11 @@ class StartDrawer extends Component
     {
         $this->qrStart = $qrStart;
         $this->qrD = $qrD;
+
+        // Reset stavu před QR zpracováním, aby neblikal předchozí krok
+        $this->showStartDrawer = false;
+        $this->startStep = 1;
+        $this->minStep = 1;
 
         if ($this->qrStart) {
             $this->handleQrPodsestava((int) $this->qrStart);
@@ -83,13 +95,20 @@ class StartDrawer extends Component
         $this->evPodsestavId = $evPods->ID;
         $this->drawing_number = trim($evPods->CisloVykresu ?? '');
         $this->selectedDokladRadekEntita = $evPods->EntitaRadkuVP;
+        if ($this->selectedDokladRadekEntita) {
+            $radek = \App\Models\DoklRadek::where('EntitaRad', $this->selectedDokladRadekEntita)->first();
+            $this->pozice_radku = $radek ? $radek->Pozice : null;
+        }
 
         $vp = trim($evPods->VyrobniPrikaz ?? '');
         if ($vp) {
-            $this->selectedDokladKey = $vp;
+            $doklad = Doklad::where('SysPrimKlicDokladu', $vp)->first();
+            $this->selectedDokladKey = $doklad ? trim($doklad->KlicDokla) : null;
+            $this->selectedSysPrimKlic = $vp;
         }
 
         $this->startStep = 5;
+        $this->minStep = 5;
         $this->showStartDrawer = true;
 
         $this->autoSelectMachineAndOperation();
@@ -117,13 +136,19 @@ class StartDrawer extends Component
         }
 
         $this->selectedDokladKey = trim($doklad->KlicDokla);
+        $this->selectedSysPrimKlic = $sysPrimKlic;
 
         if ($radekEntita) {
             $this->selectedDokladRadekEntita = $radekEntita;
+            $radek = \App\Models\DoklRadek::where('EntitaRad', $this->selectedDokladRadekEntita)->first();
+            $this->pozice_radku = $radek ? $radek->Pozice : null;
+
             $podsCount = EvPodsestav::where('EntitaRadkuVP', $radekEntita)->count();
             $this->startStep = $podsCount > 0 ? 3 : 4;
+            $this->minStep = $this->startStep;
         } else {
             $this->startStep = 2;
+            $this->minStep = 2;
         }
 
         $this->showStartDrawer = true;
@@ -139,10 +164,12 @@ class StartDrawer extends Component
         $this->resetValidation();
         $this->reset([
             'operation_id', 'machine_id', 'drawing_number',
-            'evPodsestavId', 'podSearch', 'selectedDokladKey',
+            'evPodsestavId', 'podSearch', 'selectedDokladKey', 'selectedSysPrimKlic',
             'selectedDokladRadekEntita', 'podsFilter', 'radekFilter',
+            'pracoviste_id', 'pozice_radku',
         ]);
         $this->startStep = 1;
+        $this->minStep = 1;
         $this->showStartDrawer = true;
     }
 
@@ -155,11 +182,11 @@ class StartDrawer extends Component
         $this->validate([
             'operation_id' => 'required|string|max:255',
             'machine_id' => 'nullable|string|max:255',
-            'drawing_number' => $this->evPodsestavId ? 'nullable|string|max:255' : 'required|string|max:255',
+            'drawing_number' => 'nullable|string|max:255',
         ]);
 
         $hasActive = auth()->user()->productionRecords()
-            ->whereIn('status', ['in_progress', 'paused'])
+            ->whereIn('status', [0, 1])
             ->exists();
 
         if ($hasActive) {
@@ -168,27 +195,32 @@ class StartDrawer extends Component
             return;
         }
 
-        $sysPrimKlic = null;
-        if ($this->selectedDokladKey) {
-            $sysPrimKlic = Doklad::where('SysPrimKlicDokladu', $this->selectedDokladKey)
-                ->value('SysPrimKlicDokladu');
-        }
+        $sysPrimKlic = $this->selectedSysPrimKlic;
 
-        $drawingNumber = $this->drawing_number;
-        if ($this->evPodsestavId) {
-            $drawingNumber = trim(EvPodsestav::find($this->evPodsestavId)?->CisloVykresu ?? '');
+        $nextId = ProductionRecord::nextId();
+
+        // Pro jistotu fallback, pokud nebyl naplněn prostredek
+        $pracovisteId = $this->pracoviste_id;
+        if (! $pracovisteId && $this->machine_id) {
+            $prostredek = Prostredek::where('KlicProstredku', $this->machine_id)->first();
+            $pracovisteId = $prostredek ? $prostredek->Pracoviste : null;
         }
 
         ProductionRecord::create([
-            'user_id' => auth()->id(),
-            'SysPrimKlicDokladu' => $sysPrimKlic,
-            'operation_id' => $this->operation_id,
+            'ID' => $nextId,
             'machine_id' => $this->machine_id,
-            'drawing_number' => $drawingNumber,
-            'ev_podsestav_id' => $this->evPodsestavId,
-            'doklad_radek_entita' => $this->selectedDokladRadekEntita,
-            'status' => 'in_progress',
+            'user_id' => auth()->user()->klic_subjektu,
             'started_at' => now(),
+            'pracoviste_id' => $pracovisteId,
+            'operation_id' => $this->operation_id,
+            'ZakVP_SysPrimKlic' => $sysPrimKlic,
+            'drawing_number' => $this->drawing_number,
+            'ev_podsestav_id' => $this->evPodsestavId,
+            'ZakVP_radek_entita' => $this->selectedDokladRadekEntita,
+            'ZakVP_pozice_radku' => $this->pozice_radku,
+            'status' => 0,
+            'CTSMP' => now(),
+            'SYSTIMEST' => now(),
         ]);
 
         $this->showStartDrawer = false;
@@ -213,6 +245,10 @@ class StartDrawer extends Component
 
     public function prevStartStep(): void
     {
+        if ($this->startStep <= $this->minStep) {
+            return;
+        }
+
         match ($this->startStep) {
             2 => $this->startStep = 1,
             3 => $this->startStep = 2,
@@ -220,6 +256,10 @@ class StartDrawer extends Component
             5 => $this->goBackFromStep5(),
             default => null,
         };
+
+        if ($this->startStep < $this->minStep) {
+            $this->startStep = $this->minStep;
+        }
     }
 
     private function advanceFromStep1(): void
@@ -235,7 +275,7 @@ class StartDrawer extends Component
     private function advanceFromStep2(): void
     {
         if (! $this->selectedDokladRadekEntita) {
-            $this->addError('radekFilter', 'Vyberte řádek VP.');
+            $this->addError('radekFilter', 'Vyberte řádek VP nebo použijte tlačítko pro pokračování bez výběru.');
 
             return;
         }
@@ -251,25 +291,30 @@ class StartDrawer extends Component
 
     private function advanceFromStep4(): void
     {
-        if (! $this->drawing_number) {
-            $this->addError('drawing_number', 'Zadejte číslo výkresu.');
-
-            return;
-        }
         $this->startStep = 5;
-
         $this->autoSelectMachineAndOperation();
     }
 
     private function goBackFromStep4(): void
     {
-        $podsCount = $this->selectedRadekPodsestavy->count();
-        $this->startStep = $podsCount > 0 ? 3 : 2;
+        if ($this->selectedDokladRadekEntita) {
+            $podsCount = $this->selectedRadekPodsestavy->count();
+            $this->startStep = $podsCount > 0 ? 3 : 2;
+        } else {
+            $this->startStep = 2;
+        }
     }
 
     private function goBackFromStep5(): void
     {
-        $this->startStep = $this->evPodsestavId ? 3 : 4;
+        if ($this->evPodsestavId) {
+            $this->startStep = 3;
+        } elseif ($this->selectedDokladRadekEntita) {
+            $podsCount = $this->selectedRadekPodsestavy->count();
+            $this->startStep = $podsCount > 0 ? 3 : 4;
+        } else {
+            $this->startStep = 4;
+        }
     }
 
     private function autoSelectMachineAndOperation(): void
@@ -277,6 +322,7 @@ class StartDrawer extends Component
         $firstMachine = $this->userMachines->first();
         if ($firstMachine) {
             $this->machine_id = $firstMachine->machine_key;
+            $this->pracoviste_id = $firstMachine->prostredek ? $firstMachine->prostredek->Pracoviste : null;
 
             $firstOperation = $this->startMachineOperations->first();
             if ($firstOperation) {
@@ -291,7 +337,9 @@ class StartDrawer extends Component
 
     public function selectDoklad(string $klicDokla): void
     {
+        $doklad = Doklad::where('KlicDokla', $klicDokla)->first();
         $this->selectedDokladKey = $klicDokla;
+        $this->selectedSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu ?? '') : null;
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
         $this->drawing_number = '';
@@ -303,6 +351,7 @@ class StartDrawer extends Component
     public function clearDoklad(): void
     {
         $this->selectedDokladKey = null;
+        $this->selectedSysPrimKlic = null;
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
         $this->drawing_number = '';
@@ -314,6 +363,9 @@ class StartDrawer extends Component
         $this->evPodsestavId = null;
         $this->drawing_number = '';
 
+        $radek = $this->selectedDokladRadky->firstWhere('EntitaRad', $entitaRad);
+        $this->pozice_radku = $radek ? $radek->Pozice : null;
+
         $this->nextStartStep();
     }
 
@@ -322,6 +374,7 @@ class StartDrawer extends Component
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
         $this->drawing_number = '';
+        $this->pozice_radku = null;
     }
 
     public function selectPodsestava(int $id): void
@@ -333,6 +386,7 @@ class StartDrawer extends Component
         }
 
         $this->startStep = 5;
+        $this->autoSelectMachineAndOperation();
     }
 
     public function clearPodsestava(): void
@@ -341,15 +395,39 @@ class StartDrawer extends Component
         $this->drawing_number = '';
     }
 
+    public function skipRadek(): void
+    {
+        $this->selectedDokladRadekEntita = null;
+        $this->evPodsestavId = null;
+        $this->drawing_number = '';
+        $this->startStep = 4;
+    }
+
     public function skipPodsestava(): void
     {
         $this->evPodsestavId = null;
+        $this->drawing_number = '';
         $this->startStep = 4;
+    }
+
+    public function skipDrawingNumber(): void
+    {
+        $this->drawing_number = '';
+        $this->startStep = 5;
+        $this->autoSelectMachineAndOperation();
     }
 
     public function startSelectMachine(string $machineKey): void
     {
         $this->machine_id = $machineKey;
+        $m = $this->userMachines->firstWhere('machine_key', $machineKey);
+        if ($m) {
+            $this->pracoviste_id = $m->prostredek ? $m->prostredek->Pracoviste : null;
+        } else {
+            $prostredek = Prostredek::where('KlicProstredku', $machineKey)->first();
+            $this->pracoviste_id = $prostredek ? $prostredek->Pracoviste : null;
+        }
+
         $ops = PrednOperProstr::forProstredek($machineKey)->get();
         $this->operation_id = $ops->count() >= 1 ? trim($ops->first()->Operace ?? '') : '';
     }
@@ -362,6 +440,12 @@ class StartDrawer extends Component
     // ==========================================
     // Computed Properties
     // ==========================================
+
+    #[Computed]
+    public function selectedDoklad(): ?Doklad
+    {
+        return $this->selectedDokladKey ? Doklad::find($this->selectedDokladKey) : null;
+    }
 
     #[Computed]
     public function evPodsestav(): ?EvPodsestav

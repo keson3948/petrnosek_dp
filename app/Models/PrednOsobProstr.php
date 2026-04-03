@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use App\Models\Traits\HasFirebirdGenerator;
 use Illuminate\Database\Eloquent\Model;
 
 class PrednOsobProstr extends Model
 {
-    use HasFirebirdGenerator;
+    use HasFirebirdAttributes, HasFirebirdGenerator;
 
     protected static string $generator = 'apc_IdOsobyKProstredkum';
 
@@ -19,17 +20,6 @@ class PrednOsobProstr extends Model
     protected $keyType = 'int';
     public $timestamps = false;
     protected $guarded = [];
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
-    }
 
     public function prostredek()
     {

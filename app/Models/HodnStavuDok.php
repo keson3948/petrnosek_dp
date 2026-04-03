@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFirebirdAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class HodnStavuDok extends Model
 {
+    use HasFirebirdAttributes;
+
     protected $connection = 'firebird';
     protected $table = 'wf_HodnStavuDok';
     protected $primaryKey = 'ID';
@@ -13,15 +16,4 @@ class HodnStavuDok extends Model
     protected $keyType = 'string';
     public $timestamps = false;
     protected $guarded = [];
-
-    public function getAttribute($key)
-    {
-        $value = parent::getAttribute($key);
-
-        if (is_string($value) && !mb_check_encoding($value, 'UTF-8')) {
-            return iconv('WINDOWS-1250', 'UTF-8//IGNORE', $value);
-        }
-
-        return $value;
-    }
 }

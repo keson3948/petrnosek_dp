@@ -3,7 +3,7 @@
         <x-mary-card title="Dnešní směna" class="bg-transparent border-0 shadow-none !p-0">
             @forelse($today as $record)
                 @php
-                    $info = $this->getRecordInfo($record, $mistrUsers);
+                    $info = $this->getRecordInfo($record);
                     $workedH = $info['workedH'];
                     $workedM = $info['workedM'];
                     $mistrColor = $info['mistrColor'];
@@ -61,14 +61,14 @@
                         </div>
                     </x-slot:heading>
                     <x-slot:content>
-                        <div class="p-4 border-t bg-base-50">
+                        <div class="p-4 bg-base-50">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                                     <div>
                                         <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
                                         <div class="font-semibold text-lg">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
                                     </div>
-                                    <button wire:click="openEditVp({{ $record->id }})" class="btn btn-ghost btn-sm btn-square" title="Upravit VP">
+                                    <button wire:click="openEditVp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit VP">
                                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                     </button>
                                 </div>
@@ -78,7 +78,37 @@
                                         <div class="text-xs text-gray-400 uppercase tracking-wide">Stroj / Operace</div>
                                         <div class="font-semibold">{{ trim($record->machine?->NazevUplny ?? $record->machine_id) ?: 'Nezadáno' }} <span class="text-gray-400 mx-1">/</span> {{ trim($record->operation?->Nazev1 ?? $record->operation_id) }}</div>
                                     </div>
-                                    <button wire:click="openEditMachineOp({{ $record->id }})" class="btn btn-ghost btn-sm btn-square" title="Upravit stroj a operaci">
+                                    <button wire:click="openEditMachineOp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit stroj a operaci">
+                                        <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava</div>
+                                        <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : 'Nezadáno' }} <span class="text-gray-400 mx-1">/</span> {{ $record->drawing_number ?: 'Nezadáno' }}</div>
+                                    </div>
+                                    <button wire:click="openEditRadekPodsestava({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit řádek a podsestavu">
+                                        <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase tracking-wide">Výkres</div>
+                                        <div class="font-semibold">{{ $record->drawing_number ?: 'Nezadáno' }}</div>
+                                    </div>
+                                    <button wire:click="openEditDrawing({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit výkres">
+                                        <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                    <div>
+                                        <div class="text-xs text-gray-400 uppercase tracking-wide">Množství</div>
+                                        <div class="font-semibold text-lg">{{ $record->processed_quantity }} ks</div>
+                                    </div>
+                                    <button wire:click="openEditQuantity({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit množství">
                                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                     </button>
                                 </div>
@@ -100,22 +130,21 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <button wire:click="openEditTime({{ $record->id }})" class="btn btn-ghost btn-sm btn-square" title="Upravit čas">
+                                    <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit čas">
+                                        <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200 md:col-span-2">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-xs text-gray-400 uppercase tracking-wide">Poznámka</div>
+                                        <div class="font-semibold truncate">{{ $record->notes ?: 'Nezadáno' }}</div>
+                                    </div>
+                                    <button wire:click="openEditNotes({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square shrink-0" title="Upravit poznámku">
                                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                     </button>
                                 </div>
                             </div>
-
-                            <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div><strong>Operátor:</strong> {{ auth()->user()->name }}</div>
-                                <div><strong>Množství:</strong> {{ $record->processed_quantity }} ks</div>
-                            </div>
-
-                            @if($record->notes)
-                                <div class="mt-2">
-                                    <strong>Poznámka:</strong> <span class="text-gray-600">{{ $record->notes }}</span>
-                                </div>
-                            @endif
                         </div>
                     </x-slot:content>
                 </x-mary-collapse>
@@ -130,7 +159,7 @@
             <x-mary-card title="Historie (Posledních 5 dní)" class="bg-transparent border-0 shadow-none !p-0 mt-6">
                 @foreach($historical as $record)
                     @php
-                        $info = $this->getRecordInfo($record, $mistrUsers);
+                        $info = $this->getRecordInfo($record);
                         $workedH = $info['workedH'];
                         $workedM = $info['workedM'];
                         $mistrColor = $info['mistrColor'];
@@ -194,7 +223,7 @@
                                             <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
                                             <div class="font-semibold">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
                                         </div>
-                                        <button wire:click="openEditVp({{ $record->id }})" class="btn btn-ghost btn-sm btn-square">
+                                        <button wire:click="openEditVp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                         </button>
                                     </div>
@@ -204,7 +233,37 @@
                                             <div class="text-xs text-gray-400 uppercase tracking-wide">Stroj / Operace</div>
                                             <div class="font-semibold">{{ trim($record->machine?->NazevUplny ?? $record->machine_id) ?: '—' }} / {{ trim($record->operation?->Nazev1 ?? $record->operation_id) }}</div>
                                         </div>
-                                        <button wire:click="openEditMachineOp({{ $record->id }})" class="btn btn-ghost btn-sm btn-square">
+                                        <button wire:click="openEditMachineOp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
+                                            <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                        </button>
+                                    </div>
+
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                        <div>
+                                            <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava</div>
+                                            <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : '—' }} <span class="text-gray-400 mx-1">/</span> {{ $record->drawing_number ?: '—' }}</div>
+                                        </div>
+                                        <button wire:click="openEditRadekPodsestava({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
+                                            <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                        </button>
+                                    </div>
+
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                        <div>
+                                            <div class="text-xs text-gray-400 uppercase tracking-wide">Výkres</div>
+                                            <div class="font-semibold">{{ $record->drawing_number ?: '—' }}</div>
+                                        </div>
+                                        <button wire:click="openEditDrawing({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
+                                            <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                        </button>
+                                    </div>
+
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
+                                        <div>
+                                            <div class="text-xs text-gray-400 uppercase tracking-wide">Množství</div>
+                                            <div class="font-semibold text-lg">{{ $record->processed_quantity }} ks</div>
+                                        </div>
+                                        <button wire:click="openEditQuantity({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                         </button>
                                     </div>
@@ -223,23 +282,22 @@
                                                 {{ $record->started_at->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
                                             </div>
                                         </div>
-                                        <button wire:click="openEditTime({{ $record->id }})" class="btn btn-ghost btn-sm btn-square">
+                                        <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
+                                            <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                                        </button>
+                                    </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200 md:col-span-2">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-xs text-gray-400 uppercase tracking-wide">Poznámka</div>
+                                            <div class="font-semibold truncate">{{ $record->notes ?: '—' }}</div>
+                                        </div>
+                                        <button wire:click="openEditNotes({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square shrink-0">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                         </button>
                                     </div>
                                 </div>
-
-                                <div class="mt-3">
-                                    <strong>Operátor:</strong> {{ auth()->user()->name }}
-                                    <span class="mx-2">|</span>
-                                    <strong>Množství:</strong> {{ $record->processed_quantity }} ks
-                                </div>
-
-                                @if($record->notes)
-                                    <div class="mt-2">
-                                        <strong>Poznámka:</strong> <span class="text-gray-600">{{ $record->notes }}</span>
-                                    </div>
-                                @endif
                             </div>
                         </x-slot:content>
                     </x-mary-collapse>
