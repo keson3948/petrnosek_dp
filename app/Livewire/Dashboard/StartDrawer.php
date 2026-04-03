@@ -95,16 +95,18 @@ class StartDrawer extends Component
         $this->evPodsestavId = $evPods->ID;
         $this->drawing_number = trim($evPods->CisloVykresu ?? '');
         $this->selectedDokladRadekEntita = $evPods->EntitaRadkuVP;
-        if ($this->selectedDokladRadekEntita) {
-            $radek = \App\Models\DoklRadek::where('EntitaRad', $this->selectedDokladRadekEntita)->first();
-            $this->pozice_radku = $radek ? $radek->Pozice : null;
-        }
 
         $vp = trim($evPods->VyrobniPrikaz ?? '');
         if ($vp) {
-            $doklad = Doklad::where('SysPrimKlicDokladu', $vp)->first();
+            $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
+                ->where('SysPrimKlicDokladu', $vp)
+                ->first();
             $this->selectedDokladKey = $doklad ? trim($doklad->KlicDokla) : null;
             $this->selectedSysPrimKlic = $vp;
+
+            if ($this->selectedDokladRadekEntita) {
+                $this->pozice_radku = trim($evPods->Pozice ?? '');
+            }
         }
 
         $this->startStep = 5;
@@ -128,7 +130,10 @@ class StartDrawer extends Component
             $sysPrimKlic = $d;
         }
 
-        $doklad = Doklad::where('SysPrimKlicDokladu', $sysPrimKlic)->first();
+        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
+            ->where('ZakakaMPSJeUkoncena', 0)
+            ->where('SysPrimKlicDokladu', $sysPrimKlic)
+            ->first();
         if (! $doklad) {
             $this->error('Výrobní příkaz nebyl nalezen.');
 
@@ -140,7 +145,7 @@ class StartDrawer extends Component
 
         if ($radekEntita) {
             $this->selectedDokladRadekEntita = $radekEntita;
-            $radek = \App\Models\DoklRadek::where('EntitaRad', $this->selectedDokladRadekEntita)->first();
+            $radek = $this->selectedDokladRadky->firstWhere('EntitaRad', $radekEntita);
             $this->pozice_radku = $radek ? $radek->Pozice : null;
 
             $podsCount = EvPodsestav::where('EntitaRadkuVP', $radekEntita)->count();
@@ -337,7 +342,7 @@ class StartDrawer extends Component
 
     public function selectDoklad(string $klicDokla): void
     {
-        $doklad = Doklad::where('KlicDokla', $klicDokla)->first();
+        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)->where('ZakakaMPSJeUkoncena', 0)->where('SysPrimKlicDokladu', $klicDokla)->first();
         $this->selectedDokladKey = $klicDokla;
         $this->selectedSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu ?? '') : null;
         $this->selectedDokladRadekEntita = null;
@@ -444,7 +449,15 @@ class StartDrawer extends Component
     #[Computed]
     public function selectedDoklad(): ?Doklad
     {
-        return $this->selectedDokladKey ? Doklad::find($this->selectedDokladKey) : null;
+        if (! $this->selectedSysPrimKlic) {
+            return null;
+        }
+
+        return Doklad::dbcnt(10904)->tdfDocType(410008)
+            ->where('ZakakaMPSJeUkoncena', 0)
+            ->with(['radky.materialPolozka', 'radky.evPodsestavy'])
+            ->where('SysPrimKlicDokladu', $this->selectedSysPrimKlic)
+            ->first();
     }
 
     #[Computed]
@@ -463,6 +476,9 @@ class StartDrawer extends Component
         $term = mb_substr(mb_strtoupper(trim($this->podSearch)), 0, 10);
 
         return Doklad::dbcnt(10904)
+            ->tdfDocType(410008)
+            ->where('DocYear', '>=', 2022)
+            ->where('ZakakaMPSJeUkoncena', 0)
             ->whereHas('staDoklad', fn ($q) => $q->where('TypPohybu', 'EC_ZAKVYR')->where('Vyhodnoceni', 1))
             ->where(fn ($q) => $q
                 ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
@@ -477,12 +493,7 @@ class StartDrawer extends Component
     #[Computed]
     public function selectedDokladRadky()
     {
-        if (! $this->selectedDokladKey) {
-            return collect();
-        }
-
-        $doklad = Doklad::with(['radky.materialPolozka', 'radky.evPodsestavy'])
-            ->find($this->selectedDokladKey);
+        $doklad = $this->selectedDoklad;
 
         if (! $doklad) {
             return collect();

@@ -3,7 +3,6 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\Doklad;
-use App\Models\DoklRadek;
 use App\Models\EvPodsestav;
 use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
@@ -185,6 +184,9 @@ class History extends Component
         $term = mb_substr(mb_strtoupper(trim($this->vpSearch)), 0, 10);
 
         return Doklad::dbcnt(10904)
+            ->tdfDocType(410008)
+            ->docYear(2022)
+            ->where('ZakakaMPSJeUkoncena', 0)
             ->whereHas('staDoklad', fn ($q) => $q->where('TypPohybu', 'EC_ZAKVYR')->where('Vyhodnoceni', 1))
             ->where(fn ($q) => $q
                 ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
@@ -216,7 +218,7 @@ class History extends Component
 
         $record = $this->findEditRecordForSave();
 
-        $doklad = Doklad::where('KlicDokla', $this->edit_klicDokla)->first();
+        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)->where('ZakakaMPSJeUkoncena', 0)->where('KlicDokla', $this->edit_klicDokla)->first();
         $newSysPrimKlic = $doklad ? trim($doklad->SysPrimKlicDokladu) : $this->edit_klicDokla;
         $oldSysPrimKlic = $record->ZakVP_SysPrimKlic;
 
@@ -327,7 +329,9 @@ class History extends Component
             return collect();
         }
 
-        $doklad = Doklad::where('SysPrimKlicDokladu', $this->edit_sysPrimKlic)
+        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
+            ->where('ZakakaMPSJeUkoncena', 0)
+            ->where('SysPrimKlicDokladu', $this->edit_sysPrimKlic)
             ->with(['radky.materialPolozka', 'radky.evPodsestavy'])
             ->first();
 

@@ -29,7 +29,7 @@
             @foreach($this->podSearchResults as $doklad)
                 @php $isSelected = $selectedDokladKey === trim($doklad->KlicDokla); @endphp
                 <button type="button"
-                    wire:click="selectDoklad('{{ addslashes(trim($doklad->KlicDokla)) }}')"
+                    wire:click="selectDoklad('{{ addslashes(trim($doklad->SysPrimKlicDokladu)) }}')"
                     class="w-full min-h-[3.5rem] p-3 text-left border-2 rounded-lg transition-colors flex items-center justify-between {{ $isSelected ? 'border-primary bg-primary/10' : 'border-base-200 hover:border-primary/30' }}">
                     <div>
                         <div class="font-bold font-mono text-lg {{ $isSelected ? 'text-primary' : '' }}">{{ trim($doklad->KlicDokla) }}</div>
