@@ -1,6 +1,6 @@
 <div>
     <div class="mt-8">
-        <x-mary-card title="Dnešní směna" class="bg-transparent border-0 shadow-none !p-0">
+        <x-mary-card title="Dnešní směna" class="bg-transparent border-0 shadow-none p-0!">
             @forelse($today as $record)
                 @php
                     $info = $this->getRecordInfo($record);
@@ -156,7 +156,7 @@
         </x-mary-card>
 
         @if($historical->count() > 0)
-            <x-mary-card title="Historie (Posledních 5 dní)" class="bg-transparent border-0 shadow-none !p-0 mt-6">
+            <x-mary-card title="Historie (Posledních 5 dní)" class="bg-transparent border-0 shadow-none p-0! mt-6">
                 @foreach($historical as $record)
                     @php
                         $info = $this->getRecordInfo($record);
@@ -167,7 +167,7 @@
                     @endphp
                     <x-mary-collapse class="bg-base-200 opacity-80 mb-2 border border-base-300">
                         <x-slot:heading>
-                            <div class="flex items-center gap-4 w-full grayscale-[50%]">
+                            <div class="flex items-center gap-4 w-full grayscale-50">
                                 {{-- Avatar mistra --}}
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
                                      style="background-color: {{ $mistrColor }}">
@@ -285,7 +285,6 @@
                                         <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                                         </button>
-                                    </div>
                                     </div>
 
                                     <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200 md:col-span-2">

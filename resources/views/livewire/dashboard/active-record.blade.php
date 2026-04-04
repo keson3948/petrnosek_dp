@@ -103,7 +103,7 @@
             </x-slot:actions>
         </x-mary-card>
     @else
-        <x-mary-card class="bg-white border border-dashed border-base-300">
+        <x-mary-card class="bg-white border border-base-300">
             <div class="text-center py-4">
                 <x-mary-icon name="o-play-circle" class="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p class="text-gray-500">Momentálně nemáte aktivní žádnou výrobní operaci.</p>

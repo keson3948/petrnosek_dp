@@ -276,9 +276,24 @@
 {{-- ====== MODAL: Upravit čas ====== --}}
 <x-mary-modal wire:model="showEditTimeModal" title="Upravit odpracovaný čas" separator>
     <div x-data="{
-        h: @js($edit_time_init['hours'] ?? 0),
-        m: @js($edit_time_init['minutes'] ?? 0),
-        startedAt: @js($edit_time_init['started_at'] ?? ''),
+        h: 0,
+        m: 0,
+        startedAt: '',
+        init() {
+            this.$watch('$wire.edit_time_init', (val) => {
+                if (val) {
+                    this.h = val.hours ?? 0;
+                    this.m = val.minutes ?? 0;
+                    this.startedAt = val.started_at ?? '';
+                }
+            });
+            let val = $wire.edit_time_init;
+            if (val) {
+                this.h = val.hours ?? 0;
+                this.m = val.minutes ?? 0;
+                this.startedAt = val.started_at ?? '';
+            }
+        },
         addH(d) { this.h = Math.max(0, this.h + d) },
         addM(d) {
             let n = this.m + d;
