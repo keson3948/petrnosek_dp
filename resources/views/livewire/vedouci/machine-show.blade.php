@@ -54,62 +54,70 @@
     @endif
 
     {{-- Historie --}}
-    <x-mary-card title="Historie záznamů">
-        <div class="flex flex-wrap items-end gap-4 mb-4">
-            <x-mary-input label="Od" type="date" wire:model.live="dateFrom" class="w-40" />
-            <x-mary-input label="Do" type="date" wire:model.live="dateTo" class="w-40" />
-        </div>
+    <div class="flex flex-wrap items-end gap-4 mb-6">
+        <x-mary-input label="Od" type="date" wire:model.live="dateFrom" class="w-40" />
+        <x-mary-input label="Do" type="date" wire:model.live="dateTo" class="w-40" />
+    </div>
 
-        @if($this->records->isEmpty())
-            <div class="text-center py-8 text-gray-500">Žádné záznamy v tomto období.</div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm w-full">
-                    <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Operátor</th>
-                            <th>VP</th>
-                            <th>Operace</th>
-                            <th>Množství</th>
-                            <th>Čas</th>
-                            <th>Poznámka</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($this->records as $record)
-                            @php $info = $this->getRecordInfo($record); @endphp
-                            <tr class="hover">
-                                <td class="whitespace-nowrap">{{ $record->started_at?->format('d.m.Y') }}</td>
-                                <td class="font-semibold">{{ $this->userNames[trim($record->user_id)] ?? '—' }}</td>
-                                <td class="font-mono text-sm">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</td>
-                                <td>{{ trim($record->operation?->Nazev1 ?? $record->operation_id ?? '') }}</td>
-                                <td>{{ $record->processed_quantity ?? 0 }} ks</td>
-                                <td class="whitespace-nowrap tabular-nums">
-                                    @if($info['workedH'] !== null)
-                                        {{ $info['workedH'] }}:{{ str_pad($info['workedM'], 2, '0', STR_PAD_LEFT) }}
-                                    @else
-                                        —
-                                    @endif
-                                </td>
-                                <td class="max-w-48 truncate">{{ $record->notes ?: '—' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+    <x-mary-card>
+        <x-mary-table :headers="$headers" :rows="$this->records" striped>
 
-            <div class="mt-4 text-sm text-gray-500">
+            @scope('cell_started_at', $record)
+                <span class="whitespace-nowrap tabular-nums">{{ $record->started_at?->format('d.m.Y') ?? '—' }}</span>
+            @endscope
+
+            @scope('cell_operator', $record)
+                <span class="font-semibold">{{ $this->userNames[trim($record->user_id)] ?? '—' }}</span>
+            @endscope
+
+            @scope('cell_vp', $record)
+                <span class="font-mono">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</span>
+            @endscope
+
+            @scope('cell_operation', $record)
+                {{ trim($record->operation?->Nazev1 ?? $record->operation_id ?? '') ?: '—' }}
+            @endscope
+
+            @scope('cell_quantity', $record)
+                {{ $record->processed_quantity ?? 0 }} ks
+            @endscope
+
+            @scope('cell_time', $record)
                 @php
-                    $totalMin = $this->records->sum(function ($r) {
-                        if ($r->started_at && $r->ended_at) {
-                            return max(0, intval($r->started_at->diffInMinutes($r->ended_at)) - ($r->total_paused_min ?? 0));
-                        }
-                        return 0;
-                    });
+                    $workedH = null;
+                    $workedM = null;
+                    if ($record->started_at && $record->ended_at) {
+                        $totalMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
+                        $workedH = intdiv($totalMinutes, 60);
+                        $workedM = $totalMinutes % 60;
+                    }
                 @endphp
-                Celkem {{ $this->records->count() }} záznamů | Celkem: {{ intdiv($totalMin, 60) }}h {{ $totalMin % 60 }}min
-            </div>
-        @endif
+                <span class="whitespace-nowrap tabular-nums">
+                    @if($workedH !== null)
+                        {{ $workedH }}:{{ str_pad($workedM, 2, '0', STR_PAD_LEFT) }}
+                    @else
+                        —
+                    @endif
+                </span>
+            @endscope
+
+            @scope('cell_notes', $record)
+                <span class="max-w-48 truncate block">{{ $record->notes ?: '—' }}</span>
+            @endscope
+
+        </x-mary-table>
+
+        <div class="mt-4 text-sm text-gray-500">
+            Celkem {{ $this->records->count() }} záznamů
+            @php
+                $totalMin = $this->records->sum(function ($r) {
+                    if ($r->started_at && $r->ended_at) {
+                        return max(0, intval($r->started_at->diffInMinutes($r->ended_at)) - ($r->total_paused_min ?? 0));
+                    }
+                    return 0;
+                });
+            @endphp
+            | Celkem odpracováno: {{ intdiv($totalMin, 60) }}h {{ $totalMin % 60 }}min
+        </div>
     </x-mary-card>
 </div>

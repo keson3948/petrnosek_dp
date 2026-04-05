@@ -84,22 +84,23 @@ class MachineShow extends Component
         return User::whereIn('klic_subjektu', $klice)->get();
     }
 
-    public function getRecordInfo(ProductionRecord $record): array
+    public function getTableHeaders(): array
     {
-        $workedH = null;
-        $workedM = null;
-
-        if ($record->started_at && $record->ended_at) {
-            $totalMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
-            $workedH = intdiv($totalMinutes, 60);
-            $workedM = $totalMinutes % 60;
-        }
-
-        return ['workedH' => $workedH, 'workedM' => $workedM];
+        return [
+            ['key' => 'started_at', 'label' => 'Datum'],
+            ['key' => 'operator', 'label' => 'Operátor'],
+            ['key' => 'vp', 'label' => 'VP'],
+            ['key' => 'operation', 'label' => 'Operace'],
+            ['key' => 'quantity', 'label' => 'Množství'],
+            ['key' => 'time', 'label' => 'Čas'],
+            ['key' => 'notes', 'label' => 'Poznámka'],
+        ];
     }
 
     public function render()
     {
-        return view('livewire.vedouci.machine-show');
+        return view('livewire.vedouci.machine-show', [
+            'headers' => $this->getTableHeaders(),
+        ]);
     }
 }

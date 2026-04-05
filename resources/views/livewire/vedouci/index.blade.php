@@ -4,7 +4,7 @@
             <x-mary-input icon="o-magnifying-glass" wire:model.live.debounce.300ms="search" placeholder="Hledat operátora..." clearable />
         </x-slot:middle>
         <x-slot:actions>
-            <x-mary-button label="Stroje" icon="o-wrench-screwdriver" link="{{ route('vedouci.machines') }}" class="btn-outline" />
+            <x-mary-button label="Stroje" icon="o-wrench-screwdriver" link="{{ route('vedouci.machines') }}"/>
         </x-slot:actions>
     </x-mary-header>
 
