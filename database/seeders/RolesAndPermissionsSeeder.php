@@ -35,6 +35,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view stapo']);
         Permission::firstOrCreate(['name' => 'edit profile']);
         Permission::firstOrCreate(['name' => 'can print']);
+        Permission::firstOrCreate(['name' => 'manage production records']);
 
         $roleOperator = Role::firstOrCreate(['name' => 'Operator']);
         $roleOperator->givePermissionTo('simplified layout');

@@ -17,10 +17,9 @@
                                  style="background-color: {{ $mistrColor }}">
                                 {{ $mistrCislo }}
                             </div>
-
                             {{-- VP + výkres --}}
                             <div class="w-1/5 min-w-0">
-                                <div class="font-bold truncate">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                                <div class="font-bold truncate">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
                                 @if($record->drawing_number)
                                     <div class="text-xs text-gray-500 truncate">{{ $record->drawing_number }}</div>
                                 @endif
@@ -28,6 +27,7 @@
 
                             {{-- Množství --}}
                             <div class="w-1/6 min-w-0">
+                                <div class="text-sm font-semibold">{{ trim($record->doklad?->SpecifiSy ?? '') ?: '—' }}</div>
                                 <div class="text-sm font-semibold">{{ $record->processed_quantity }} ks</div>
                             </div>
 
@@ -66,7 +66,12 @@
                                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                                     <div>
                                         <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
-                                        <div class="font-semibold text-lg">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                                        <div class="font-semibold text-lg">
+                                            {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                            @if(trim($record->doklad?->SpecifiSy ?? ''))
+                                                <span class="text-gray-400 mx-1">|</span> {{ trim($record->doklad->SpecifiSy) }}
+                                            @endif
+                                        </div>
                                     </div>
                                     <button wire:click="openEditVp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit VP">
                                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
@@ -176,7 +181,7 @@
 
                                 {{-- VP + výkres --}}
                                 <div class="w-1/5 min-w-0">
-                                    <div class="font-bold truncate">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                                    <div class="font-bold truncate">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
                                     @if($record->drawing_number)
                                         <div class="text-xs text-gray-500 truncate">{{ $record->drawing_number }}</div>
                                     @endif
@@ -184,6 +189,7 @@
 
                                 {{-- Množství --}}
                                 <div class="w-1/6 min-w-0">
+                                    <div class="text-sm font-semibold">{{ trim($record->doklad?->SpecifiSy ?? '') ?: '—' }}</div>
                                     <div class="text-sm font-semibold">{{ $record->processed_quantity }} ks</div>
                                 </div>
 
@@ -221,7 +227,12 @@
                                     <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                                         <div>
                                             <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
-                                            <div class="font-semibold">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                                            <div class="font-semibold text-lg">
+                                                {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                                @if(trim($record->doklad?->SpecifiSy ?? ''))
+                                                    <span class="text-gray-400 mx-1">|</span> {{ trim($record->doklad->SpecifiSy) }}
+                                                @endif
+                                            </div>
                                         </div>
                                         <button wire:click="openEditVp({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />

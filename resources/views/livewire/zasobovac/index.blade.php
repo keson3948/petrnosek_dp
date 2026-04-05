@@ -14,7 +14,7 @@
     </x-mary-header>
 
     <x-mary-card>
-        <x-mary-table :headers="$headers" :rows="$staDoklady" :sort-by="$sortBy" striped link="/zasobovac/{doklad_id}">
+        <x-mary-table :headers="$headers" :rows="$staDoklady" :sort-by="$sortBy" striped with-pagination link="/zasobovac/{doklad_id}">
 
             @scope('cell_klic_dokla', $item)
             <div class="flex items-center gap-2">

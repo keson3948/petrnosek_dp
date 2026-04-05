@@ -182,17 +182,10 @@ class History extends Component
 
         $term = mb_substr(mb_strtoupper(trim($this->vpSearch)), 0, 10);
 
-        return Doklad::dbcnt(10904)
-            ->tdfDocType(410008)
-            ->docYear(2022)
-            ->where('ZakakaMPSJeUkoncena', 0)
-            ->whereHas('staDoklad', fn ($q) => $q->where('TypPohybu', 'EC_ZAKVYR')->where('Vyhodnoceni', 1))
-            ->where(fn ($q) => $q
-                ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
-                ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
-            )
+        return Doklad::allTypes()
+            ->searchByTerm($term)
             ->orderByDesc('KlicDokla')
-            ->limit(8)
+            ->limit(12)
             ->get();
     }
 
@@ -213,6 +206,16 @@ class History extends Component
     {
         if (! $this->edit_vp_sysPrimKlic) {
             $this->addError('vpSearch', 'Vyberte výrobní příkaz.');
+
+            return;
+        }
+
+        $dokladExists = Doklad::allTypes()
+            ->where('SysPrimKlicDokladu', $this->edit_vp_sysPrimKlic)
+            ->exists();
+
+        if (! $dokladExists) {
+            $this->addError('vpSearch', 'Vybraný výrobní příkaz neexistuje.');
 
             return;
         }
@@ -276,6 +279,29 @@ class History extends Component
             'edit_operation_id' => 'required|string|max:255',
         ]);
 
+        if ($this->edit_machine_id) {
+            $klicSubjektu = auth()->user()->klic_subjektu;
+            $machineExists = PrednOsobProstr::forOsoba($klicSubjektu)
+                ->where('Prrostredek', $this->edit_machine_id)
+                ->exists();
+
+            if (! $machineExists) {
+                $this->addError('edit_machine_id', 'Vybraný stroj neexistuje nebo k němu nemáte přístup.');
+
+                return;
+            }
+
+            $operationExists = PrednOperProstr::forProstredek($this->edit_machine_id)
+                ->where('Operace', $this->edit_operation_id)
+                ->exists();
+
+            if (! $operationExists) {
+                $this->addError('edit_operation_id', 'Vybraná operace nepatří ke zvolenému stroji.');
+
+                return;
+            }
+        }
+
         $record = $this->findEditRecordForSave();
         $record->update([
             'machine_id' => $this->edit_machine_id,
@@ -327,8 +353,7 @@ class History extends Component
             return collect();
         }
 
-        $doklad = Doklad::dbcnt(10904)->tdfDocType(410008)
-            ->where('ZakakaMPSJeUkoncena', 0)
+        $doklad = Doklad::allTypes()
             ->where('SysPrimKlicDokladu', $this->edit_sysPrimKlic)
             ->with(['radky.materialPolozka', 'radky.evPodsestavy'])
             ->first();
@@ -383,6 +408,38 @@ class History extends Component
     public function saveEditRadekPodsestava()
     {
         $record = $this->findEditRecordForSave();
+
+        if ($this->edit_radek_entita) {
+            $doklad = Doklad::allTypes()
+                ->where('SysPrimKlicDokladu', $record->ZakVP_SysPrimKlic)
+                ->with('radky')
+                ->first();
+
+            if (! $doklad || ! $doklad->radky->contains('EntitaRad', $this->edit_radek_entita)) {
+                $this->addError('edit_radek_entita', 'Vybraný řádek nepatří k tomuto výrobnímu příkazu.');
+
+                return;
+            }
+        }
+
+        if ($this->edit_ev_podsestav_id) {
+            if (! $this->edit_radek_entita) {
+                $this->addError('edit_ev_podsestav_id', 'Nelze zadat podsestavu bez vybraného řádku.');
+
+                return;
+            }
+
+            $podsestavExists = EvPodsestav::where('ID', $this->edit_ev_podsestav_id)
+                ->where('EntitaRadkuVP', $this->edit_radek_entita)
+                ->exists();
+
+            if (! $podsestavExists) {
+                $this->addError('edit_ev_podsestav_id', 'Vybraná podsestava nepatří k tomuto řádku.');
+
+                return;
+            }
+        }
+
         $record->update([
             'ZakVP_radek_entita' => $this->edit_radek_entita,
             'ZakVP_pozice_radku' => $this->edit_pozice_radku,
@@ -403,7 +460,7 @@ class History extends Component
     {
         $record = $this->findEditRecord($id);
         $this->editRecordId = (int) $record->ID;
-        $this->edit_drawing_only = $record->drawing_number ?? '';
+        $this->edit_drawing_only = trim($record->drawing_number) ?? '';
         $this->resetValidation();
         $this->showEditDrawingModal = true;
     }
@@ -435,7 +492,11 @@ class History extends Component
 
     public function saveEditQuantity(int $quantity)
     {
-        $quantity = max(0, $quantity);
+        if ($quantity < 0) {
+            $this->addError('edit_quantity', 'Množství nesmí být záporné.');
+
+            return;
+        }
 
         $record = $this->findEditRecordForSave();
         $record->update([
@@ -498,22 +559,50 @@ class History extends Component
 
     public function saveEditTime(int $hours, int $minutes, string $startedAt)
     {
-        $record = $this->findEditRecordForSave();
+        if ($hours < 0 || $minutes < 0) {
+            $this->addError('edit_time', 'Hodiny a minuty nesmí být záporné.');
+
+            return;
+        }
 
         $workedMinutes = ($hours * 60) + $minutes;
 
-        $updateData = [
-            'started_at' => $startedAt,
-            'SYSTIMEST' => now(),
-        ];
+        if ($workedMinutes === 0) {
+            $this->addError('edit_time', 'Odpracovaný čas musí být větší než 0.');
 
-        if ($startedAt) {
-            $start = \Carbon\Carbon::parse($startedAt);
-            $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
-            $updateData['ended_at'] = $start->copy()->addMinutes($totalMinutes);
+            return;
         }
 
-        $record->update($updateData);
+        if (! $startedAt) {
+            $this->addError('edit_time', 'Začátek práce musí být vyplněn.');
+
+            return;
+        }
+
+        $start = \Carbon\Carbon::parse($startedAt);
+
+        if ($start->isFuture()) {
+            $this->addError('edit_time', 'Začátek práce nesmí být v budoucnosti.');
+
+            return;
+        }
+
+        $record = $this->findEditRecordForSave();
+
+        $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
+        $endedAt = $start->copy()->addMinutes($totalMinutes);
+
+        if ($endedAt->isFuture()) {
+            $this->addError('edit_time', 'Konec práce nesmí být v budoucnosti.');
+
+            return;
+        }
+
+        $record->update([
+            'started_at' => $startedAt,
+            'ended_at' => $endedAt,
+            'SYSTIMEST' => now(),
+        ]);
 
         $this->showEditTimeModal = false;
         $this->success('Čas uložen.');

@@ -72,29 +72,12 @@
 
                     <x-mary-menu-item icon="o-home" title="Dashboard" link="{{ route('dashboard') }}" />
 
-                    @cannot('simplified layout')
-                        @can('view polozky')
-                            <x-mary-menu-item icon="o-archive-box" title="Položky" link="{{ route('polozka.index') }}" />
-                        @endcan
-                        @can('view operace')
-                            <x-mary-menu-item icon="o-cog" title="Operace" link="{{ route('operace.index') }}" />
-                        @endcan
-                        @can('view subjekty')
-                            <x-mary-menu-item icon="o-user" title="Subjekty" link="{{ route('subjekt.index') }}" />
-                        @endcan
-                        @can('view prostredky')
-                            <x-mary-menu-item icon="o-rocket-launch" title="Prostředky" link="{{ route('prostredky.index') }}" />
-                        @endcan
-                        @can('view stadokl')
-                            <x-mary-menu-item icon="o-hashtag" title="Stav Dokladů" link="{{ route('stadokl.index') }}" />
-                        @endcan
-                        @can('view stapo')
-                            <x-mary-menu-item icon="o-hashtag" title="Stav Položek" link="{{ route('stapo.index') }}" />
-                        @endcan
-                    @endcannot
-
                     @can('manage zasobovani')
                         <x-mary-menu-item icon="o-truck" title="Zásobování" link="{{ route('zasobovac.index') }}" />
+                    @endcan
+
+                    @can('manage production records')
+                        <x-mary-menu-item icon="o-clipboard-document-list" title="Vedoucí" link="{{ route('vedouci.index') }}" />
                     @endcan
 
                     <x-mary-menu-separator/>

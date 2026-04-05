@@ -60,4 +60,28 @@ class Doklad extends Model
         return $query->where('DocYear', '>=', $year);
     }
 
+    public const DOKLAD_DBCNT_IDS = [
+        10003, 10004, 10005, 10032, 21026, // Obchodní zakázky
+        21030,                              // Konstrukce
+        10904, 21036,                       // Výrobní příkazy
+        21027, 21029,                       // Reklamace
+        21023,                              // Režie
+    ];
+
+    public function scopeAllTypes($query)
+    {
+        return $query->whereIn('DBCNTID', self::DOKLAD_DBCNT_IDS)
+            ->tdfDocType(410008)
+            ->docYear('2022')
+            ->where('ZakakaMPSJeUkoncena', 0);
+    }
+
+    public function scopeSearchByTerm($query, string $term)
+    {
+        return $query->where(fn ($q) => $q
+            ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+            ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+            ->orWhereRaw('CAST("SpecifiSy" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+        );
+    }
 }

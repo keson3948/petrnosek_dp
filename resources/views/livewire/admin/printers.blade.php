@@ -1,7 +1,7 @@
 <div>
     <x-mary-header title="Správa tiskáren" separator>
         <x-slot:middle class="!justify-end">
-            <x-mary-input icon="o-magnifying-glass" placeholder="Hledat..." />
+            <x-mary-input wire:model.live.debounce.300ms="search" icon="o-magnifying-glass" placeholder="Hledat..." clearable />
         </x-slot:middle>
         <x-slot:actions>
             <x-mary-button icon="o-plus" class="btn-primary" @click="$wire.create()" />

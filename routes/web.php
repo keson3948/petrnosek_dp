@@ -1,13 +1,6 @@
 <?php
 
-use App\Http\Controllers\DokladLabelController;
-use App\Http\Controllers\DruhSubjektuController;
-use App\Http\Controllers\PolozkaController;
 use App\Http\Controllers\PrinterController;
-use App\Http\Controllers\ProstredekController;
-use App\Http\Controllers\StaDoklController;
-use App\Http\Controllers\StaPoController;
-use App\Http\Controllers\SubjektController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -25,46 +18,20 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 Route::middleware('auth')->group(function () {
-    Route::middleware(['permission:view polozky'])->group(function () {
-        Route::resource('/polozka', PolozkaController::class)
-            ->only(['index', 'store']);
-        Route::get('/polozka/delete', [PolozkaController::class, 'deleteForm'])->name('polozka.delete-form');
-        Route::delete('/polozka/delete', [PolozkaController::class, 'destroyById'])->name('polozka.destroy-by-id');
-    });
-
-    Route::middleware(['permission:view subjekty'])->group(function () {
-        Route::resource('/subjekt', SubjektController::class)
-            ->only(['index']);
-        Route::resource('/druh-subjektu', DruhSubjektuController::class)
-            ->only(['index', 'create']);
-    });
-
-    Route::middleware(['permission:view prostredky'])->group(function () {
-        Route::get('/prostredky', [ProstredekController::class, 'index'])->name('prostredky.index');
-    });
-
-    Route::middleware(['permission:view stadokl'])->group(function () {
-        Route::get('/stadokl', [StaDoklController::class, 'index'])->name('stadokl.index');
-        Route::get('/stadokl/{id}', [StaDoklController::class, 'show'])->name('stadokl.show')->where('id', '.*');
-        Route::get('/stadokl-label', [DokladLabelController::class, 'show'])->name('stadokl.label');
-    });
-
-    Route::middleware(['permission:view stapo'])->group(function () {
-        Route::get('/stapo', [StaPoController::class, 'index'])->name('stapo.index');
-    });
-
-    Route::middleware(['permission:view operace'])->group(function () {
-        Route::get('/operace', \App\Livewire\Operace\Index::class)->name('operace.index');
-        Route::get('/operace/podsestava/{id}', \App\Livewire\Operace\PodsestavaShow::class)->name('operace.podsestava');
-        Route::get('/qr-result/{code}', \App\Livewire\QrScannerResult::class)->name('qr.result');
-    });
-
     Route::get('/qr', \App\Livewire\QrRedirect::class)->name('qr.redirect');
 
     // --- ZÁSOBOVAČ ---
     Route::middleware(['permission:manage zasobovani'])->group(function () {
         Route::get('/zasobovac', \App\Livewire\Zasobovac\Index::class)->name('zasobovac.index');
         Route::get('/zasobovac/{id}', \App\Livewire\Zasobovac\Show::class)->name('zasobovac.show')->where('id', '.*');
+    });
+
+    // --- VEDOUCÍ ---
+    Route::middleware(['permission:manage production records'])->prefix('vedouci')->group(function () {
+        Route::get('/', \App\Livewire\Vedouci\Index::class)->name('vedouci.index');
+        Route::get('/stroje', \App\Livewire\Vedouci\MachineIndex::class)->name('vedouci.machines');
+        Route::get('/stroje/{machineKey}', \App\Livewire\Vedouci\MachineShow::class)->name('vedouci.machine');
+        Route::get('/operator/{klicSubjektu}', \App\Livewire\Vedouci\Show::class)->name('vedouci.show');
     });
 
     // --- ADMIN  ---

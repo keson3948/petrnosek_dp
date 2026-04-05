@@ -33,9 +33,10 @@ class MachineIndex extends Component
             ->with('pracoviste');
 
         if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('KlicProstredku', 'like', "%{$this->search}%")
-                    ->orWhere('NazevUplny', 'like', "%{$this->search}%");
+            $term = mb_substr(trim($this->search), 0, 15);
+            $query->where(function ($q) use ($term) {
+                $q->whereRaw('CAST("KlicProstredku" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
+                    ->orWhereRaw('CAST("NazevUplny" AS VARCHAR(100)) LIKE ?', ["%{$term}%"]);
             });
         }
 

@@ -15,6 +15,11 @@
             <div class="flex justify-between items-start mb-1">
                 <div class="font-bold text-base {{ $isSelected ? 'text-primary' : '' }}">
                     Poz. {{ trim($radek->Pozice) }}
+                    <!-- Pokud je zadana $radek->Pozice, zobraz ji a za pozici dej | -->
+                    @if(trim($radek->Pozice ?? '') !== '')
+                        |
+                        {{ $radek->Polozka ?? '—' }}
+                    @endif
                 </div>
             </div>
 
@@ -25,7 +30,7 @@
                     </div>
                 @endif
                 <div class="text-gray-500 flex items-center justify-between mt-1">
-                    <span>Množství: {{ (float)($radek->MnozstviZMJ ?? 0) }} ks</span>
+                    <span>Množ.: {{ (float)($radek->MnozstviZMJ ?? 0) }} ks</span>
                     @if($podsCount > 0)
                         <span class="badge badge-info badge-sm text-xs">{{ $podsCount }} podsestav</span>
                     @else

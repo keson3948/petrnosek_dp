@@ -7,14 +7,16 @@ use App\Models\StaDokl;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use Toast;
+    use Toast, WithPagination;
 
     public string $search = '';
 
@@ -63,9 +65,32 @@ class Index extends Component
         $mistrUsers = $this->loadMistrUsers($staDoklady);
         $rows = $this->transformRows($staDoklady, $mistrUsers);
 
+        if (!empty($this->search)) {
+            $term = mb_strtolower(trim($this->search));
+            $rows = $rows->filter(function ($row) use ($term) {
+                return str_contains(mb_strtolower($row->klic_dokla ?? ''), $term)
+                    || str_contains(mb_strtolower($row->mps_projekt ?? ''), $term)
+                    || str_contains(mb_strtolower($row->vlastni_osoba ?? ''), $term)
+                    || str_contains(mb_strtolower($row->garant ?? ''), $term)
+                    || str_contains(mb_strtolower($row->zakazka ?? ''), $term)
+                    || str_contains(mb_strtolower($row->specificky_symbol ?? ''), $term);
+            });
+        }
+
+        $perPage = 15;
+        $page = $this->getPage('page');
+        
+        $paginator = new LengthAwarePaginator(
+            $rows->forPage($page, $perPage),
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'pageName' => 'page']
+        );
+
         return view('livewire.zasobovac.index', [
             'headers' => $this->headers(),
-            'staDoklady' => $rows,
+            'staDoklady' => $paginator,
         ]);
     }
 
@@ -88,14 +113,6 @@ class Index extends Component
                 $q->tdfDocType(410008)
                     ->dbcnt(10904)
                     ->docYear(2022);
-
-                if ($this->search) {
-                    $q->where(function (Builder $sq) {
-                        $term = mb_substr(mb_strtoupper(trim($this->search)), 0, 10);
-                        $sq->where('KlicDokla', 'like', "%{$term}%")
-                            ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(50)) LIKE ?', ["%{$term}%"]);
-                    });
-                }
 
                 if ($this->filterMistr) {
                     $q->where('VlastniOsoba', $this->filterMistr);

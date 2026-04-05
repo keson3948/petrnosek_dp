@@ -304,8 +304,7 @@
         pad(v) { return String(v).padStart(2, '0'); }
     }">
         <div class="mb-4">
-            <label class="label"><span class="label-text font-semibold">Začátek</span></label>
-            <input type="datetime-local" x-model="startedAt" class="input input-bordered input-lg w-full" />
+            <x-mary-input label="Začátek" x-model="startedAt" type="datetime-local" name=""></x-mary-input>
         </div>
 
         <label class="label"><span class="label-text font-semibold">Odpracovaná doba</span></label>

@@ -11,6 +11,7 @@ class Printers extends Component
     use Toast;
 
     public $printers;
+    public string $search = '';
     public bool $myModal = false;
     public $form = [];
     public $selectedPrinter = null;
@@ -41,7 +42,20 @@ class Printers extends Component
 
     public function refresh()
     {
-        $this->printers = Printer::all();
+        if (!empty($this->search)) {
+            $term = '%' . $this->search . '%';
+            $this->printers = Printer::where('name', 'like', $term)
+                ->orWhere('system_name', 'like', $term)
+                ->orWhere('ip_address', 'like', $term)
+                ->get();
+        } else {
+            $this->printers = Printer::all();
+        }
+    }
+
+    public function updatedSearch()
+    {
+        $this->refresh();
     }
 
     public function create()

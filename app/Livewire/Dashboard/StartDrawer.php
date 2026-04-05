@@ -274,6 +274,13 @@ class StartDrawer extends Component
             return;
         }
 
+        if (! $this->isVyrobniPrikaz()) {
+            $this->startStep = 5;
+            $this->autoSelectMachineAndOperation();
+
+            return;
+        }
+
         $podsCount = $this->selectedRadekPodsestavy->count();
         $this->startStep = $podsCount > 0 ? 3 : 4;
     }
@@ -301,6 +308,12 @@ class StartDrawer extends Component
 
     private function goBackFromStep5(): void
     {
+        if (! $this->isVyrobniPrikaz()) {
+            $this->startStep = 2;
+
+            return;
+        }
+
         if ($this->evPodsestavId) {
             $this->startStep = 3;
         } elseif ($this->selectedDokladRadekEntita) {
@@ -309,6 +322,13 @@ class StartDrawer extends Component
         } else {
             $this->startStep = 4;
         }
+    }
+
+    private function isVyrobniPrikaz(): bool
+    {
+        $doklad = $this->selectedDoklad;
+
+        return $doklad && (int) $doklad->DBCNTID === 10904;
     }
 
     private function autoSelectMachineAndOperation(): void
@@ -391,7 +411,13 @@ class StartDrawer extends Component
         $this->selectedDokladRadekEntita = null;
         $this->evPodsestavId = null;
         $this->drawing_number = '';
-        $this->startStep = 4;
+
+        if (! $this->isVyrobniPrikaz()) {
+            $this->startStep = 5;
+            $this->autoSelectMachineAndOperation();
+        } else {
+            $this->startStep = 4;
+        }
     }
 
     public function skipPodsestava(): void
@@ -439,8 +465,7 @@ class StartDrawer extends Component
             return null;
         }
 
-        return Doklad::dbcnt(10904)->tdfDocType(410008)
-            ->where('ZakakaMPSJeUkoncena', 0)
+        return Doklad::allTypes()
             ->with(['radky.materialPolozka', 'radky.evPodsestavy'])
             ->where('SysPrimKlicDokladu', $this->selectedSysPrimKlic)
             ->first();
@@ -461,18 +486,10 @@ class StartDrawer extends Component
 
         $term = mb_substr(mb_strtoupper(trim($this->podSearch)), 0, 10);
 
-        return Doklad::dbcnt(10904)
-            ->tdfDocType(410008)
-            ->where('DocYear', '>=', 2022)
-            ->where('ZakakaMPSJeUkoncena', 0)
-            ->whereHas('staDoklad', fn ($q) => $q->where('TypPohybu', 'EC_ZAKVYR')->where('Vyhodnoceni', 1))
-            ->where(fn ($q) => $q
-                ->whereRaw('CAST("KlicDokla" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
-                ->orWhereRaw('CAST("MPSProjekt" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
-                ->orWhereRaw('CAST("SpecifiSy" AS VARCHAR(100)) LIKE ?', ["%{$term}%"])
-            )
+        return Doklad::allTypes()
+            ->searchByTerm($term)
             ->orderByDesc('KlicDokla')
-            ->limit(8)
+            ->limit(12)
             ->get();
     }
 
