@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Zasobovac;
+namespace App\Livewire;
 
 use App\Jobs\PrintLabelJob;
 use App\Models\EvPodsestav;
@@ -14,7 +14,7 @@ use Mary\Traits\Toast;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Layout('layouts.app')]
-class Show extends Component
+class VpDetail extends Component
 {
     use Toast;
 
@@ -27,14 +27,9 @@ class Show extends Component
 
     // Print modal state
     public bool $showPrintModal = false;
-    public string $printType = '';  // 'doklad', 'radek', 'podsestava'
+    public string $printType = '';
     public ?int $printTargetId = null;
     public int $printCopies = 1;
-
-    public function boot()
-    {
-        abort_if(! auth()->user()->can('manage zasobovani'), 403);
-    }
 
     public function mount($id)
     {
@@ -67,6 +62,8 @@ class Show extends Component
 
     public function saveEntry(int $rowIndex): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             "newEntries.{$rowIndex}.CisloVykresu" => 'required|string|max:100',
             "newEntries.{$rowIndex}.Mnozstvi" => 'required|numeric|min:0.01',
@@ -100,13 +97,14 @@ class Show extends Component
             'Poznamka' => '',
         ];
 
-
         $this->success('Záznam uložen.');
         $this->dispatch('entry-saved', rowIndex: $rowIndex);
     }
 
     public function startEdit(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $ev = EvPodsestav::find($evPodsId);
         if (! $ev) return;
 
@@ -126,6 +124,8 @@ class Show extends Component
 
     public function updateEntry(): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             'editEntry.CisloVykresu' => 'required|string|max:100',
             'editEntry.Mnozstvi' => 'required|numeric|min:0.01',
@@ -147,6 +147,8 @@ class Show extends Component
 
     public function deleteEntry(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         EvPodsestav::where('ID', $evPodsId)->delete();
 
         $this->success('Záznam smazán.');
@@ -154,6 +156,8 @@ class Show extends Component
 
     public function openPrintModal(string $type, ?int $id = null): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->printType = $type;
         $this->printTargetId = $id;
         $this->printCopies = 1;
@@ -162,6 +166,8 @@ class Show extends Component
 
     public function confirmPrint(): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             'printCopies' => 'required|integer|min:1|max:100',
         ]);
@@ -217,6 +223,8 @@ class Show extends Component
 
     public function printPodsestava(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->printTargetId = $evPodsId;
         $this->printCopies = 1;
 
@@ -246,9 +254,7 @@ class Show extends Component
             'mnozstvi' => (int) ($evPods->Mnozstvi ?? 1) . ' ks',
             'mistrCislo' => $mistrUser?->cislo_mistra,
         ]);
-
     }
-
 
     protected function checkPrintPermissions(): ?Printer
     {
@@ -312,9 +318,9 @@ class Show extends Component
         }
 
         return view('livewire.zasobovac.show', [
-            'radky' => $this->staDokl->doklad->radky,
+            'radky' => $radky,
             'mistrUser' => $this->staDokl->doklad->vlastniOsoba?->user,
-            'backRoute' => route('zasobovac.index'),
+            'backRoute' => url()->previous(),
         ]);
     }
 }

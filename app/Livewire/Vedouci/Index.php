@@ -60,7 +60,8 @@ class Index extends Component
             $user->status_label = $active
                 ? ($active->status === 0 ? 'Pracuje' : 'Pauza')
                 : 'Neaktivní';
-            $user->current_vp = $active ? trim($active->doklad?->KlicDokla ?? '') : '';
+            $user->current_vp = $active ? trim(($active->doklad?->MPSProjekt ?? '') . ' ' . ($active->doklad?->KlicDokla ?? '')) : '';
+            $user->current_vp_sys_klic = $active ? trim($active->ZakVP_SysPrimKlic ?? '') : '';
             $user->current_operation = $active ? trim($active->operation?->Nazev1 ?? $active->operation_id ?? '') : '';
             $user->current_machine = $active ? trim($active->machine?->NazevUplny ?? $active->machine_id ?? '') : '';
             $user->started_at_label = $active?->started_at?->format('H:i') ?? '';

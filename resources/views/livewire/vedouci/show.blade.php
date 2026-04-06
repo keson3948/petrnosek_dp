@@ -25,7 +25,13 @@
                 </div>
                 <div>
                     <div class="text-xs text-gray-400 uppercase">VP</div>
-                    <div class="font-mono font-semibold">{{ trim($active->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                    <div class="font-mono font-semibold">
+                        @if($active->ZakVP_SysPrimKlic)
+                            <a href="{{ route('vp.show', trim($active->ZakVP_SysPrimKlic)) }}" class="hover:underline hover:text-primary">{{ trim($active->doklad?->MPSProjekt ?? '') }} {{ trim($active->doklad?->KlicDokla ?? '') ?: '—' }}</a>
+                        @else
+                            —
+                        @endif
+                    </div>
                 </div>
                 <div>
                     <div class="text-xs text-gray-400 uppercase">Operace</div>
@@ -58,7 +64,11 @@
             @endscope
 
             @scope('cell_vp', $record)
-                <span class="font-mono">{{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</span>
+                @if($record->ZakVP_SysPrimKlic)
+                    <a href="{{ route('vp.show', trim($record->ZakVP_SysPrimKlic)) }}" class="font-mono hover:underline hover:text-primary">{{ trim($record->doklad?->MPSProjekt ?? '') }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</a>
+                @else
+                    <span class="font-mono">—</span>
+                @endif
             @endscope
 
             @scope('cell_machine', $record)

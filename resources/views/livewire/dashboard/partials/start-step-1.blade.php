@@ -32,10 +32,8 @@
                     wire:click="selectDoklad('{{ addslashes(trim($doklad->SysPrimKlicDokladu)) }}')"
                     class="w-full min-h-[3.5rem] p-3 text-left border-2 rounded-lg transition-colors flex items-center justify-between {{ $isSelected ? 'border-primary bg-primary/10' : 'border-base-200 hover:border-primary/30' }}">
                     <div>
-                        <div class="font-bold font-mono text-lg {{ $isSelected ? 'text-primary' : '' }}">{{ trim($doklad->KlicDokla) }}</div>
-                        @if(trim($doklad->MPSProjekt ?? ''))
-                            <div class="text-sm text-gray-500">{{ trim($doklad->MPSProjekt) }}</div>
-                        @endif
+                        <div class="font-bold font-mono text-lg {{ $isSelected ? 'text-primary' : '' }}">{{trim($doklad->MPSProjekt)}} {{ trim($doklad->KlicDokla) }}</div>
+                        <div class="text-sm text-gray-500">{{ trim($doklad->TxtDoklad) }}</div>
                     </div>
                     @if($isSelected)
                         <x-mary-icon name="o-check-circle" class="w-6 h-6 text-primary" />

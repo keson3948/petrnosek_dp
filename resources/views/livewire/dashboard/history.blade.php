@@ -67,7 +67,11 @@
                                     <div>
                                         <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
                                         <div class="font-semibold text-lg">
-                                            {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                            @if($record->ZakVP_SysPrimKlic)
+                                                <a href="{{ route('vp.show', trim($record->ZakVP_SysPrimKlic)) }}" @click.stop class="z-50 relative hover:underline hover:text-primary">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</a>
+                                            @else
+                                                {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                            @endif
                                             @if(trim($record->doklad?->SpecifiSy ?? ''))
                                                 <span class="text-gray-400 mx-1">|</span> {{ trim($record->doklad->SpecifiSy) }}
                                             @endif
@@ -181,7 +185,13 @@
 
                                 {{-- VP + výkres --}}
                                 <div class="w-1/5 min-w-0">
-                                    <div class="font-bold truncate">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                                    <div class="font-bold truncate">
+                                        @if($record->ZakVP_SysPrimKlic)
+                                            <a href="{{ route('vp.show', trim($record->ZakVP_SysPrimKlic)) }}" class="z-50 relative hover:underline hover:text-primary">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</a>
+                                        @else
+                                            {{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                        @endif
+                                    </div>
                                     @if($record->drawing_number)
                                         <div class="text-xs text-gray-500 truncate">{{ $record->drawing_number }}</div>
                                     @endif
@@ -228,7 +238,11 @@
                                         <div>
                                             <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz (VP)</div>
                                             <div class="font-semibold text-lg">
-                                                {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                                @if($record->ZakVP_SysPrimKlic)
+                                                    <a href="{{ route('vp.show', trim($record->ZakVP_SysPrimKlic)) }}" @click.stop class="z-50 relative hover:underline hover:text-primary">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</a>
+                                                @else
+                                                    {{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}
+                                                @endif
                                                 @if(trim($record->doklad?->SpecifiSy ?? ''))
                                                     <span class="text-gray-400 mx-1">|</span> {{ trim($record->doklad->SpecifiSy) }}
                                                 @endif

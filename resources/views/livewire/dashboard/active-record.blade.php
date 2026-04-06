@@ -28,10 +28,13 @@
                     <x-mary-icon name="o-document-text" class="w-6 h-6 text-gray-400 shrink-0" />
                     <div class="min-w-0">
                         <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz</div>
-                        <div class="font-bold text-lg truncate">{{ $klicDokla ?? '—' }}</div>
-                        @if(trim($activeRecord->doklad?->MPSProjekt ?? ''))
-                            <div class="text-sm text-gray-500 truncate">{{ trim($activeRecord->doklad->MPSProjekt) }}</div>
-                        @endif
+                        <div class="font-bold text-lg truncate">
+                            @if($activeRecord->ZakVP_SysPrimKlic)
+                                <a href="{{ route('vp.show', trim($activeRecord->ZakVP_SysPrimKlic)) }}" class="z-50 relative hover:underline hover:text-primary">{{ trim($activeRecord->doklad->MPSProjekt) }} {{ $klicDokla ?? '—' }}</a>
+                            @else
+                                {{ $klicDokla ?? '—' }}
+                            @endif
+                        </div>
                     </div>
                 </div>
 

@@ -73,6 +73,7 @@ class Doklad extends Model
         return $query->whereIn('DBCNTID', self::DOKLAD_DBCNT_IDS)
             ->tdfDocType(410008)
             ->docYear('2022')
+            ->where('StavStornovani', 0)
             ->where('ZakakaMPSJeUkoncena', 0);
     }
 

@@ -488,8 +488,8 @@ class StartDrawer extends Component
 
         return Doklad::allTypes()
             ->searchByTerm($term)
-            ->orderByDesc('KlicDokla')
-            ->limit(12)
+            ->orderBy('KlicDokla')
+            ->limit(30)
             ->get();
     }
 

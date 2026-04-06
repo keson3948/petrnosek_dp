@@ -29,7 +29,11 @@
 
             @scope('cell_current_vp', $user)
                 @if($user->current_vp)
-                    <span class="font-mono text-sm">{{ $user->current_vp }}</span>
+                    @if($user->current_vp_sys_klic)
+                        <a href="{{ route('vp.show', $user->current_vp_sys_klic) }}" class="font-mono text-sm hover:underline hover:text-primary">{{ $user->current_vp }}</a>
+                    @else
+                        <span class="font-mono text-sm">{{ $user->current_vp }}</span>
+                    @endif
                 @else
                     <span class="text-gray-300">—</span>
                 @endif

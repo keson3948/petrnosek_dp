@@ -5,20 +5,22 @@
                 <x-mary-button
                     icon="o-arrow-left"
                     class="btn-circle btn-ghost btn-sm"
-                    link="{{ route('zasobovac.index') }}"
-                    tooltip-bottom="Zpět na seznam"
+                    link="{{ $backRoute ?? route('zasobovac.index') }}"
+                    tooltip-bottom="Zpět"
                 />
                 <span>Výrobní příkaz: {{ $staDokl->doklad->KlicDokla ?? 'N/A' }}</span>
             </div>
         </x-slot:title>
         <x-slot:actions>
-            @can('can print')
-                <x-mary-button
-                    icon="o-qr-code"
-                    class="btn-square text-primary"
-                    wire:click="openPrintModal('doklad')"
-                    tooltip-bottom="Tisk QR kódu VP"
-                />
+            @can('manage zasobovani')
+                @can('can print')
+                    <x-mary-button
+                        icon="o-qr-code"
+                        class="btn-square text-primary"
+                        wire:click="openPrintModal('doklad')"
+                        tooltip-bottom="Tisk QR kódu VP"
+                    />
+                @endcan
             @endcan
         </x-slot:actions>
     </x-mary-header>
@@ -188,18 +190,20 @@
                                             </div>
                                         @endif
                                     </div>
-                                    @can('can print')
-                                        <div class="flex justify-end">
-                                            <x-mary-button
-                                                type="button"
-                                                wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
-                                                class="btn-sm btn-square text-primary z-50"
-                                                title="Tisk QR řádku"
-                                                tooltip-left="Tisk QR řádku"
-                                                icon="o-qr-code"
-                                            >
-                                            </x-mary-button>
-                                        </div>
+                                    @can('manage zasobovani')
+                                        @can('can print')
+                                            <div class="flex justify-end">
+                                                <x-mary-button
+                                                    type="button"
+                                                    wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
+                                                    class="btn-sm btn-square text-primary z-50"
+                                                    title="Tisk QR řádku"
+                                                    tooltip-left="Tisk QR řádku"
+                                                    icon="o-qr-code"
+                                                >
+                                                </x-mary-button>
+                                            </div>
+                                        @endcan
                                     @endcan
                                 </div>
 
@@ -215,42 +219,44 @@
                              ">
                             @foreach($radek->evPodsestavy as $index_ev => $ev)
                                 @if($editingId === $ev->ID)
-                                    <div class="p-3 rounded-xl bg-warning/5 border border-warning/30">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                            <x-mary-input
-                                                label="Číslo výkresu *"
-                                                wire:model="editEntry.CisloVykresu"
-                                                placeholder="Zadejte číslo výkresu"
-                                            />
-                                            <x-mary-input
-                                                label="Množství *"
-                                                type="number"
-                                                step="0.01"
-                                                wire:model="editEntry.Mnozstvi"
-                                                placeholder="0.00"
-                                            />
-                                            <x-mary-input
-                                                label="Poznámka"
-                                                wire:model="editEntry.Poznamka"
-                                                placeholder="Volitelné"
-                                            />
+                                    @can('manage zasobovani')
+                                        <div class="p-3 rounded-xl bg-warning/5 border border-warning/30">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <x-mary-input
+                                                    label="Číslo výkresu *"
+                                                    wire:model="editEntry.CisloVykresu"
+                                                    placeholder="Zadejte číslo výkresu"
+                                                />
+                                                <x-mary-input
+                                                    label="Množství *"
+                                                    type="number"
+                                                    step="0.01"
+                                                    wire:model="editEntry.Mnozstvi"
+                                                    placeholder="0.00"
+                                                />
+                                                <x-mary-input
+                                                    label="Poznámka"
+                                                    wire:model="editEntry.Poznamka"
+                                                    placeholder="Volitelné"
+                                                />
+                                            </div>
+                                            <div class="mt-3 flex justify-end gap-2">
+                                                <x-mary-button
+                                                    label="Zrušit"
+                                                    icon="o-x-mark"
+                                                    class="btn-ghost btn-sm"
+                                                    wire:click="cancelEdit"
+                                                />
+                                                <x-mary-button
+                                                    label="Uložit změny"
+                                                    icon="o-check"
+                                                    class="btn-warning btn-sm"
+                                                    wire:click="updateEntry"
+                                                    spinner="updateEntry"
+                                                />
+                                            </div>
                                         </div>
-                                        <div class="mt-3 flex justify-end gap-2">
-                                            <x-mary-button
-                                                label="Zrušit"
-                                                icon="o-x-mark"
-                                                class="btn-ghost btn-sm"
-                                                wire:click="cancelEdit"
-                                            />
-                                            <x-mary-button
-                                                label="Uložit změny"
-                                                icon="o-check"
-                                                class="btn-warning btn-sm"
-                                                wire:click="updateEntry"
-                                                spinner="updateEntry"
-                                            />
-                                        </div>
-                                    </div>
+                                    @endcan
                                 @else
                                     <div class="flex items-center justify-between p-3 rounded-lg bg-base-100 border border-base-200">
                                         <div class="flex items-center gap-6">
@@ -273,67 +279,71 @@
                                                 </div>
                                             @endif
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            @can('can print')
+                                        @can('manage zasobovani')
+                                            <div class="flex items-center gap-2">
+                                                @can('can print')
+                                                    <x-mary-button
+                                                        icon="o-qr-code"
+                                                        class="btn-sm btn-ghost text-primary"
+                                                        wire:click="printPodsestava({{ $ev->ID }})"
+                                                        spinner="printPodsestava({{ $ev->ID }})"
+                                                        tooltip="Tisk QR štítku podsestavy"
+                                                    />
+                                                @endcan
                                                 <x-mary-button
-                                                    icon="o-qr-code"
+                                                    icon="o-pencil"
                                                     class="btn-sm btn-ghost text-primary"
-                                                    wire:click="printPodsestava({{ $ev->ID }})"
-                                                    spinner="printPodsestava({{ $ev->ID }})"
-                                                    tooltip="Tisk QR štítku podsestavy"
+                                                    wire:click="startEdit({{ $ev->ID }})"
+                                                    tooltip="Upravit"
                                                 />
-                                            @endcan
-                                            <x-mary-button
-                                                icon="o-pencil"
-                                                class="btn-sm btn-ghost text-primary"
-                                                wire:click="startEdit({{ $ev->ID }})"
-                                                tooltip="Upravit"
-                                            />
-                                            <x-mary-button
-                                                icon="o-trash"
-                                                class="btn-sm btn-ghost text-error"
-                                                wire:click="deleteEntry({{ $ev->ID }})"
-                                                wire:confirm="Opravdu smazat tento záznam?"
-                                                tooltip="Smazat"
-                                            />
-                                        </div>
+                                                <x-mary-button
+                                                    icon="o-trash"
+                                                    class="btn-sm btn-ghost text-error"
+                                                    wire:click="deleteEntry({{ $ev->ID }})"
+                                                    wire:confirm="Opravdu smazat tento záznam?"
+                                                    tooltip="Smazat"
+                                                />
+                                            </div>
+                                        @endcan
                                     </div>
                                 @endif
                             @endforeach
 
-                            <x-mary-card title="Přidat nový záznam" class="p-2 bg-primary/5 border border-primary/20 rounded-lg">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
-                                     @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
-                                     @entry-saved.window="if ($event.detail.rowIndex === {{ $index }}) $nextTick(() => $el.querySelector('input')?.focus())"
-                                >
-                                    <x-mary-input
-                                        label="Číslo výkresu *"
-                                        wire:model="newEntries.{{ $index }}.CisloVykresu"
-                                        placeholder="Zadejte číslo výkresu"
-                                    />
-                                    <x-mary-input
-                                        label="Množství *"
-                                        type="number"
-                                        step="1"
-                                        wire:model="newEntries.{{ $index }}.Mnozstvi"
-                                        placeholder="0.00"
-                                    />
-                                    <x-mary-input
-                                        label="Poznámka"
-                                        wire:model="newEntries.{{ $index }}.Poznamka"
-                                        placeholder="Volitelné"
-                                    />
-                                </div>
-                                <x-slot:actions>
-                                    <x-mary-button
-                                        label="Uložit"
-                                        icon="o-plus"
-                                        class="btn-primary btn-sm"
-                                        wire:click="saveEntry({{ $index }})"
-                                        spinner="saveEntry({{ $index }})"
-                                    />
-                                </x-slot:actions>
-                            </x-mary-card>
+                            @can('manage zasobovani')
+                                <x-mary-card title="Přidat nový záznam" class="p-2 bg-primary/5 border border-primary/20 rounded-lg">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
+                                         @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
+                                         @entry-saved.window="if ($event.detail.rowIndex === {{ $index }}) $nextTick(() => $el.querySelector('input')?.focus())"
+                                    >
+                                        <x-mary-input
+                                            label="Číslo výkresu *"
+                                            wire:model="newEntries.{{ $index }}.CisloVykresu"
+                                            placeholder="Zadejte číslo výkresu"
+                                        />
+                                        <x-mary-input
+                                            label="Množství *"
+                                            type="number"
+                                            step="1"
+                                            wire:model="newEntries.{{ $index }}.Mnozstvi"
+                                            placeholder="0.00"
+                                        />
+                                        <x-mary-input
+                                            label="Poznámka"
+                                            wire:model="newEntries.{{ $index }}.Poznamka"
+                                            placeholder="Volitelné"
+                                        />
+                                    </div>
+                                    <x-slot:actions>
+                                        <x-mary-button
+                                            label="Uložit"
+                                            icon="o-plus"
+                                            class="btn-primary btn-sm"
+                                            wire:click="saveEntry({{ $index }})"
+                                            spinner="saveEntry({{ $index }})"
+                                        />
+                                    </x-slot:actions>
+                                </x-mary-card>
+                            @endcan
                         </div>
                     </x-slot:content>
                 </x-mary-collapse>
@@ -347,39 +357,41 @@
     </x-mary-card>
 
     {{-- Print modal --}}
-    <x-mary-modal wire:model="showPrintModal" title="Tisk QR štítku" separator>
-        <div class="space-y-4">
-            <div class="text-sm text-gray-500">
-                @if($printType === 'doklad')
-                    Tisk QR kódu celého výrobního příkazu <span class="font-bold">{{ $staDokl->doklad->KlicDokla }}</span>
-                @elseif($printType === 'radek')
-                    Tisk QR kódu řádku VP
-                @elseif($printType === 'podsestava')
-                    Tisk QR kódu podsestavy
-                @endif
+    @can('manage zasobovani')
+        <x-mary-modal wire:model="showPrintModal" title="Tisk QR štítku" separator>
+            <div class="space-y-4">
+                <div class="text-sm text-gray-500">
+                    @if($printType === 'doklad')
+                        Tisk QR kódu celého výrobního příkazu <span class="font-bold">{{ $staDokl->doklad->KlicDokla }}</span>
+                    @elseif($printType === 'radek')
+                        Tisk QR kódu řádku VP
+                    @elseif($printType === 'podsestava')
+                        Tisk QR kódu podsestavy
+                    @endif
+                </div>
+
+                <x-mary-input
+                    label="Počet kusů"
+                    type="number"
+                    wire:model="printCopies"
+                    min="1"
+                    max="100"
+                    class="input-lg"
+                    autofocus
+                />
             </div>
 
-            <x-mary-input
-                label="Počet kusů"
-                type="number"
-                wire:model="printCopies"
-                min="1"
-                max="100"
-                class="input-lg"
-                autofocus
-            />
-        </div>
-
-        <x-slot:actions>
-            <x-mary-button label="Zrušit" @click="$wire.showPrintModal = false" />
-            <x-mary-button
-                label="Tisknout"
-                icon="o-printer"
-                class="btn-primary"
-                wire:click="confirmPrint"
-                spinner="confirmPrint"
-            />
-        </x-slot:actions>
-    </x-mary-modal>
+            <x-slot:actions>
+                <x-mary-button label="Zrušit" @click="$wire.showPrintModal = false" />
+                <x-mary-button
+                    label="Tisknout"
+                    icon="o-printer"
+                    class="btn-primary"
+                    wire:click="confirmPrint"
+                    spinner="confirmPrint"
+                />
+            </x-slot:actions>
+        </x-mary-modal>
+    @endcan
 
 </div>
