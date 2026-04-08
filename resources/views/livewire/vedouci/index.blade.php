@@ -9,13 +9,12 @@
     </x-mary-header>
 
     <x-mary-card>
-        <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination link="/vedouci/operator/{klic_subjektu}">
+        <x-mary-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination>
 
             @scope('cell_name', $user)
-                <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full shrink-0 {{ $user->is_active ? ($user->status_label === 'Pauza' ? 'bg-warning' : 'bg-success animate-pulse') : 'bg-base-300' }}"></div>
+                <a href="{{ route('vedouci.show', $user->klic_subjektu) }}" class="flex items-center gap-3 hover:text-primary transition">
                     <span class="font-semibold">{{ $user->name }}</span>
-                </div>
+                </a>
             @endscope
 
             @scope('cell_status_label', $user)

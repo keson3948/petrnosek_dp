@@ -6,7 +6,9 @@ use App\Jobs\PrintLabelJob;
 use App\Models\EvPodsestav;
 use App\Models\Polozka;
 use App\Models\Printer;
+use App\Models\ProductionRecord;
 use App\Models\StaDokl;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -24,6 +26,15 @@ class VpDetail extends Component
 
     public ?int $editingId = null;
     public array $editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
+
+    // History drawer state
+    public bool $showHistoryDrawer = false;
+
+    public string $historyDrawerTitle = '';
+
+    public string $historyDrawerContext = '';
+
+    public array $historyDrawerRecords = [];
 
     // Print modal state
     public bool $showPrintModal = false;
@@ -152,6 +163,52 @@ class VpDetail extends Component
         EvPodsestav::where('ID', $evPodsId)->delete();
 
         $this->success('Záznam smazán.');
+    }
+
+    public function openHistory(string $type, ?int $targetId = null, string $label = '', string $context = ''): void
+    {
+        $this->historyDrawerTitle = $label ?: '';
+        $this->historyDrawerContext = $context;
+
+        $records = ProductionRecord::where('ZakVP_SysPrimKlic', trim($this->staDokl->Doklad))
+            ->where('status', 2)
+            ->with(['machine', 'operation'])
+            ->orderBy('started_at');
+
+        if ($type === 'vp') {
+            $records = $records->whereNull('ZakVP_radek_entita')->get();
+        } elseif ($type === 'radek') {
+            $records = $records->where('ZakVP_radek_entita', $targetId)
+                ->whereNull('ev_podsestav_id')->get();
+        } elseif ($type === 'podsestava') {
+            $records = $records->where('ev_podsestav_id', $targetId)->get();
+        } else {
+            $records = collect();
+        }
+
+        $userNames = User::whereIn('klic_subjektu',
+                $records->pluck('user_id')->map(fn ($k) => trim($k))->filter()->unique()
+            )->pluck('name', 'klic_subjektu')
+            ->mapWithKeys(fn ($name, $k) => [trim($k) => $name])
+            ->all();
+
+        $this->historyDrawerRecords = $records->map(function ($r) use ($userNames) {
+            $totalMin = ($r->started_at && $r->ended_at)
+                ? max(0, intval($r->started_at->diffInMinutes($r->ended_at)) - ($r->total_paused_min ?? 0))
+                : null;
+
+            return [
+                'operation' => trim($r->operation?->Nazev1 ?? $r->operation_id ?? '') ?: '—',
+                'started_at' => $r->started_at?->format('d.m. H:i') ?? '—',
+                'operator' => $userNames[trim($r->user_id)] ?? '—',
+                'machine' => trim($r->machine?->NazevUplny ?? $r->machine_id ?? '') ?: '—',
+                'time' => $totalMin !== null ? intdiv($totalMin, 60) . ':' . str_pad($totalMin % 60, 2, '0', STR_PAD_LEFT) : '—',
+                'quantity' => (int) ($r->processed_quantity ?? 0),
+                'notes' => $r->notes ?: '',
+            ];
+        })->toArray();
+
+        $this->showHistoryDrawer = true;
     }
 
     public function openPrintModal(string $type, ?int $id = null): void

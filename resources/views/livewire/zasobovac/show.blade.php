@@ -22,80 +22,27 @@
                     />
                 @endcan
             @endcan
+            <x-mary-button
+                wire:click="openHistory('vp', null, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}')"
+                icon="o-clock"
+                class="btn-square text-primary"
+                tooltip-bottom="Práce na VP"
+            />
         </x-slot:actions>
     </x-mary-header>
 
     <x-mary-card class="mb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <div class="flex items-start gap-5">
-                <div
-                    class="shrink-0 w-16 h-16 rounded-full"
-                    style="background-color: {{ $mistrUser?->color ?? '#6b7280' }}"
-                ></div>
-                <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Výrobní příkaz č.</div>
-                    <div class="text-3xl font-medium leading-tight">
-                        {{ trim($staDokl->doklad->KlicDokla ?? '') }} / <span class="text-4xl font-extrabold">{{ trim($staDokl->doklad->MPSProjekt ?? '-') }}</span>
-                    </div>
-                    <div class="mt-2 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1">
-                        <span class="text-xs text-gray-400 uppercase font-bold w-14">Mistr</span>
-                        <span class="font-semibold">
-                            {{ trim($staDokl->doklad->vlastniOsoba->Prijmeni ?? '-') }}
-                            @if($mistrUser?->cislo_mistra)
-                                <span class="text-xs text-gray-400 font-normal ml-1">#{{ $mistrUser->cislo_mistra }}</span>
-                            @endif
-                        </span>
-                        @if(trim($staDokl->doklad->rodicZakazka?->vlastniOsoba?->Prijmeni ?? '') !== '')
-                            <span class="text-xs text-gray-400 uppercase font-bold w-14">Garant</span>
-                            <span class="font-semibold">{{ trim($staDokl->doklad->rodicZakazka->vlastniOsoba->Prijmeni) }}</span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-x-6 gap-y-3 content-start">
-                <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Vystaveno</div>
-                    <div class="text-lg font-semibold">
-                        {{ $staDokl->doklad->DatVystav ? \Carbon\Carbon::parse($staDokl->doklad->DatVystav)->format('d.m.Y') : '-' }}
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Cena VP</div>
-                    <div class="text-lg font-semibold">
-                        {{ $staDokl->doklad->ZaklDanCelkVM1D !== null ? number_format((float) $staDokl->doklad->ZaklDanCelkVM1D, 2, ',', ' ') . ' Kč' : '-' }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Obch. zakázka</div>
-                    <div class="text-lg font-semibold">{{ trim($staDokl->doklad->rodicZakazka->KlicDokla ?? '-') }}</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Hmotnost</div>
-                    <div class="text-lg font-semibold">
-                        {{ $staDokl->doklad->NettoKg && (float) $staDokl->doklad->NettoKg > 0 ? number_format((float) $staDokl->doklad->NettoKg, 2, ',', ' ') . ' kg' : '-' }}
-                    </div>
-                </div>
-
-                  <div>
-                    <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Int. projekt</div>
-                    <div class="text-lg font-semibold font-mono">{{ trim($staDokl->doklad->rodicZakazka->SpecifiSy ?? '-') }}</div>
-                </div>
-            </div>
-
-        </div>
+        @include('livewire.zasobovac.partials.vp-header', ['staDokl' => $staDokl, 'mistrUser' => $mistrUser])
     </x-mary-card>
 
 
     @if(trim($staDokl->doklad->InterniPoznamka ?? '') !== '')
         <x-mary-card class="mb-8">
             <div class="flex items-start gap-3">
-                <x-mary-icon name="o-chat-bubble-left-ellipsis" class="w-5 h-5 text-base-content/40 shrink-0 mt-0.5" />
+                <x-mary-icon name="o-chat-bubble-left-ellipsis" class="w-5 h-5 text-base-content/40 shrink-0 mt-0.5"/>
                 <div>
                     <div class="text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Poznámka</div>
-                    <div class="text-sm whitespace-pre">{{ trim($staDokl->doklad->InterniPoznamka) }}</div>
+                    <div class="text-sm whitespace-pre-wrap break-words">{{ trim($staDokl->doklad->InterniPoznamka) }}</div>
                 </div>
             </div>
         </x-mary-card>
@@ -111,13 +58,15 @@
                         @endphp
                         <div class="w-full -mx-4 -my-2">
 
-                            <div class="bg-primary/5 rounded-r-lg  px-4 py-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
+                            <div
+                                class="bg-primary/5 rounded-r-lg  px-4 py-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
                                 <div class="flex gap-2">
                                     <div>
                                         <div class="text-[10px] text-gray-400 uppercase font-bold">ŘÁDEK VP</div>
                                         <div class="font-mono text-sm font-bold text-primary">{{ $radek->CisloRadk }}
                                             @if($radek->evPodsestavy->count() > 0)
-                                                <x-mary-badge class="badge-primary badge-soft bg-gray-400 text-white " value="{{ $radek->evPodsestavy->count() }}"/>
+                                                <x-mary-badge class="badge-primary badge-soft bg-gray-400 text-white "
+                                                              value="{{ $radek->evPodsestavy->count() }}"/>
                                             @endif
                                         </div>
                                     </div>
@@ -128,7 +77,8 @@
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Termín</div>
-                                    <div class="text-sm">{{ $datum ? \Carbon\Carbon::parse($datum)->format('d.m.Y') : '-' }}</div>
+                                    <div
+                                        class="text-sm">{{ $datum ? \Carbon\Carbon::parse($datum)->format('d.m.Y') : '-' }}</div>
                                 </div>
                                 <div class="lg:col-span-2">
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Název</div>
@@ -136,22 +86,27 @@
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Množství</div>
-                                    <div class="text-sm font-bold">{{ number_format((float)($radek->MnozstviZMJ ?? 0), 0) }} <span class="text-gray-400 font-normal">ks</span></div>
+                                    <div
+                                        class="text-sm font-bold">{{ number_format((float)($radek->MnozstviZMJ ?? 0), 0) }}
+                                        <span class="text-gray-400 font-normal">ks</span></div>
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Materiál</div>
-                                    <div class="text-sm truncate">{{ trim($radek->materialPolozka->Nazev1 ?? '-') }}</div>
+                                    <div
+                                        class="text-sm truncate">{{ trim($radek->materialPolozka->Nazev1 ?? '-') }}</div>
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Povrch. úprava</div>
-                                    <div class="text-sm truncate">{{ trim($radek->povrchoUpPolozka->Nazev1 ?? '-') }}</div>
+                                    <div
+                                        class="text-sm truncate">{{ trim($radek->povrchoUpPolozka->Nazev1 ?? '-') }}</div>
                                 </div>
                             </div>
 
                             <div class="px-4 py-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-1">
                                 <div class="lg:col-span-3">
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Text řádku</div>
-                                    <div class="text-xs text-gray-600">{{ $radek->TxtRadku ? preg_replace('/[\r\n]+/', '; ', trim($radek->TxtRadku)) : '-' }}</div>
+                                    <div
+                                        class="text-xs text-gray-600">{{ $radek->TxtRadku ? preg_replace('/[\r\n]+/', '; ', trim($radek->TxtRadku)) : '-' }}</div>
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Kontrakt</div>
@@ -167,45 +122,63 @@
                                 </div>
                                 <div>
                                     <div class="text-[10px] text-gray-400 uppercase font-bold">Cena/ks</div>
-                                    <div class="text-xs text-gray-600">{{ number_format((float)($radek->PCZaZMJVCM ?? 0), 2) }}</div>
+                                    <div
+                                        class="text-xs text-gray-600">{{ number_format((float)($radek->PCZaZMJVCM ?? 0), 2) }}</div>
                                 </div>
                             </div>
 
-                                <div class="pl-4 py-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-x-4 gap-y-1 items-center">
-                                    <div class="lg:col-span-7">
-                                        @if($radek->RozsahPoz || $radek->Poznamka)
-                                            <div class="flex gap-4">
-                                                @if($radek->RozsahPoz)
-                                                    <div>
-                                                        <div class="text-[10px] text-gray-400 uppercase font-bold">Rozsah pozic</div>
-                                                        <div class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->RozsahPoz)) }}</div>
+                            <div
+                                class="pl-4 py-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-x-4 gap-y-1 items-center">
+                                <div class="lg:col-span-7">
+                                    @if($radek->RozsahPoz || $radek->Poznamka)
+                                        <div class="flex gap-4">
+                                            @if($radek->RozsahPoz)
+                                                <div>
+                                                    <div class="text-[10px] text-gray-400 uppercase font-bold">Rozsah
+                                                        pozic
                                                     </div>
-                                                @endif
-                                                @if($radek->Poznamka)
-                                                    <div>
-                                                        <div class="text-[10px] text-gray-400 uppercase font-bold">Poznámka</div>
-                                                        <div class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->Poznamka)) }}</div>
+                                                    <div
+                                                        class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->RozsahPoz)) }}</div>
+                                                </div>
+                                            @endif
+                                            @if($radek->Poznamka)
+                                                <div>
+                                                    <div class="text-[10px] text-gray-400 uppercase font-bold">
+                                                        Poznámka
                                                     </div>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @can('manage zasobovani')
-                                        @can('can print')
-                                            <div class="flex justify-end">
-                                                <x-mary-button
-                                                    type="button"
-                                                    wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
-                                                    class="btn-sm btn-square text-primary z-50"
-                                                    title="Tisk QR řádku"
-                                                    tooltip-left="Tisk QR řádku"
-                                                    icon="o-qr-code"
-                                                >
-                                                </x-mary-button>
-                                            </div>
-                                        @endcan
-                                    @endcan
+                                                    <div
+                                                        class="text-xs text-gray-500 italic">{{ preg_replace('/[\r\n]+/', '; ', trim($radek->Poznamka)) }}</div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
+                                <div class="flex justify-end">
+                                    @can('manage zasobovani')
+
+                                        @can('can print')
+
+                                            <x-mary-button
+                                                type="button"
+                                                wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
+                                                class="btn-sm btn-square text-primary z-50"
+                                                title="Tisk QR řádku"
+                                                tooltip-left="Tisk QR řádku"
+                                                icon="o-qr-code"
+                                            >
+                                            </x-mary-button>
+
+                                        @endcan
+
+                                    @endcan
+                                    <x-mary-button
+                                        wire:click="openHistory('radek', {{ $radek->EntitaRad }}, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}', 'ŘÁDEK VP: {{ $radek->CisloRadk }} | POZICE: {{ trim($radek->Pozice ?? '-') }}')"
+                                        icon="o-clock"
+                                        class="btn-sm btn-square text-primary z-50"
+                                        tooltip="Práce na řádku"
+                                    />
+                                </div>
+                            </div>
 
                         </div>
                     </x-slot:heading>
@@ -230,9 +203,9 @@
                                                 <x-mary-input
                                                     label="Množství *"
                                                     type="number"
-                                                    step="0.01"
+                                                    step="1"
                                                     wire:model="editEntry.Mnozstvi"
-                                                    placeholder="0.00"
+                                                    placeholder="0"
                                                 />
                                                 <x-mary-input
                                                     label="Poznámka"
@@ -258,11 +231,13 @@
                                         </div>
                                     @endcan
                                 @else
-                                    <div class="flex items-center justify-between p-3 rounded-lg bg-base-100 border border-base-200">
+                                    <div
+                                        class="flex items-center justify-between p-3 rounded-lg bg-base-100 border border-base-200">
                                         <div class="flex items-center gap-6">
                                             <div>
                                                 <div class="text-xs text-gray-400 uppercase">Č. PODSESTAVY</div>
-                                                <div class="font-semibold">{{ trim($ev->OznaceniPodsestavy ?? $radek->CisloRadk . '.' . ($index_ev + 1)) }}</div>
+                                                <div
+                                                    class="font-semibold">{{ trim($ev->OznaceniPodsestavy ?? $radek->CisloRadk . '.' . ($index_ev + 1)) }}</div>
                                             </div>
                                             <div>
                                                 <div class="text-xs text-gray-400 uppercase">Číslo výkresu</div>
@@ -290,27 +265,37 @@
                                                         tooltip="Tisk QR štítku podsestavy"
                                                     />
                                                 @endcan
+                                                @endcan
                                                 <x-mary-button
-                                                    icon="o-pencil"
+                                                    wire:click="openHistory('podsestava', {{ $ev->ID }}, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}', 'ŘÁDEK VP: {{ $radek->CisloRadk }} | POZICE: {{ trim($radek->Pozice ?? '-') }} | PODSESTAVA: {{ trim($ev->OznaceniPodsestavy ?? '') }}')"
+                                                    icon="o-clock"
                                                     class="btn-sm btn-ghost text-primary"
-                                                    wire:click="startEdit({{ $ev->ID }})"
-                                                    tooltip="Upravit"
+                                                    tooltip="Práce na podsestavě"
                                                 />
-                                                <x-mary-button
-                                                    icon="o-trash"
-                                                    class="btn-sm btn-ghost text-error"
-                                                    wire:click="deleteEntry({{ $ev->ID }})"
-                                                    wire:confirm="Opravdu smazat tento záznam?"
-                                                    tooltip="Smazat"
-                                                />
+                                                @can('manage zasobovani')
+                                                    <x-mary-button
+                                                        icon="o-pencil"
+                                                        class="btn-sm btn-ghost text-primary"
+                                                        wire:click="startEdit({{ $ev->ID }})"
+                                                        tooltip="Upravit"
+                                                    />
+                                                    <x-mary-button
+                                                        icon="o-trash"
+                                                        class="btn-sm btn-ghost text-error"
+                                                        wire:click="deleteEntry({{ $ev->ID }})"
+                                                        wire:confirm="Opravdu smazat tento záznam?"
+                                                        tooltip="Smazat"
+                                                    />
                                             </div>
                                         @endcan
+
                                     </div>
                                 @endif
                             @endforeach
 
                             @can('manage zasobovani')
-                                <x-mary-card title="Přidat nový záznam" class="p-2 bg-primary/5 border border-primary/20 rounded-lg">
+                                <x-mary-card title="Přidat nový záznam"
+                                             class="p-2 bg-primary/5 border border-primary/20 rounded-lg">
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
                                          @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
                                          @entry-saved.window="if ($event.detail.rowIndex === {{ $index }}) $nextTick(() => $el.querySelector('input')?.focus())"
@@ -325,7 +310,7 @@
                                             type="number"
                                             step="1"
                                             wire:model="newEntries.{{ $index }}.Mnozstvi"
-                                            placeholder="0.00"
+                                            placeholder="0"
                                         />
                                         <x-mary-input
                                             label="Poznámka"
@@ -350,11 +335,58 @@
             </div>
         @empty
             <div class="text-center py-10 text-gray-500">
-                <x-mary-icon name="o-inbox" class="w-12 h-12 mx-auto text-gray-300" />
+                <x-mary-icon name="o-inbox" class="w-12 h-12 mx-auto text-gray-300"/>
                 <div class="mt-2">Žádné položky nenalezeny.</div>
             </div>
         @endforelse
     </x-mary-card>
+
+    {{-- History Drawer --}}
+    <x-mary-drawer wire:model="showHistoryDrawer" right title="Historie prací"
+                   class="w-full lg:w-2/3" with-close-button>
+
+        <div class="mb-4 px-3 py-3 bg-base-200/50 rounded-lg">
+            @include('livewire.zasobovac.partials.vp-header', ['staDokl' => $staDokl, 'mistrUser' => $mistrUser, 'compact' => true, 'context' => $historyDrawerContext])
+        </div>
+
+        @if(count($historyDrawerRecords) > 0)
+            @php $grouped = collect($historyDrawerRecords)->groupBy('operation'); @endphp
+            <table class="table table-xs w-full">
+                <thead>
+                <tr class="text-xs text-gray-400 border-0">
+                    <th class="!border-0">Operace</th>
+                    <th class="!border-0">Zahájení</th>
+                    <th class="!border-0">Operátor</th>
+                    <th class="!border-0">Stroj</th>
+                    <th class="!border-0">Čas</th>
+                    <th class="!border-0">Mn.</th>
+                    <th class="!border-0">Poznámka</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" class="!p-0 !border-0"><hr class="border-base-300 my-1.5"></td></tr>
+                @foreach($grouped as $operationName => $records)
+                    @if(!$loop->first)
+                        <tr><td colspan="7" class="!p-0 !border-0"><hr class="border-base-300 my-1.5"></td></tr>
+                    @endif
+                    @foreach($records as $rec)
+                        <tr>
+                            <td class="py-0.5 !border-0 font-bold">{{ $loop->first ? $operationName : '' }}</td>
+                            <td class="py-0.5 !border-0 whitespace-nowrap tabular-nums">{{ $rec['started_at'] }}</td>
+                            <td class="py-0.5 !border-0">{{ $rec['operator'] }}</td>
+                            <td class="py-0.5 !border-0">{{ $rec['machine'] }}</td>
+                            <td class="py-0.5 !border-0 whitespace-nowrap tabular-nums font-mono">{{ $rec['time'] }}</td>
+                            <td class="py-0.5 !border-0">{{ $rec['quantity'] }} ks</td>
+                            <td class="py-0.5 !border-0 max-w-32 truncate" title="{{ $rec['notes'] }}">{{ $rec['notes'] ?: '—' }}</td>
+                        </tr>
+                    @endforeach
+                @endforeach
+                </tbody>
+            </table>
+        @else
+            <div class="text-center py-8 text-gray-500">Žádné záznamy.</div>
+        @endif
+    </x-mary-drawer>
 
     {{-- Print modal --}}
     @can('manage zasobovani')
@@ -362,7 +394,8 @@
             <div class="space-y-4">
                 <div class="text-sm text-gray-500">
                     @if($printType === 'doklad')
-                        Tisk QR kódu celého výrobního příkazu <span class="font-bold">{{ $staDokl->doklad->KlicDokla }}</span>
+                        Tisk QR kódu celého výrobního příkazu <span
+                            class="font-bold">{{ $staDokl->doklad->KlicDokla }}</span>
                     @elseif($printType === 'radek')
                         Tisk QR kódu řádku VP
                     @elseif($printType === 'podsestava')
@@ -382,7 +415,7 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Zrušit" @click="$wire.showPrintModal = false" />
+                <x-mary-button label="Zrušit" @click="$wire.showPrintModal = false"/>
                 <x-mary-button
                     label="Tisknout"
                     icon="o-printer"

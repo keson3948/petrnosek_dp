@@ -4,10 +4,12 @@ namespace App\Livewire\Dashboard;
 
 use App\Models\Doklad;
 use App\Models\EvPodsestav;
+use App\Models\Operace;
 use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
 use App\Models\Prostredek;
+use App\Models\Terminal;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -542,7 +544,8 @@ class StartDrawer extends Component
             return collect();
         }
 
-        return PrednOperProstr::forProstredek($this->machine_id)
+        // Operace přiřazené tomuto stroji
+        $assigned = PrednOperProstr::forProstredek($this->machine_id)
             ->with('operace')
             ->get()
             ->map(function ($r) {
@@ -551,26 +554,75 @@ class StartDrawer extends Component
 
                 return $r;
             });
+
+        // Operace bez přiřazeného stroje (Prostredek = '~') = volné pro všechny stroje
+        $unassigned = PrednOperProstr::where('Prostredek', '~')
+            ->with('operace')
+            ->get()
+            ->map(function ($r) {
+                $r->operation_key = trim($r->Operace ?? '');
+                $r->operation_name = trim($r->operace?->Nazev1 ?? '');
+
+                return $r;
+            });
+
+        return $assigned->concat($unassigned);
     }
 
     #[Computed]
     public function userMachines()
     {
         $klicSubjektu = auth()->user()->klic_subjektu;
-        if (! $klicSubjektu) {
-            return collect();
+        $terminal = Terminal::current();
+        $pracovisteFilter = $terminal?->klic_pracoviste;
+
+        $assigned = collect();
+        if ($klicSubjektu) {
+            $assigned = PrednOsobProstr::forOsoba($klicSubjektu)
+                ->with('prostredek')
+                ->orderBy('Priorita')
+                ->get();
         }
 
-        return PrednOsobProstr::forOsoba($klicSubjektu)
-            ->with('prostredek')
-            ->orderBy('Priorita')
-            ->get()
-            ->map(function ($r) {
-                $r->machine_key = trim($r->Prrostredek ?? '');
-                $r->machine_name = trim($r->prostredek?->NazevUplny ?? '');
+        // 2. Stroje bez jakékoliv přiřazené osoby (= volné pro všechny)
+        $allAssignedMachineKeys = PrednOsobProstr::pluck('Prrostredek')
+            ->map(fn ($k) => trim($k))
+            ->unique()
+            ->values();
 
-                return $r;
-            });
+        $unassignedQuery = Prostredek::dbcnt(730550)
+            ->where('KlicProstredku', 'like', '20%')
+            ->whereNotIn('KlicProstredku', $allAssignedMachineKeys);
+
+        if ($pracovisteFilter) {
+            $unassignedQuery->where('Pracoviste', $pracovisteFilter);
+        }
+
+        $unassigned = $unassignedQuery->orderBy('KlicProstredku')->get();
+
+        // 3. Sloučit: přiřazené (filtrované) + nepřiřazené
+        $machines = collect();
+
+        foreach ($assigned as $r) {
+            $prostredek = $r->prostredek;
+            if ($pracovisteFilter && trim($prostredek?->Pracoviste ?? '') !== $pracovisteFilter) {
+                continue;
+            }
+            $r->machine_key = trim($r->Prrostredek ?? '');
+            $r->machine_name = trim($prostredek?->NazevUplny ?? '');
+            $machines->push($r);
+        }
+
+        foreach ($unassigned as $prostredek) {
+            $obj = (object) [
+                'machine_key' => trim($prostredek->KlicProstredku),
+                'machine_name' => trim($prostredek->NazevUplny ?? ''),
+                'prostredek' => $prostredek,
+            ];
+            $machines->push($obj);
+        }
+
+        return $machines;
     }
 
     public function render()

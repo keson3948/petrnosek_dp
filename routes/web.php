@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/stroje', \App\Livewire\Vedouci\MachineIndex::class)->name('vedouci.machines');
         Route::get('/stroje/{machineKey}', \App\Livewire\Vedouci\MachineShow::class)->name('vedouci.machine');
         Route::get('/operator/{klicSubjektu}', \App\Livewire\Vedouci\Show::class)->name('vedouci.show');
+        Route::get('/operator/{klicSubjektu}/edit/{id?}', \App\Livewire\Vedouci\RecordEdit::class)->name('vedouci.record-edit');
     });
 
     // --- ADMIN  ---
