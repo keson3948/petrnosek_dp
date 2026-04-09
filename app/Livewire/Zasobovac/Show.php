@@ -278,7 +278,6 @@ class Show extends Component
         $this->printCopies = 1;
 
         $printer = $this->checkPrintPermissions();
-        dd($printer);
         $doklad = $this->staDokl->doklad;
         $mistrUser = $doklad->vlastniOsoba?->user;
 
