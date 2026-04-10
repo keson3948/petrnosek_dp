@@ -340,15 +340,7 @@ class Show extends Component
         $data['qrCode'] = $qrCode;
 
         $customPaper = [0, 0, 175.7, 82.2];
-        $pdf = Pdf::loadView('pdf.pdf-label', $data)
-            ->setPaper($customPaper)
-            ->setOption([
-                'margin-top' => 0,
-                'margin-bottom' => 0,
-                'margin-left' => 0,
-                'margin-right' => 0,
-                'dpi' => 300,
-            ]);
+        $pdf = Pdf::loadView('pdf.pdf-label', $data)->setPaper($customPaper);
 
         PrintLabelJob::dispatch($printer->id, base64_encode($pdf->output()), $this->printCopies);
 
