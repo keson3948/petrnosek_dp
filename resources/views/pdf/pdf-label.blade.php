@@ -36,7 +36,7 @@
     <table style="width: 100%; border-collapse: collapse; padding-top: 7px; padding-left: 5px;">
         <tr>
             <td style="width: 30%; vertical-align: middle; text-align: left; padding: 0; padding-right: 4px">
-                <img  src="data:image/svg+xml;base64,{{ $qrCode }}" style="width: 94px; height: 94px;" alt="QR">
+                <img  src="data:image/svg+xml;base64,{{ $qrCode }}" style="width: 89px; height: 89px;" alt="QR">
             </td>
             <td style="width: 70%; vertical-align: top; text-align: left; padding-left: 3px;">
                 <table style="width: 100%; border-collapse: collapse;">
