@@ -340,6 +340,10 @@
             Celkem: <span x-text="h"></span> hodin <span x-text="m"></span> minut
         </div>
 
+        @error('edit_time')
+            <div class="text-error text-sm mt-2">{{ $message }}</div>
+        @enderror
+
         <div class="flex justify-end gap-2 mt-6">
             <x-mary-button label="Zrušit" @click="$wire.showEditTimeModal = false" />
             <button type="button" class="btn btn-primary" @click="$wire.saveEditTime(h, m, startedAt)">Uložit</button>

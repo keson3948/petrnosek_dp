@@ -98,7 +98,7 @@
                                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                                     <div>
                                         <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava</div>
-                                        <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : 'Nezadáno' }} <span class="text-gray-400 mx-1">/</span> {{ $record->drawing_number ?: 'Nezadáno' }}</div>
+                                        <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : 'Nezadáno' }} <span class="text-gray-400 mx-1">/</span> {{ $record->podsestav?->OznaceniPodsestavy ?: '—' }} </div>
                                     </div>
                                     <button wire:click="openEditRadekPodsestava({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit řádek a podsestavu">
                                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
@@ -272,7 +272,7 @@
                                     <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                                         <div>
                                             <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava</div>
-                                            <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : '—' }} <span class="text-gray-400 mx-1">/</span> {{ $record->drawing_number ?: '—' }}</div>
+                                            <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : '—' }} <span class="text-gray-400 mx-1">/</span> {{ $record->podsestav?->OznaceniPodsestavy ?: '—' }}</div>
                                         </div>
                                         <button wire:click="openEditRadekPodsestava({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square">
                                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />

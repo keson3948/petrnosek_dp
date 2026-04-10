@@ -7,6 +7,8 @@ use App\Models\EvPodsestav;
 use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
+use App\Models\Prostredek;
+use App\Models\Terminal;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -78,20 +80,54 @@ class History extends Component
     public function getUserMachinesProperty()
     {
         $klicSubjektu = auth()->user()->klic_subjektu;
-        if (! $klicSubjektu) {
-            return collect();
+        $terminal = Terminal::current();
+        $pracovisteFilter = $terminal?->klic_pracoviste;
+
+        $assigned = collect();
+        if ($klicSubjektu) {
+            $assigned = PrednOsobProstr::forOsoba($klicSubjektu)
+                ->with('prostredek')
+                ->orderBy('Priorita')
+                ->get();
         }
 
-        return PrednOsobProstr::forOsoba($klicSubjektu)
-            ->with('prostredek')
-            ->orderBy('Priorita')
-            ->get()
-            ->map(function ($r) {
-                $r->machine_key = trim($r->Prrostredek ?? '');
-                $r->machine_name = trim($r->prostredek?->NazevUplny ?? '');
+        $allAssignedMachineKeys = PrednOsobProstr::pluck('Prrostredek')
+            ->map(fn ($k) => trim($k))
+            ->unique()
+            ->values();
 
-                return $r;
-            });
+        $unassignedQuery = Prostredek::dbcnt(730550)
+            ->where('KlicProstredku', 'like', '20%')
+            ->whereNotIn('KlicProstredku', $allAssignedMachineKeys);
+
+        if ($pracovisteFilter) {
+            $unassignedQuery->where('Pracoviste', $pracovisteFilter);
+        }
+
+        $unassigned = $unassignedQuery->orderBy('KlicProstredku')->get();
+
+        $machines = collect();
+
+        foreach ($assigned as $r) {
+            $prostredek = $r->prostredek;
+            if ($pracovisteFilter && trim($prostredek?->Pracoviste ?? '') !== $pracovisteFilter) {
+                continue;
+            }
+            $r->machine_key = trim($r->Prrostredek ?? '');
+            $r->machine_name = trim($prostredek?->NazevUplny ?? '');
+            $machines->push($r);
+        }
+
+        foreach ($unassigned as $prostredek) {
+            $obj = (object) [
+                'machine_key' => trim($prostredek->KlicProstredku),
+                'machine_name' => trim($prostredek->NazevUplny ?? ''),
+                'prostredek' => $prostredek,
+            ];
+            $machines->push($obj);
+        }
+
+        return $machines;
     }
 
     public function render()
@@ -100,7 +136,7 @@ class History extends Component
         $fiveDaysAgo = now()->subDays(5)->startOfDay();
 
         $allCompleted = auth()->user()->productionRecords()
-            ->with(['doklad.vlastniOsoba', 'machine', 'operation'])
+            ->with(['doklad.vlastniOsoba', 'machine', 'operation', 'podsestav'])
             ->where('status', 2)
             ->where('ended_at', '>=', $fiveDaysAgo)
             ->orderByDesc('ended_at')
@@ -280,10 +316,7 @@ class History extends Component
         ]);
 
         if ($this->edit_machine_id) {
-            $klicSubjektu = auth()->user()->klic_subjektu;
-            $machineExists = PrednOsobProstr::forOsoba($klicSubjektu)
-                ->where('Prrostredek', $this->edit_machine_id)
-                ->exists();
+            $machineExists = $this->userMachines->contains('machine_key', $this->edit_machine_id);
 
             if (! $machineExists) {
                 $this->addError('edit_machine_id', 'Vybraný stroj neexistuje nebo k němu nemáte přístup.');
@@ -291,9 +324,7 @@ class History extends Component
                 return;
             }
 
-            $operationExists = PrednOperProstr::forProstredek($this->edit_machine_id)
-                ->where('Operace', $this->edit_operation_id)
-                ->exists();
+            $operationExists = $this->machineOperations->contains('operation_key', $this->edit_operation_id);
 
             if (! $operationExists) {
                 $this->addError('edit_operation_id', 'Vybraná operace nepatří ke zvolenému stroji.');
@@ -319,7 +350,7 @@ class History extends Component
             return collect();
         }
 
-        return PrednOperProstr::forProstredek($this->edit_machine_id)
+        $assigned = PrednOperProstr::forProstredek($this->edit_machine_id)
             ->with('operace')
             ->get()
             ->map(function ($r) {
@@ -328,6 +359,18 @@ class History extends Component
 
                 return $r;
             });
+
+        $unassigned = PrednOperProstr::where('Prostredek', '~')
+            ->with('operace')
+            ->get()
+            ->map(function ($r) {
+                $r->operation_key = trim($r->Operace ?? '');
+                $r->operation_name = trim($r->operace?->Nazev1 ?? '');
+
+                return $r;
+            });
+
+        return $assigned->concat($unassigned);
     }
 
     // ==========================================
@@ -557,8 +600,12 @@ class History extends Component
         $this->showEditTimeModal = true;
     }
 
-    public function saveEditTime(int $hours, int $minutes, string $startedAt)
+    public function saveEditTime($hours, $minutes, $startedAt)
     {
+        $hours = (int) $hours;
+        $minutes = (int) $minutes;
+        $startedAt = (string) $startedAt;
+
         if ($hours < 0 || $minutes < 0) {
             $this->addError('edit_time', 'Hodiny a minuty nesmí být záporné.');
 
@@ -567,7 +614,7 @@ class History extends Component
 
         $workedMinutes = ($hours * 60) + $minutes;
 
-        if ($workedMinutes === 0) {
+        if ($workedMinutes == 0) {
             $this->addError('edit_time', 'Odpracovaný čas musí být větší než 0.');
 
             return;

@@ -76,4 +76,14 @@ class ProductionRecord extends Model
     {
         return $this->belongsTo(Operace::class, 'operation_id', 'KlicPoloz');
     }
+
+    public function pracoviste()
+    {
+        return $this->belongsTo(Pracoviste::class, 'pracoviste_id', 'KlicPracoviste');
+    }
+
+    public function podsestav()
+    {
+        return $this->belongsTo(EvPodsestav::class, 'ev_podsestav_id', 'ID');
+    }
 }
