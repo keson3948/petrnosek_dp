@@ -334,7 +334,7 @@ class Show extends Component
     protected function dispatchPrintJob(Printer $printer, string $qrUrl, array $data): void
     {
         $qrCode = base64_encode(
-            QrCode::format('png')->size(200)->margin(0)->generate($qrUrl)
+            QrCode::format('svg')->size(200)->margin(0)->generate($qrUrl)
         );
 
         $data['qrCode'] = $qrCode;
