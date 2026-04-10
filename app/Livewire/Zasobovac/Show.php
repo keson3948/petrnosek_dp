@@ -368,10 +368,24 @@ class Show extends Component
             $radek->setRelation('povrchoUpPolozka', $polozky[trim($radek->PovrchoUp ?? '')] ?? null);
         }
 
+        // One lightweight query for history existence per level
+        $historyRecords = ProductionRecord::where('ZakVP_SysPrimKlic', trim($this->staDokl->Doklad))
+            ->where('status', 2)
+            ->get(['ZakVP_radek_entita', 'ev_podsestav_id']);
+
+        $vpHasHistory = $historyRecords->filter(fn ($r) => !$r->ZakVP_radek_entita)->isNotEmpty();
+        $radekHasHistory = $historyRecords->filter(fn ($r) => $r->ZakVP_radek_entita && !$r->ev_podsestav_id)
+            ->groupBy('ZakVP_radek_entita')->map->isNotEmpty();
+        $podsestavaHasHistory = $historyRecords->filter(fn ($r) => $r->ev_podsestav_id)
+            ->groupBy('ev_podsestav_id')->map->isNotEmpty();
+
         return view('livewire.zasobovac.show', [
             'radky' => $this->staDokl->doklad->radky,
             'mistrUser' => $this->staDokl->doklad->vlastniOsoba?->user,
             'backRoute' => route('zasobovac.index'),
+            'vpHasHistory' => $vpHasHistory,
+            'radekHasHistory' => $radekHasHistory,
+            'podsestavaHasHistory' => $podsestavaHasHistory,
         ]);
     }
 }

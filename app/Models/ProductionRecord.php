@@ -48,6 +48,7 @@ class ProductionRecord extends Model
         'CUSR',
         'UPUSR',
         'UPCNT',
+        'SluzebniCesta',
     ];
 
     protected $casts = [

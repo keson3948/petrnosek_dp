@@ -9,6 +9,7 @@ use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
 use App\Models\Prostredek;
+use App\Models\SluzebniCesta;
 use App\Models\Terminal;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -44,6 +45,11 @@ class StartDrawer extends Component
     public string $operation_id = '';
 
     // Filters
+    // Business trip state
+    public bool $showTripConfirmation = false;
+
+    public ?string $selectedTripKey = null;
+
     public string $podSearch = '';
 
     public string $radekFilter = '';
@@ -108,7 +114,7 @@ class StartDrawer extends Component
         $this->minStep = 5;
         $this->showStartDrawer = true;
 
-        $this->autoSelectMachineAndOperation();
+        $this->autoSelectMachine();
 
         $this->qrStart = null;
         $this->cleanUrl();
@@ -164,6 +170,7 @@ class StartDrawer extends Component
             'evPodsestavId', 'podSearch', 'selectedSysPrimKlic',
             'selectedDokladRadekEntita', 'podsFilter', 'radekFilter',
             'pracoviste_id', 'pozice_radku',
+            'showTripConfirmation', 'selectedTripKey',
         ]);
         $this->startStep = 1;
         $this->minStep = 1;
@@ -235,6 +242,7 @@ class StartDrawer extends Component
             2 => $this->advanceFromStep2(),
             3 => $this->advanceFromStep3(),
             4 => $this->advanceFromStep4(),
+            5 => $this->advanceFromStep5(),
             default => null,
         };
     }
@@ -250,6 +258,7 @@ class StartDrawer extends Component
             3 => $this->startStep = 2,
             4 => $this->goBackFromStep4(),
             5 => $this->goBackFromStep5(),
+            6 => $this->startStep = 5,
             default => null,
         };
 
@@ -278,7 +287,7 @@ class StartDrawer extends Component
 
         if (! $this->isVyrobniPrikaz()) {
             $this->startStep = 5;
-            $this->autoSelectMachineAndOperation();
+            $this->autoSelectMachine();
 
             return;
         }
@@ -295,7 +304,18 @@ class StartDrawer extends Component
     private function advanceFromStep4(): void
     {
         $this->startStep = 5;
-        $this->autoSelectMachineAndOperation();
+        $this->autoSelectMachine();
+    }
+
+    private function advanceFromStep5(): void
+    {
+        if (! $this->machine_id) {
+            $this->addError('machine_id', 'Vyberte stroj.');
+
+            return;
+        }
+        $this->autoSelectOperation();
+        $this->startStep = 6;
     }
 
     private function goBackFromStep4(): void
@@ -316,14 +336,7 @@ class StartDrawer extends Component
             return;
         }
 
-        if ($this->evPodsestavId) {
-            $this->startStep = 3;
-        } elseif ($this->selectedDokladRadekEntita) {
-            $podsCount = $this->selectedRadekPodsestavy->count();
-            $this->startStep = $podsCount > 0 ? 3 : 4;
-        } else {
-            $this->startStep = 4;
-        }
+        $this->startStep = 4;
     }
 
     private function isVyrobniPrikaz(): bool
@@ -333,17 +346,20 @@ class StartDrawer extends Component
         return $doklad && (int) $doklad->DBCNTID === 10904;
     }
 
-    private function autoSelectMachineAndOperation(): void
+    private function autoSelectMachine(): void
     {
         $firstMachine = $this->userMachines->first();
         if ($firstMachine) {
             $this->machine_id = $firstMachine->machine_key;
             $this->pracoviste_id = $firstMachine->prostredek ? $firstMachine->prostredek->Pracoviste : null;
+        }
+    }
 
-            $firstOperation = $this->startMachineOperations->first();
-            if ($firstOperation) {
-                $this->operation_id = $firstOperation->operation_key;
-            }
+    private function autoSelectOperation(): void
+    {
+        $firstOperation = $this->startMachineOperations->first();
+        if ($firstOperation) {
+            $this->operation_id = $firstOperation->operation_key;
         }
     }
 
@@ -399,7 +415,7 @@ class StartDrawer extends Component
         }
 
         $this->startStep = 5;
-        $this->autoSelectMachineAndOperation();
+        $this->autoSelectMachine();
     }
 
     public function clearPodsestava(): void
@@ -416,7 +432,7 @@ class StartDrawer extends Component
 
         if (! $this->isVyrobniPrikaz()) {
             $this->startStep = 5;
-            $this->autoSelectMachineAndOperation();
+            $this->autoSelectMachine();
         } else {
             $this->startStep = 4;
         }
@@ -433,12 +449,13 @@ class StartDrawer extends Component
     {
         $this->drawing_number = '';
         $this->startStep = 5;
-        $this->autoSelectMachineAndOperation();
+        $this->autoSelectMachine();
     }
 
     public function startSelectMachine(string $machineKey): void
     {
         $this->machine_id = $machineKey;
+        $this->operation_id = '';
         $m = $this->userMachines->firstWhere('machine_key', $machineKey);
         if ($m) {
             $this->pracoviste_id = $m->prostredek ? $m->prostredek->Pracoviste : null;
@@ -446,9 +463,6 @@ class StartDrawer extends Component
             $prostredek = Prostredek::where('KlicProstredku', $machineKey)->first();
             $this->pracoviste_id = $prostredek ? $prostredek->Pracoviste : null;
         }
-
-        $ops = PrednOperProstr::forProstredek($machineKey)->get();
-        $this->operation_id = $ops->count() >= 1 ? trim($ops->first()->Operace ?? '') : '';
     }
 
     public function startSelectOperation(string $operationKey): void
@@ -456,9 +470,88 @@ class StartDrawer extends Component
         $this->operation_id = $operationKey;
     }
 
-    // ==========================================
-    // Computed Properties
-    // ==========================================
+
+    public function selectTrip(string $klicSluzebniCesty): void
+    {
+        $this->selectedTripKey = $klicSluzebniCesty;
+        $this->showTripConfirmation = true;
+    }
+
+    public function cancelTrip(): void
+    {
+        $this->selectedTripKey = null;
+        $this->showTripConfirmation = false;
+    }
+
+    public function startTripOperation(): void
+    {
+        $trip = $this->selectedTrip;
+        if (! $trip) {
+            $this->error('Služební cesta nebyla nalezena.');
+
+            return;
+        }
+
+        $hasActive = auth()->user()->productionRecords()
+            ->whereIn('status', [0, 1])
+            ->exists();
+
+        if ($hasActive) {
+            $this->error('Již máte aktivní nebo pozastavený záznam.');
+
+            return;
+        }
+
+        $nextId = ProductionRecord::nextId();
+
+        ProductionRecord::create([
+            'ID' => $nextId,
+            'machine_id' => null,
+            'user_id' => auth()->user()->klic_subjektu,
+            'started_at' => now(),
+            'pracoviste_id' => trim($trip->MistoRealizacePracoviste ?? '') ?: null,
+            'operation_id' => trim($trip->HlavniCinnost ?? '') ?: null,
+            'ZakVP_SysPrimKlic' => trim($trip->ZakazkaVyrobniPrikaz ?? '') ?: null,
+            'drawing_number' => null,
+            'ev_podsestav_id' => null,
+            'ZakVP_radek_entita' => null,
+            'ZakVP_pozice_radku' => null,
+            'SluzebniCesta' => 1,
+            'status' => 0,
+            'CTSMP' => now(),
+            'SYSTIMEST' => now(),
+        ]);
+
+        $this->showStartDrawer = false;
+        $this->dispatch('operation-started');
+        $this->success('Služební cesta zahájena.');
+    }
+
+
+    #[Computed]
+    public function activeTrips()
+    {
+        $klicSubjektu = auth()->user()->klic_subjektu;
+        if (! $klicSubjektu) {
+            return collect();
+        }
+
+        return SluzebniCesta::activeForUser($klicSubjektu)
+            ->with(['doklad', 'operace', 'zakaznikSubjekt', 'pracovisteSubjekt'])
+            ->get();
+    }
+
+    #[Computed]
+    public function selectedTrip(): ?SluzebniCesta
+    {
+        if (! $this->selectedTripKey) {
+            return null;
+        }
+
+        return SluzebniCesta::where('KlicSluzebniCesty', $this->selectedTripKey)
+            ->with(['doklad', 'operace', 'zakaznikSubjekt', 'pracovisteSubjekt'])
+            ->first();
+    }
 
     #[Computed]
     public function selectedDoklad(): ?Doklad
@@ -544,7 +637,6 @@ class StartDrawer extends Component
             return collect();
         }
 
-        // Operace přiřazené tomuto stroji
         $assigned = PrednOperProstr::forProstredek($this->machine_id)
             ->with('operace')
             ->get()
@@ -555,7 +647,6 @@ class StartDrawer extends Component
                 return $r;
             });
 
-        // Operace bez přiřazeného stroje (Prostredek = '~') = volné pro všechny stroje
         $unassigned = PrednOperProstr::where('Prostredek', '~')
             ->with('operace')
             ->get()
@@ -600,7 +691,6 @@ class StartDrawer extends Component
 
         $unassigned = $unassignedQuery->orderBy('KlicProstredku')->get();
 
-        // 3. Sloučit: přiřazené (filtrované) + nepřiřazené
         $machines = collect();
 
         foreach ($assigned as $r) {

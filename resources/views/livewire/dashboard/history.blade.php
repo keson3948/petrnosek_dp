@@ -55,7 +55,10 @@
                             </div>
 
                             {{-- Stav --}}
-                            <div class="w-8 shrink-0 flex justify-end">
+                            <div class="shrink-0 flex items-center gap-1.5 justify-end">
+                                @if($record->SluzebniCesta)
+                                    <x-mary-icon name="o-truck" class="text-info w-5 h-5" title="Služební cesta" />
+                                @endif
                                 <x-mary-icon name="o-check-circle" class="text-success w-7 h-7" />
                             </div>
                         </div>
@@ -226,7 +229,10 @@
                                 </div>
 
                                 {{-- Badge --}}
-                                <div class="w-8 shrink-0 flex justify-end">
+                                <div class="shrink-0 flex items-center gap-1.5 justify-end">
+                                    @if($record->SluzebniCesta)
+                                        <x-mary-icon name="o-truck" class="text-info w-5 h-5 opacity-50" title="Služební cesta" />
+                                    @endif
                                     <x-mary-icon name="o-check-circle" class="text-neutral w-7 h-7 opacity-50" />
                                 </div>
                             </div>

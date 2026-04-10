@@ -25,8 +25,9 @@
             <x-mary-button
                 wire:click="openHistory('vp', null, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}')"
                 icon="o-clock"
-                class="btn-square text-primary"
-                tooltip-bottom="Práce na VP"
+                class="btn-square {{ $vpHasHistory ? 'text-primary' : 'text-base-content/20' }}"
+                tooltip-bottom="{{ $vpHasHistory ? 'Práce na VP' : 'Žádná historie prací' }}"
+                :disabled="!$vpHasHistory"
             />
         </x-slot:actions>
     </x-mary-header>
@@ -153,7 +154,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="flex justify-end">
+                                <div class="flex justify-end space-x-1">
                                     @can('manage zasobovani')
 
                                         @can('can print')
@@ -171,11 +172,13 @@
                                         @endcan
 
                                     @endcan
+                                    @php $radekHas = ($radekHasHistory[$radek->EntitaRad] ?? false); @endphp
                                     <x-mary-button
                                         wire:click="openHistory('radek', {{ $radek->EntitaRad }}, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}', 'ŘÁDEK VP: {{ $radek->CisloRadk }} | POZICE: {{ trim($radek->Pozice ?? '-') }}')"
                                         icon="o-clock"
-                                        class="btn-sm btn-square text-primary z-50"
-                                        tooltip="Práce na řádku"
+                                        class="btn-sm btn-square {{ $radekHas ? 'text-primary' : 'text-base-content/20' }} z-50"
+                                        tooltip="{{ $radekHas ? 'Práce na řádku' : 'Žádná historie prací' }}"
+                                        :disabled="!$radekHas"
                                     />
                                 </div>
                             </div>
@@ -266,11 +269,13 @@
                                                     />
                                                 @endcan
                                                 @endcan
+                                                @php $podHas = ($podsestavaHasHistory[$ev->ID] ?? false); @endphp
                                                 <x-mary-button
                                                     wire:click="openHistory('podsestava', {{ $ev->ID }}, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}', 'ŘÁDEK VP: {{ $radek->CisloRadk }} | POZICE: {{ trim($radek->Pozice ?? '-') }} | PODSESTAVA: {{ trim($ev->OznaceniPodsestavy ?? '') }}')"
                                                     icon="o-clock"
-                                                    class="btn-sm btn-ghost text-primary"
-                                                    tooltip="Práce na podsestavě"
+                                                    class="btn-sm btn-ghost {{ $podHas ? 'text-primary' : 'text-base-content/20' }}"
+                                                    tooltip="{{ $podHas ? 'Práce na podsestavě' : 'Žádná historie prací' }}"
+                                                    :disabled="!$podHas"
                                                 />
                                                 @can('manage zasobovani')
                                                     <x-mary-button

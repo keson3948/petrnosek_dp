@@ -19,6 +19,9 @@
                         <x-mary-icon name="o-pause-circle" class="w-5 h-5 text-warning" />
                         <span class="text-warning">Pozastavená operace</span>
                     @endif
+                    @if($activeRecord->SluzebniCesta)
+                        <x-mary-badge value="Služební cesta" icon="o-truck" class="badge-info badge-sm" />
+                    @endif
                 </div>
             </x-slot:title>
 
