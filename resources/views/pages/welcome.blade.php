@@ -40,8 +40,6 @@ class extends Component {
     x-data="{
         time: '',
         date: '',
-        shift: '',
-        shiftIcon: '',
         init() {
             this.tick();
             setInterval(() => this.tick(), 1000);
@@ -51,17 +49,6 @@ class extends Component {
             const now = new Date();
             this.time = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             this.date = now.toLocaleDateString('cs-CZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const h = now.getHours();
-            if (h >= 6 && h < 14) {
-                this.shift = 'Ranní (6:00–14:00)';
-                this.shiftIcon = 'sun';
-            } else if (h >= 14 && h < 22) {
-                this.shift = 'Odpolední (14:00–22:00)';
-                this.shiftIcon = 'sunset';
-            } else {
-                this.shift = 'Noční (22:00–6:00)';
-                this.shiftIcon = 'moon';
-            }
         },
         focusInput() {
             this.$nextTick(() => {
@@ -97,36 +84,41 @@ class extends Component {
         }
     }"
     @click.document="handleBlur"
-    class="w-full max-w-4xl"
+    class="w-full max-w-5xl"
 >
     {{-- Bento Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-12 gap-3 md:gap-4">
 
-        {{-- Logo + název --}}
-        <div class="border border-base-300 bg-base-100 rounded-2xl p-6 flex items-center gap-4">
+        {{-- Logo + název — wide --}}
+        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex items-center gap-5">
             <x-application-logo class="w-16 h-16 shrink-0" />
             <div>
-                <div class="text-lg font-bold text-base-content">Metal Product</div>
-                <div class="text-lg font-bold text-base-content">Servis Praha</div>
+                <div class="text-xl font-bold text-base-content leading-tight">Metal Product</div>
+                <div class="text-xl font-bold text-base-content leading-tight">Servis Praha</div>
             </div>
         </div>
 
-        {{-- Hodiny --}}
-        <div class="border border-base-300 bg-base-100 rounded-2xl p-6 flex flex-col items-center justify-center">
-            <div class="text-3xl md:text-5xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
+        {{-- Hodiny — velké --}}
+        <div class="col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col items-center justify-center">
+            <div class="text-4xl md:text-5xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
         </div>
 
         {{-- Datum --}}
-        <div class="border border-base-300 bg-base-100 rounded-2xl p-6 flex flex-col items-center justify-center gap-2">
-            <x-mary-icon name="o-calendar" class="w-8 h-8 text-base-content/40" />
-            <div class="text-center text-base-content/80 text-lg capitalize" x-text="date"></div>
+        <div class="col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-1">
+            <x-mary-icon name="o-calendar" class="w-7 h-7 text-primary/40" />
+            <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
         </div>
 
-        {{-- RFID přihlášení --}}
-        <div class="border border-base-300 bg-base-100 rounded-2xl p-6 flex flex-col justify-center">
-            <div class="flex items-center gap-2 mb-4">
-                <x-mary-icon name="o-key" class="w-6 h-6 text-primary" />
-                <span class="text-sm font-medium text-base-content/60">Přiložte čip k přihlášení</span>
+        {{-- RFID přihlášení — hlavní karta --}}
+        <div class="col-span-12 md:col-span-6 bg-white/90 backdrop-blur border-2 border-primary/20 rounded-2xl p-8 flex flex-col justify-center">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <x-mary-icon name="o-finger-print" class="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                    <div class="font-semibold text-base-content">Přihlášení</div>
+                    <div class="text-xs text-base-content/50">Přiložte čip ke čtečce</div>
+                </div>
             </div>
 
             <form wire:submit="login">
@@ -135,13 +127,14 @@ class extends Component {
                         @blur="handleBlur"
                         @input="handleMap"
                         wire:model="izo"
-                        icon="o-finger-print"
+                        icon="o-key"
                         type="password"
                         placeholder="Čekám na čip..."
                         error-field="izo"
                         required
                         autofocus
                         autocomplete="off"
+                        class="input-lg"
                     />
                 </div>
 
@@ -149,38 +142,30 @@ class extends Component {
             </form>
         </div>
 
-        {{-- Terminál + Směna --}}
-        <div class="md:col-span-2 border border-base-300 bg-base-100 rounded-2xl p-6 flex flex-col justify-center gap-4">
-            @if($terminal = Terminal::current())
+        {{-- Terminál --}}
+        @if($terminal = Terminal::current())
+            <div class="col-span-12 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col justify-center">
                 <div class="flex items-center gap-3">
-                    <x-mary-icon name="o-building-office" class="w-6 h-6 text-primary" />
+                    <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <x-mary-icon name="o-building-office" class="w-5 h-5 text-primary" />
+                    </div>
                     <div>
-                        <div class="text-xs uppercase tracking-wider text-base-content/40">Terminál</div>
+                        <div class="text-[10px] uppercase tracking-wider text-base-content/40 font-bold">Terminál</div>
                         <div class="text-lg font-semibold">{{ $terminal->name }}</div>
                     </div>
                 </div>
-            @endif
-
-            <div class="flex items-center gap-3">
-                <template x-if="shiftIcon === 'sun'">
-                    <x-mary-icon name="o-sun" class="w-6 h-6 text-warning" />
-                </template>
-                <template x-if="shiftIcon === 'sunset'">
-                    <x-mary-icon name="o-sun" class="w-6 h-6 text-orange-500" />
-                </template>
-                <template x-if="shiftIcon === 'moon'">
-                    <x-mary-icon name="o-moon" class="w-6 h-6 text-info" />
-                </template>
-                <div>
-                    <div class="text-xs uppercase tracking-wider text-base-content/40">Směna</div>
-                    <div class="text-lg font-semibold" x-text="shift"></div>
-                </div>
             </div>
+        @endif
+
+        {{-- Status --}}
+        <div class="{{ ($terminal = Terminal::current()) ? 'md:col-span-3' : 'md:col-span-6' }} col-span-12 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex items-center justify-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+            <span class="text-sm text-base-content/50">Systém online</span>
         </div>
 
         {{-- Patička --}}
-        <div class="md:col-span-3 border border-base-300 bg-base-100 rounded-2xl p-4 flex items-center justify-center">
-            <a href="{{ route('login') }}" class="text-sm text-base-content/50 hover:text-primary transition-colors" wire:navigate>
+        <div class="col-span-12 bg-white/60 backdrop-blur border border-base-200 rounded-2xl p-3 flex items-center justify-center">
+            <a href="{{ route('login') }}" class="text-sm text-base-content/40 hover:text-primary transition-colors" wire:navigate>
                 Přihlásit se pomocí emailu
             </a>
         </div>
