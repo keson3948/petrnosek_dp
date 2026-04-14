@@ -14,6 +14,7 @@
             ['key' => 'name', 'label' => 'Název'],
             ['key' => 'system_name', 'label' => 'CUPS Název'],
             ['key' => 'ip_address', 'label' => 'IP Adresa'],
+            ['key' => 'port', 'label' => 'Port'],
             ['key' => 'page_size', 'label' => 'Role'],
             ['key' => 'is_active', 'label' => 'Aktivní'],
         ]" :rows="$printers">
@@ -42,7 +43,10 @@
             <x-mary-input label="Systémový název (CUPS)" wire:model="form.system_name"
                           hint="Musí přesně odpovídat názvu v příkazu lpstat -p" />
 
-            <x-mary-input label="IP Adresa" wire:model="form.ip_address" hint="Pro informaci" />
+            <div class="grid grid-cols-3 gap-4">
+                <x-mary-input label="IP Adresa" wire:model="form.ip_address" class="col-span-2" />
+                <x-mary-input label="Port" wire:model="form.port" type="number" />
+            </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <x-mary-select label="Velikost role" :options="$pageSizes" wire:model="form.page_size" />

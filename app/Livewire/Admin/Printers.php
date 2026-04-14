@@ -65,6 +65,7 @@ class Printers extends Component
             'name' => '',
             'system_name' => '',
             'ip_address' => '',
+            'port' => 9100,
             'page_size' => '29x62mm',
             'orientation' => '4',
             'is_active' => true

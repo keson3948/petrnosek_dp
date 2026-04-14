@@ -42,11 +42,12 @@ class PrintLabelJob implements ShouldQueue
         $response = Http::attach(
             'file', base64_decode($this->pdfContent), 'label.pdf'
         )->post($url, [
+            'printer_url'         => "tcp://{$printer->ip_address}:{$printer->port}",
             'printer_system_name' => $printer->system_name,
-            'copies' => $this->copies,
-            'page_size' => $printer->page_size,
-            'orientation' => $printer->orientation,
-            'media_type' => $printer->media_type,
+            'copies'              => $this->copies,
+            'page_size'           => $printer->page_size,
+            'orientation'         => $printer->orientation,
+            'media_type'          => $printer->media_type,
         ]);
 
         if ($response->failed()) {
