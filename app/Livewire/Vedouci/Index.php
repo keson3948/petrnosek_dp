@@ -63,7 +63,11 @@ class Index extends Component
                 ->mapWithKeys(fn ($u) => [$u->attendance_cip => $u->id]);
 
             if ($cipToUserId->isNotEmpty()) {
-                $osoby = AttendanceOsoba::whereIn('CIP', $cipToUserId->keys()->all())->get();
+                $cipKeys = $cipToUserId->keys()->all();
+                $bindings = array_map(fn ($v) => (string) $v, $cipKeys);
+                $placeholders = implode(',', array_fill(0, count($bindings), '?'));
+                $osoby = AttendanceOsoba::whereRaw("CAST(CIP AS VARCHAR(20)) IN ({$placeholders})", $bindings)->get();
+
                 $oscToUserId = $osoby->mapWithKeys(fn ($o) => [
                     (int) $o->OSC => $cipToUserId->get(trim($o->CIP)),
                 ]);

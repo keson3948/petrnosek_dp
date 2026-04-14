@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -21,6 +22,12 @@ class UserIndex extends Component
     public function boot()
     {
         abort_if(! auth()->user()->can('manage users'), 403);
+    }
+
+    public function syncUsers(): void
+    {
+        Artisan::call('economy:sync-users');
+        $this->success('Synchronizace dokončena.');
     }
 
     public function edit(User $user)

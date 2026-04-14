@@ -3,6 +3,9 @@
         <x-slot:middle class="!justify-end">
             <x-mary-input icon="o-magnifying-glass" wire:model.live="search" placeholder="Hledat" />
         </x-slot:middle>
+        <x-slot:actions>
+            <x-mary-button label="Synchronizovat s Economy" icon="o-arrow-path" wire:click="syncUsers" wire:confirm="Opravdu synchronizovat? Přepíšou se jména, čipy a stavy uživatelů z Economy." class="btn-primary" spinner="syncUsers" />
+        </x-slot:actions>
     </x-mary-header>
 
     <x-mary-card>

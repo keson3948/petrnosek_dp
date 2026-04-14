@@ -15,6 +15,10 @@ class Osoba extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'CIP' => 'string',
+    ];
+
     public function pruchody(): HasMany
     {
         return $this->hasMany(Pruchod::class, 'OSC', 'OSC');

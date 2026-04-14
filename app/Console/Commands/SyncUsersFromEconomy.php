@@ -64,7 +64,7 @@ class SyncUsersFromEconomy extends Command
             }
 
             $izo = trim($vztah->NFCRFIDTag ?? '');
-            $name = trim($subjekt->Prijmeni.' '.$subjekt->Jmeno);
+            $name = trim($subjekt->Jmeno.' '.$subjekt->Prijmeni);
             $isActive = $vztah->Ukonceno == 0;
 
             // Check izo uniqueness — skip if another user already has this chip
