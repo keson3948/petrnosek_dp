@@ -64,7 +64,7 @@ class SyncUsersFromEconomy extends Command
 
             $izo = trim($vztah->NFCRFIDTag ?? '');
             $osobniCisloDochazky = trim($vztah->OsobniCisloVDochazce ?? '');
-            $name = trim($subjekt->Jmeno.' '.$subjekt->Prijmeni);
+            $name = trim(trim($subjekt->Jmeno).' '.trim($subjekt->Prijmeni));
             $isActive = $vztah->Ukonceno == 0;
 
             $izoForUser = $izo ?: null;
@@ -96,7 +96,7 @@ class SyncUsersFromEconomy extends Command
                     $deactivated++;
                 }
             } else {
-                $email = optional($subjekt->emailKontakt)->Hodnota;
+                $email = trim(optional($subjekt->emailKontakt)->Hodnota ?? '');
                 if (empty($email)) {
                     $email = ($izo ?: $klicSubjektu).'@rfid.local';
                 }

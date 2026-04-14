@@ -44,7 +44,7 @@
                 <div class="ml-5 pt-2 flex items-center gap-2">
                     <x-application-logo class="w-11 h-11"></x-application-logo>
                     @if($terminal = \App\Models\Terminal::current())
-                        <div class="text-sm font-semibold text-gray-500 truncate mt-1">
+                        <div class="text-sm font-semibold text-gray-500 truncate mt-1 hidden-when-collapsed">
                             {{ $terminal->name }}
                         </div>
                     @endif
