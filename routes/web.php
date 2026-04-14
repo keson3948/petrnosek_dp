@@ -21,12 +21,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/qr', \App\Livewire\QrRedirect::class)->name('qr.redirect');
 
     // --- VP DETAIL (pro všechny přihlášené) ---
-    Route::get('/vp/{id}', \App\Livewire\VpDetail::class)->name('vp.show')->where('id', '.*');
+    Route::get('/vp/{id}', \App\Livewire\Zasobovac\Show::class)->name('vp.show')->where('id', '.*');
 
     // --- ZÁSOBOVAČ ---
     Route::middleware(['permission:manage zasobovani'])->group(function () {
         Route::get('/zasobovac', \App\Livewire\Zasobovac\Index::class)->name('zasobovac.index');
-        Route::get('/zasobovac/{id}', \App\Livewire\Zasobovac\Show::class)->name('zasobovac.show')->where('id', '.*');
+        Route::get('/zasobovac/{id}', \App\Livewire\Zasobovac\Show::class)->name('zasobovac.show')->where('id', '.*')->defaults('context', 'zasobovac');
     });
 
     // --- VEDOUCÍ ---

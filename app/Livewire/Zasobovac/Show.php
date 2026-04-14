@@ -38,17 +38,20 @@ class Show extends Component
 
     // Print modal state
     public bool $showPrintModal = false;
-    public string $printType = '';  // 'doklad', 'radek', 'podsestava'
+    public string $printType = '';
     public ?int $printTargetId = null;
     public int $printCopies = 1;
 
-    public function boot()
-    {
-        abort_if(! auth()->user()->can('manage zasobovani'), 403);
-    }
+    public string $context = 'vp';
 
-    public function mount($id)
+    public function mount($id, string $context = 'vp')
     {
+        $this->context = $context;
+
+        if ($this->context === 'zasobovac') {
+            abort_if(! auth()->user()->can('manage zasobovani'), 403);
+        }
+
         $this->staDokl = StaDokl::with([
                 'doklad.vlastniOsoba',
                 'doklad.rodicZakazka.vlastniOsoba',
@@ -78,6 +81,8 @@ class Show extends Component
 
     public function saveEntry(int $rowIndex): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             "newEntries.{$rowIndex}.CisloVykresu" => 'required|string|max:100',
             "newEntries.{$rowIndex}.Mnozstvi" => 'required|numeric|min:0.01',
@@ -118,6 +123,8 @@ class Show extends Component
 
     public function startEdit(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $ev = EvPodsestav::find($evPodsId);
         if (! $ev) return;
 
@@ -137,6 +144,8 @@ class Show extends Component
 
     public function updateEntry(): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             'editEntry.CisloVykresu' => 'required|string|max:100',
             'editEntry.Mnozstvi' => 'required|numeric|min:0.01',
@@ -158,6 +167,16 @@ class Show extends Component
 
     public function deleteEntry(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
+        $hasRecords = ProductionRecord::where('ev_podsestav_id', $evPodsId)->exists();
+
+        if ($hasRecords) {
+            $this->error('Nelze smazat — na této podsestavě již někdo pracoval nebo pracuje.');
+
+            return;
+        }
+
         EvPodsestav::where('ID', $evPodsId)->delete();
 
         $this->success('Záznam smazán.');
@@ -211,6 +230,8 @@ class Show extends Component
 
     public function openPrintModal(string $type, ?int $id = null): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->printType = $type;
         $this->printTargetId = $id;
         $this->printCopies = 1;
@@ -219,6 +240,8 @@ class Show extends Component
 
     public function confirmPrint(): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->validate([
             'printCopies' => 'required|integer|min:1|max:100',
         ]);
@@ -274,6 +297,8 @@ class Show extends Component
 
     public function printPodsestava(int $evPodsId): void
     {
+        abort_if(! auth()->user()->can('manage zasobovani'), 403);
+
         $this->printTargetId = $evPodsId;
         $this->printCopies = 1;
 
@@ -368,7 +393,6 @@ class Show extends Component
             $radek->setRelation('povrchoUpPolozka', $polozky[trim($radek->PovrchoUp ?? '')] ?? null);
         }
 
-        // One lightweight query for history existence per level
         $historyRecords = ProductionRecord::where('ZakVP_SysPrimKlic', trim($this->staDokl->Doklad))
             ->where('status', 2)
             ->get(['ZakVP_radek_entita', 'ev_podsestav_id']);
@@ -382,7 +406,7 @@ class Show extends Component
         return view('livewire.zasobovac.show', [
             'radky' => $this->staDokl->doklad->radky,
             'mistrUser' => $this->staDokl->doklad->vlastniOsoba?->user,
-            'backRoute' => route('zasobovac.index'),
+            'backRoute' => $this->context === 'zasobovac' ? route('zasobovac.index') : url()->previous(),
             'vpHasHistory' => $vpHasHistory,
             'radekHasHistory' => $radekHasHistory,
             'podsestavaHasHistory' => $podsestavaHasHistory,

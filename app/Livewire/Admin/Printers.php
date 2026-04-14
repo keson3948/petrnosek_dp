@@ -10,20 +10,19 @@ class Printers extends Component
 {
     use Toast;
 
-    public $printers;
+    public mixed $printers = null;
     public string $search = '';
     public bool $myModal = false;
-    public $form = [];
-    public $selectedPrinter = null;
+    public array $form = [];
+    public ?Printer $selectedPrinter = null;
 
-    // Možnosti pro selectboxy (Brother QL)
-    public $pageSizes = [
+    public array $pageSizes = [
         ['id' => '29x62mm', 'name' => '29x62mm'],
         ['id' => '62mm', 'name' => '62mm (Nekonečná)'],
         ['id' => '29mm', 'name' => '29mm (Nekonečná)'],
     ];
 
-    public $orientations = [
+    public array $orientations = [
         ['id' => '3', 'name' => 'Portrait (3)'],
         ['id' => '4', 'name' => 'Landscape (4)'],
         ['id' => '5', 'name' => 'Landscape Reverse (5)'],
@@ -84,7 +83,7 @@ class Printers extends Component
     {
         $this->validate([
             'form.name' => 'required',
-            'form.system_name' => 'required', // Musí sedět s CUPS!
+            'form.system_name' => 'required',
             'form.page_size' => 'required',
         ]);
 

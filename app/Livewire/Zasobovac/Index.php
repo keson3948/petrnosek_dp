@@ -65,21 +65,20 @@ class Index extends Component
         $mistrUsers = $this->loadMistrUsers($staDoklady);
         $rows = $this->transformRows($staDoklady, $mistrUsers);
 
-        if (!empty($this->search)) {
+        if ($this->search) {
             $term = mb_strtolower(trim($this->search));
-            $rows = $rows->filter(function ($row) use ($term) {
-                return str_contains(mb_strtolower($row->klic_dokla ?? ''), $term)
-                    || str_contains(mb_strtolower($row->mps_projekt ?? ''), $term)
-                    || str_contains(mb_strtolower($row->vlastni_osoba ?? ''), $term)
-                    || str_contains(mb_strtolower($row->garant ?? ''), $term)
-                    || str_contains(mb_strtolower($row->zakazka ?? ''), $term)
-                    || str_contains(mb_strtolower($row->specificky_symbol ?? ''), $term);
-            });
+            $rows = $rows->filter(fn ($row) => str_contains(mb_strtolower($row->klic_dokla ?? ''), $term)
+                || str_contains(mb_strtolower($row->mps_projekt ?? ''), $term)
+                || str_contains(mb_strtolower($row->vlastni_osoba ?? ''), $term)
+                || str_contains(mb_strtolower($row->garant ?? ''), $term)
+                || str_contains(mb_strtolower($row->zakazka ?? ''), $term)
+                || str_contains(mb_strtolower($row->specificky_symbol ?? ''), $term)
+            )->values();
         }
 
         $perPage = 15;
         $page = $this->getPage('page');
-        
+
         $paginator = new LengthAwarePaginator(
             $rows->forPage($page, $perPage),
             $rows->count(),
@@ -117,6 +116,7 @@ class Index extends Component
                 if ($this->filterMistr) {
                     $q->where('VlastniOsoba', $this->filterMistr);
                 }
+
             })
             ->orderBy(
                 Doklad::select('TerminDatum')
