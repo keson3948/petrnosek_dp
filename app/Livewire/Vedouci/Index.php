@@ -44,9 +44,11 @@ class Index extends Component
         ];
 
         $absentHeaders = [
+            ['key' => '', 'label' => 'Skupina', 'class' => 'w-24 bg-base-200'],
             ['key' => 'name', 'label' => 'Jméno', 'class' => 'w-64'],
             ['key' => 'arrival', 'label' => 'Příchod', 'sortable' => false, 'class' => 'w-1 bg-success/20 text-center'],
             ['key' => 'departure', 'label' => 'Odchod', 'sortable' => false, 'class' => 'w-1 bg-error/20 text-center'],
+            ['key' => 'worked_hours', 'label' => 'Odpracováno', 'sortable' => false, 'class' => 'w-1 text-center'],
             ['key' => '', 'label' => '', 'sortable' => false]
         ];
 
@@ -86,15 +88,23 @@ class Index extends Component
                         && ($lastDeparture->DATUM > $lastArrival->DATUM
                             || ($lastDeparture->DATUM === $lastArrival->DATUM && $lastDeparture->CAS > $lastArrival->CAS));
 
+                    $workedMinutes = 0;
+                    if ($lastArrival && $showDeparture) {
+                        $arrMin = (int) $lastArrival->DATUM * 1440 + (int) $lastArrival->CAS;
+                        $depMin = (int) $lastDeparture->DATUM * 1440 + (int) $lastDeparture->CAS;
+                        $workedMinutes = max(0, $depMin - $arrMin);
+                    }
+
                     return [$userId => [
                         'arrival' => $lastArrival?->cas_time,
                         'departure' => $showDeparture ? $lastDeparture->cas_time : null,
                         'is_present' => $isPresent,
+                        'worked_minutes' => $workedMinutes,
                     ]];
                 });
             }
         } catch (\Exception $e) {
-            // MSSQL may not be available
+
         }
 
         // Transform users
@@ -115,6 +125,11 @@ class Index extends Component
             $user->arrival = $att['arrival'] ?? null;
             $user->departure = $att['departure'] ?? null;
             $user->is_present = $att['is_present'] ?? false;
+
+            $minutes = $att['worked_minutes'] ?? 0;
+            $user->worked_hours = $minutes > 0
+                ? sprintf('%d:%02d', intdiv($minutes, 60), $minutes % 60)
+                : null;
 
             return $user;
         });

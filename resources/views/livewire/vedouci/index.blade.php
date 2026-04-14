@@ -31,7 +31,7 @@
                 @scope('cell_current_vp', $user)
                     @if($user->current_vp)
                         @if($user->current_vp_sys_klic)
-                            <a href="{{ route('vp.show', $user->current_vp_sys_klic) }}" class="font-mono text-sm hover:underline hover:text-primary">{{ $user->current_vp }}</a>
+                            <a href="{{ route('vp.show', $user->current_vp_sys_klic) }}" class="flex items-center gap-3 hover:text-primary transition hover:text-primary">{{ $user->current_vp }}</a>
                         @else
                             <span class="font-mono text-sm">{{ $user->current_vp }}</span>
                         @endif
@@ -78,6 +78,14 @@
                     <a href="{{ route('vedouci.show', $user->klic_subjektu) }}" class="flex items-center gap-3 hover:text-primary transition">
                         <span class="font-semibold">{{ $user->name }}</span>
                     </a>
+                @endscope
+
+                @scope('cell_worked_hours', $user)
+                    @if($user->worked_hours)
+                        <span class="text-sm tabular-nums font-semibold">{{ $user->worked_hours }}</span>
+                    @else
+                        <span class="text-gray-300">—</span>
+                    @endif
                 @endscope
 
             </x-mary-table>
