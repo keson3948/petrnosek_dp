@@ -48,6 +48,7 @@ class Index extends Component
             ['key' => 'name', 'label' => 'Jméno', 'class' => 'w-64'],
             ['key' => 'arrival', 'label' => 'Příchod', 'sortable' => false, 'class' => 'w-1 bg-success/20 text-center'],
             ['key' => 'departure', 'label' => 'Odchod', 'sortable' => false, 'class' => 'w-1 bg-error/20 text-center'],
+            ['key' => 'attendance_date', 'label' => 'Datum', 'sortable' => false, 'class' => 'w-1 text-center'],
             ['key' => 'worked_hours', 'label' => 'Odpracováno', 'sortable' => false, 'class' => 'w-1 text-center'],
             ['key' => '', 'label' => '', 'sortable' => false]
         ];
@@ -100,6 +101,7 @@ class Index extends Component
                         'departure' => $showDeparture ? $lastDeparture->cas_time : null,
                         'is_present' => $isPresent,
                         'worked_minutes' => $workedMinutes,
+                        'date' => $lastArrival?->datum_date?->format('d.m.'),
                     ]];
                 });
             }
@@ -130,6 +132,7 @@ class Index extends Component
             $user->worked_hours = $minutes > 0
                 ? sprintf('%d:%02d', intdiv($minutes, 60), $minutes % 60)
                 : null;
+            $user->attendance_date = $att['date'] ?? null;
 
             return $user;
         });

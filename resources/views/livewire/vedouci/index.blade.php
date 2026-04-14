@@ -83,8 +83,6 @@
                 @scope('cell_worked_hours', $user)
                     @if($user->worked_hours)
                         <span class="text-sm tabular-nums font-semibold">{{ $user->worked_hours }}</span>
-                    @else
-                        <span class="text-gray-300">—</span>
                     @endif
                 @endscope
 

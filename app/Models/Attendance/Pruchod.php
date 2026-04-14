@@ -24,7 +24,7 @@ class Pruchod extends Model
 
     protected function datumDate(): Attribute
     {
-        return Attribute::get(fn () => Carbon::createFromDate(1900, 1, 1)->addDays($this->DATUM));
+        return Attribute::get(fn () => Carbon::createFromDate(1900, 1, 1)->addDays((int) $this->DATUM));
     }
 
     protected function casTime(): Attribute
