@@ -28,4 +28,9 @@ class Terminal extends Model
     {
         return app()->bound('current_terminal') ? app('current_terminal') : null;
     }
+
+    public static function isTerminal(): bool
+    {
+        return static::current() !== null;
+    }
 }

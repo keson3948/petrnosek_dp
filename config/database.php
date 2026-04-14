@@ -113,6 +113,20 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'attendance' => [
+            'driver' => 'sqlsrv',
+            'host' => env('ATTENDANCE_DB_HOST', 'localhost'),
+            'port' => env('ATTENDANCE_DB_PORT', '1433'),
+            'database' => env('ATTENDANCE_DB_DATABASE', ''),
+            'username' => env('ATTENDANCE_DB_USERNAME', ''),
+            'password' => env('ATTENDANCE_DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'encrypt' => env('ATTENDANCE_DB_ENCRYPT', 'no'),
+            'trust_server_certificate' => env('ATTENDANCE_DB_TRUST_CERT', 'true'),
+        ],
+
         'firebird' => [
             'driver'   => 'firebird',
             'host'     => env('FIREBIRD_DB_HOST', 'localhost'),

@@ -1,4 +1,34 @@
 <div>
+    @if($activeTrips->isNotEmpty())
+        <div class="mt-8">
+            <x-mary-card title="Naplánované služební cesty" class="bg-base-200 border-0 shadow-none p-0!">
+                @foreach($activeTrips as $trip)
+                    <div
+                        wire:click="startTrip('{{ trim($trip->KlicSluzebniCesty) }}')"
+                        class="mb-2 p-4 border border-base-300 bg-white rounded-box cursor-pointer hover:bg-info/5 transition flex items-center gap-4"
+                    >
+                        <x-mary-icon name="o-truck" class="text-info w-8 h-8 shrink-0" />
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-info">
+                                {{ trim($trip->Nazev ?? '') ?: 'Služební cesta' }}
+                            </div>
+                            <div class="text-sm text-gray-500 flex flex-wrap gap-x-3">
+                                <span>{{ $trip->DatumACasOd?->format('d.m.') ?? '' }} – {{ $trip->DatumACasDo?->format('d.m.') ?? '' }}</span>
+                                @if(trim($trip->zakaznikSubjekt->Nazev1 ?? ''))
+                                    <span>{{ trim($trip->zakaznikSubjekt->Nazev1) }}</span>
+                                @endif
+                                @if($trip->doklad)
+                                    <span class="font-mono">{{ trim($trip->doklad->MPSProjekt ?? '') }} {{ trim($trip->doklad->KlicDokla ?? '') }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <x-mary-icon name="o-play" class="text-info w-6 h-6 shrink-0" />
+                    </div>
+                @endforeach
+            </x-mary-card>
+        </div>
+    @endif
+
     <div class="mt-8">
         <x-mary-card title="Dnešní směna" class="bg-transparent border-0 shadow-none p-0!">
             @forelse($today as $record)
@@ -11,28 +41,28 @@
                 @endphp
                 <x-mary-collapse class="mb-2 border border-base-200 bg-white">
                     <x-slot:heading>
-                        <div class="flex items-center gap-4 w-full">
+                        <div class="flex items-center gap-3 sm:gap-4 w-full">
                             {{-- Avatar mistra --}}
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs sm:text-sm"
                                  style="background-color: {{ $mistrColor }}">
                                 {{ $mistrCislo }}
                             </div>
                             {{-- VP + výkres --}}
-                            <div class="w-1/5 min-w-0">
-                                <div class="font-bold truncate">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
+                            <div class="flex-1 sm:w-1/5 sm:flex-none min-w-0">
+                                <div class="font-bold truncate text-sm sm:text-base">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</div>
                                 @if($record->drawing_number)
                                     <div class="text-xs text-gray-500 truncate">{{ $record->drawing_number }}</div>
                                 @endif
                             </div>
 
                             {{-- Množství --}}
-                            <div class="w-1/6 min-w-0">
+                            <div class="hidden sm:block w-1/6 min-w-0">
                                 <div class="text-sm font-semibold">{{ trim($record->doklad?->SpecifiSy ?? '') ?: '—' }}</div>
                                 <div class="text-sm font-semibold">{{ $record->processed_quantity }} ks</div>
                             </div>
 
                             {{-- Operace + stroj --}}
-                            <div class="flex-1 min-w-0">
+                            <div class="hidden md:block flex-1 min-w-0">
                                 <div class="text-sm truncate">{{ trim($record->operation?->Nazev1 ?? $record->operation_id) }}</div>
                                 @if($record->machine_id)
                                     <div class="text-xs text-gray-500 truncate">{{ trim($record->machine?->NazevUplny ?? $record->machine_id) }}</div>
@@ -40,15 +70,15 @@
                             </div>
 
                             {{-- Operátor + čas zahájení --}}
-                            <div class="w-28 min-w-0 hidden md:block">
+                            <div class="w-28 min-w-0 hidden lg:block">
                                 <div class="text-sm truncate">{{ auth()->user()->name }}</div>
                                 <div class="text-xs text-gray-500">{{ $record->started_at?->format('H:i') }}</div>
                             </div>
 
                             {{-- Odpracovaný čas --}}
-                            <div class="w-16 text-right shrink-0">
+                            <div class="w-14 sm:w-16 text-right shrink-0">
                                 @if($workedH !== null)
-                                    <span class="text-2xl font-bold tabular-nums">{{ $workedH }}:{{ str_pad($workedM, 2, '0', STR_PAD_LEFT) }}</span>
+                                    <span class="text-xl sm:text-2xl font-bold tabular-nums">{{ $workedH }}:{{ str_pad($workedM, 2, '0', STR_PAD_LEFT) }}</span>
                                 @else
                                     <span class="text-sm text-gray-400">—</span>
                                 @endif
@@ -59,7 +89,7 @@
                                 @if($record->SluzebniCesta)
                                     <x-mary-icon name="o-truck" class="text-info w-5 h-5" title="Služební cesta" />
                                 @endif
-                                <x-mary-icon name="o-check-circle" class="text-success w-7 h-7" />
+                                <x-mary-icon name="o-check-circle" class="text-success w-6 h-6 sm:w-7 sm:h-7" />
                             </div>
                         </div>
                     </x-slot:heading>
@@ -179,16 +209,16 @@
                     @endphp
                     <x-mary-collapse class="bg-base-200 opacity-80 mb-2 border border-base-300">
                         <x-slot:heading>
-                            <div class="flex items-center gap-4 w-full grayscale-50">
+                            <div class="flex items-center gap-3 sm:gap-4 w-full grayscale-50">
                                 {{-- Avatar mistra --}}
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-xs sm:text-sm"
                                      style="background-color: {{ $mistrColor }}">
                                     {{ $mistrCislo }}
                                 </div>
 
                                 {{-- VP + výkres --}}
-                                <div class="w-1/5 min-w-0">
-                                    <div class="font-bold truncate">
+                                <div class="flex-1 sm:w-1/5 sm:flex-none min-w-0">
+                                    <div class="font-bold truncate text-sm sm:text-base">
                                         @if($record->ZakVP_SysPrimKlic)
                                             <a href="{{ route('vp.show', trim($record->ZakVP_SysPrimKlic)) }}" class="z-50 relative hover:underline hover:text-primary">{{ trim($record->doklad?->MPSProjekt ?? '') ?: '—' }} {{ trim($record->doklad?->KlicDokla ?? '') ?: '—' }}</a>
                                         @else
@@ -201,12 +231,12 @@
                                 </div>
 
                                 {{-- Množství --}}
-                                <div class="w-1/6 min-w-0">
+                                <div class="hidden sm:block w-1/6 min-w-0">
                                     <div class="text-sm font-semibold">{{ trim($record->doklad?->SpecifiSy ?? '') ?: '—' }}</div>
                                     <div class="text-sm font-semibold">{{ $record->processed_quantity }} ks</div>
                                 </div>
 
-                                <div class="flex-1 min-w-0">
+                                <div class="hidden md:block flex-1 min-w-0">
                                     <div class="text-sm truncate">{{ trim($record->operation?->Nazev1 ?? $record->operation_id) }}</div>
                                     @if($record->machine_id)
                                         <div class="text-xs text-gray-500 truncate">{{ trim($record->machine?->NazevUplny ?? $record->machine_id) }}</div>
@@ -214,15 +244,15 @@
                                 </div>
 
                                 {{-- Operátor + datum --}}
-                                <div class="w-28 min-w-0 hidden md:block">
+                                <div class="w-28 min-w-0 hidden lg:block">
                                     <div class="text-sm truncate">{{ auth()->user()->name }}</div>
                                     <div class="text-xs text-gray-500">{{ $record->started_at?->format('d.m.') }}</div>
                                 </div>
 
                                 {{-- Odpracovaný čas --}}
-                                <div class="w-16 text-right shrink-0">
+                                <div class="w-14 sm:w-16 text-right shrink-0">
                                     @if($workedH !== null)
-                                        <span class="text-2xl font-bold tabular-nums">{{ $workedH }}:{{ str_pad($workedM, 2, '0', STR_PAD_LEFT) }}</span>
+                                        <span class="text-xl sm:text-2xl font-bold tabular-nums">{{ $workedH }}:{{ str_pad($workedM, 2, '0', STR_PAD_LEFT) }}</span>
                                     @else
                                         <span class="text-sm text-gray-400">—</span>
                                     @endif
@@ -233,7 +263,7 @@
                                     @if($record->SluzebniCesta)
                                         <x-mary-icon name="o-truck" class="text-info w-5 h-5 opacity-50" title="Služební cesta" />
                                     @endif
-                                    <x-mary-icon name="o-check-circle" class="text-neutral w-7 h-7 opacity-50" />
+                                    <x-mary-icon name="o-check-circle" class="text-neutral w-6 h-6 sm:w-7 sm:h-7 opacity-50" />
                                 </div>
                             </div>
                         </x-slot:heading>

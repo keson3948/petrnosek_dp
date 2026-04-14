@@ -33,16 +33,18 @@ new #[Layout('layouts.guest')] class extends Component
         <x-mary-input label="Heslo" icon="o-key" wire:model="form.password" type="password" name="password" error-field="form.password" required autocomplete="current-password"/>
 
         <x-slot:actions>
-            {{-- Obalovací DIV, který zajistí roztažení a zarovnání --}}
             <div class="w-full flex items-center justify-between">
 
-                <x-mary-button
-                    label="Přihlásit se pomocí čipu"
-                    link="{{ route('loginRFID') }}"
-                    class="btn-link text-gray-600 underline hover:no-underline p-0 h-auto min-h-0"
-                />
+                @if(\App\Models\Terminal::isTerminal())
+                    <x-mary-button
+                        label="Přihlásit se pomocí čipu"
+                        link="{{ route('welcome') }}"
+                        class="btn-link text-gray-600 underline hover:no-underline p-0 h-auto min-h-0"
+                    />
+                @else
+                    <span></span>
+                @endif
 
-                {{-- 2. Tlačítko (bude vpravo) --}}
                 <x-mary-button
                     label="PŘIHLÁSIT SE"
                     icon="o-paper-airplane"

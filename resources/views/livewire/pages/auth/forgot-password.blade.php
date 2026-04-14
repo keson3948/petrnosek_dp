@@ -38,24 +38,29 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+        Zapomněli jste heslo? Zadejte svůj email a my vám pošleme odkaz pro obnovení hesla.
     </div>
 
-    <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form wire:submit="sendPasswordResetLink">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+    <x-mary-form wire:submit="sendPasswordResetLink">
+        <x-mary-input label="Email" icon="o-envelope" wire:model="email" error-field="email" type="email" name="email" required autofocus autocomplete="email" />
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
-    </form>
+        <x-slot:actions>
+            <div class="w-full flex items-center justify-between">
+                <x-mary-button
+                    label="Zpět na přihlášení"
+                    link="{{ route('login') }}"
+                    class="btn-link text-gray-600 underline hover:no-underline p-0 h-auto min-h-0"
+                />
+                <x-mary-button
+                    label="Odeslat odkaz"
+                    icon="o-paper-airplane"
+                    class="btn-primary"
+                    type="submit"
+                    spinner="sendPasswordResetLink"
+                />
+            </div>
+        </x-slot:actions>
+    </x-mary-form>
 </div>

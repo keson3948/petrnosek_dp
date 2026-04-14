@@ -1,14 +1,15 @@
 <div>
     <x-mary-header title="Dashboard" separator>
-        <x-slot:middle class="!justify-end">
+        <x-slot:actions class="!justify-end">
             <x-mary-button
                 label="Začít novou operaci"
                 icon="o-play"
                 wire:click="openStartDrawer"
-                class="btn-primary btn-lg"
+                class="btn-primary md:btn-lg"
                 :disabled="$hasActiveRecord"
+                responsive
             />
-        </x-slot:middle>
+        </x-slot:actions>
     </x-mary-header>
 
     <livewire:dashboard.active-record />

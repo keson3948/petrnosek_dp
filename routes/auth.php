@@ -13,9 +13,6 @@ Route::middleware('guest')->group(function () {
     Volt::route('login', 'pages.auth.login')
         ->name('login');
 
-    Volt::route('loginRFID', 'pages.auth.loginRFID')
-        ->name('loginRFID');
-
     Route::post('rfid-login', [App\Http\Controllers\Auth\RfidLoginController::class, 'login'])
         ->name('rfid.login');
 

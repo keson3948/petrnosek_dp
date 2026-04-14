@@ -19,7 +19,7 @@
         close-on-escape
         class="w-full lg:w-1/3"
     >
-        <div class="flex flex-col h-[calc(100vh-10rem)]">
+        <div class="flex flex-col h-[calc(100dvh-10rem)]">
 
             @if($showTripConfirmation)
                 @php $trip = $this->selectedTrip; @endphp
@@ -84,25 +84,25 @@
                     </div>
 
                     {{-- Trip footer --}}
-                    <div class="shrink-0 flex items-center justify-between gap-3 pt-4 border-t border-base-200 mt-4">
-                        <x-mary-button label="Zpět" icon="o-arrow-left" wire:click="cancelTrip" class="btn-lg" />
-                        <x-mary-button label="Zahájit služební cestu" icon="o-play" wire:click="startTripOperation" class="btn-info btn-lg" spinner="startTripOperation" />
+                    <div class="shrink-0 flex items-center justify-between gap-2 pt-4 border-t border-base-200 mt-4">
+                        <x-mary-button label="Zpět" icon="o-arrow-left" wire:click="cancelTrip" class="btn-md sm:btn-lg" />
+                        <x-mary-button label="Zahájit služební cestu" icon="o-play" wire:click="startTripOperation" class="btn-info btn-md sm:btn-lg" spinner="startTripOperation" />
                     </div>
                 @endif
 
             @else
-                <div class="flex items-center justify-center gap-1.5 shrink-0 pb-4">
+                <div class="flex items-center justify-center gap-1 sm:gap-1.5 shrink-0 pb-4">
                     @foreach([1, 2, 3, 4, 5, 6] as $i)
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors
+                        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-colors
                             {{ $startStep === $i ? 'bg-primary text-white ring-2 ring-primary/30' : ($startStep > $i ? 'bg-success/20 text-success' : 'bg-base-200 text-base-content/30') }}">
                             @if($startStep > $i)
-                                <x-mary-icon name="o-check" class="w-4 h-4" />
+                                <x-mary-icon name="o-check" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             @else
                                 {{ $i }}
                             @endif
                         </div>
                         @if($i < 6)
-                            <div class="w-3 h-0.5 {{ $startStep > $i ? 'bg-success' : 'bg-base-200' }}"></div>
+                            <div class="w-2 sm:w-3 h-0.5 {{ $startStep > $i ? 'bg-success' : 'bg-base-200' }}"></div>
                         @endif
                     @endforeach
                 </div>
@@ -176,27 +176,27 @@
                     @endif
                 </div>
 
-                <div class="shrink-0 flex items-center justify-between gap-3 pt-4 border-t border-base-200 mt-4">
+                <div class="shrink-0 flex items-center justify-between gap-2 pt-4 border-t border-base-200 mt-4">
                     @if($startStep > $minStep)
-                        <x-mary-button label="Zpět" icon="o-arrow-left" wire:click="prevStartStep" class="btn-lg" />
+                        <x-mary-button label="Zpět" icon="o-arrow-left" wire:click="prevStartStep" class="btn-md sm:btn-lg" />
                     @else
-                        <x-mary-button label="Zrušit" @click="$wire.showStartDrawer = false" class="btn-lg" />
+                        <x-mary-button label="Zrušit" @click="$wire.showStartDrawer = false" class="btn-md sm:btn-lg" />
                     @endif
 
                     @if($startStep === 6)
-                        <x-mary-button label="Zahájit operaci" icon="o-play" wire:click="startOperation" class="btn-primary btn-lg" spinner="startOperation" />
+                        <x-mary-button label="Zahájit operaci" icon="o-play" wire:click="startOperation" class="btn-primary btn-md sm:btn-lg" spinner="startOperation" />
                     @elseif($startStep === 2)
-                        <x-mary-button label="Pokračovat bez řádku" icon-right="o-arrow-right" wire:click="skipRadek" class="btn-outline btn-lg" />
+                        <x-mary-button label="Bez řádku" icon-right="o-arrow-right" wire:click="skipRadek" class="btn-outline btn-md sm:btn-lg" />
                     @elseif($startStep === 3)
-                        <x-mary-button label="Pokračovat bez podsestavy" icon-right="o-arrow-right" wire:click="skipPodsestava" class="btn-outline btn-lg" />
+                        <x-mary-button label="Bez podsestavy" icon-right="o-arrow-right" wire:click="skipPodsestava" class="btn-outline btn-md sm:btn-lg" />
                     @elseif($startStep === 4)
                         @if($drawing_number)
-                            <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-lg" />
+                            <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-md sm:btn-lg" />
                         @else
-                            <x-mary-button label="Pokračovat bez výkresu" icon-right="o-arrow-right" wire:click="skipDrawingNumber" class="btn-outline btn-lg" />
+                            <x-mary-button label="Bez výkresu" icon-right="o-arrow-right" wire:click="skipDrawingNumber" class="btn-outline btn-md sm:btn-lg" />
                         @endif
                     @else
-                        <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-lg" />
+                        <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-md sm:btn-lg" />
                     @endif
                 </div>
 

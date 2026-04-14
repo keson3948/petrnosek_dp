@@ -8,6 +8,7 @@ use App\Models\PrednOperProstr;
 use App\Models\PrednOsobProstr;
 use App\Models\ProductionRecord;
 use App\Models\Prostredek;
+use App\Models\SluzebniCesta;
 use App\Models\Terminal;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -72,9 +73,15 @@ class History extends Component
     public string $edit_notes = '';
 
     #[On('operation-completed')]
+    #[On('operation-started')]
     public function refresh(): void
     {
         // Livewire will re-render automatically
+    }
+
+    public function startTrip(string $tripKey): void
+    {
+        $this->dispatch('open-start-drawer-trip', tripKey: $tripKey);
     }
 
     public function getUserMachinesProperty()
@@ -153,9 +160,25 @@ class History extends Component
         $today = $allCompleted->filter(fn ($r) => $r->ended_at->isToday())->values();
         $historical = $allCompleted->filter(fn ($r) => $r->ended_at < $todayStart);
 
+        $activeTrips = collect();
+        $klicSubjektu = auth()->user()->klic_subjektu;
+        if ($klicSubjektu) {
+            $hasRunningTrip = auth()->user()->productionRecords()
+                ->whereIn('status', [0, 1])
+                ->where('SluzebniCesta', 1)
+                ->exists();
+
+            if (! $hasRunningTrip) {
+                $activeTrips = SluzebniCesta::activeForUser($klicSubjektu)
+                    ->with(['doklad', 'operace', 'zakaznikSubjekt', 'pracovisteSubjekt'])
+                    ->get();
+            }
+        }
+
         return view('livewire.dashboard.history', [
             'today' => $today,
             'historical' => $historical,
+            'activeTrips' => $activeTrips,
         ]);
     }
 

@@ -21,7 +21,7 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 relative overflow-hidden grid-bg bg-gray-50">
+    <body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 relative overflow-y-auto grid-bg bg-gray-50">
 
 
 

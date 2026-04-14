@@ -17,6 +17,15 @@
                 </a>
             @endscope
 
+            @scope('cell_attendance', $user)
+                @if($user->attendance_time)
+                    <x-mary-badge :value="($user->attendance_type === 'prichod' ? 'Příchod ' : 'Odchod ') . $user->attendance_time"
+                        class="{{ $user->attendance_type === 'prichod' ? 'badge-success' : 'badge-warning' }} badge-sm" />
+                @else
+                    <span class="text-gray-300">—</span>
+                @endif
+            @endscope
+
             @scope('cell_status_label', $user)
                 @if($user->is_active)
                     <x-mary-badge :value="$user->status_label"

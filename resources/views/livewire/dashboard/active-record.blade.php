@@ -8,16 +8,16 @@
             class="border {{ $isRunning ? 'border-primary bg-primary/5' : 'border-warning bg-warning/5' }}"
         >
             <x-slot:title>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
                     @if($isRunning)
                         <span class="relative flex h-3 w-3">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                         </span>
-                        <span class="text-primary">Probíhající operace</span>
+                        <span class="text-primary text-sm sm:text-base">Probíhající operace</span>
                     @else
                         <x-mary-icon name="o-pause-circle" class="w-5 h-5 text-warning" />
-                        <span class="text-warning">Pozastavená operace</span>
+                        <span class="text-warning text-sm sm:text-base">Pozastavená operace</span>
                     @endif
                     @if($activeRecord->SluzebniCesta)
                         <x-mary-badge value="Služební cesta" icon="o-truck" class="badge-info badge-sm" />
@@ -26,14 +26,14 @@
             </x-slot:title>
 
             {{-- Info grid --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-white border border-base-200">
-                    <x-mary-icon name="o-document-text" class="w-6 h-6 text-gray-400 shrink-0" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
+                <div class="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-white border border-base-200">
+                    <x-mary-icon name="o-document-text" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 shrink-0" />
                     <div class="min-w-0">
                         <div class="text-xs text-gray-400 uppercase tracking-wide">Výrobní příkaz</div>
-                        <div class="font-bold text-lg truncate">
+                        <div class="font-bold text-sm sm:text-lg truncate">
                             @if($activeRecord->ZakVP_SysPrimKlic)
-                                <a href="{{ route('vp.show', trim($activeRecord->ZakVP_SysPrimKlic)) }}" class="z-50 relative hover:underline hover:text-primary">{{ trim($activeRecord->doklad->MPSProjekt) }} {{ $klicDokla ?? '—' }}</a>
+                                <a href="{{ route('vp.show', trim($activeRecord->ZakVP_SysPrimKlic)) }}" class="relative hover:underline hover:text-primary">{{ trim($activeRecord->doklad->MPSProjekt) }} {{ $klicDokla ?? '—' }}</a>
                             @else
                                 {{ $klicDokla ?? '—' }}
                             @endif
@@ -41,46 +41,46 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-white border border-base-200">
-                    <x-mary-icon name="o-cog-6-tooth" class="w-6 h-6 text-gray-400 shrink-0" />
+                <div class="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-white border border-base-200">
+                    <x-mary-icon name="o-cog-6-tooth" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 shrink-0" />
                     <div class="min-w-0">
                         <div class="text-xs text-gray-400 uppercase tracking-wide">Operace</div>
-                        <div class="font-bold truncate">{{ trim($activeRecord->operation?->Nazev1 ?? $activeRecord->operation_id) }}</div>
+                        <div class="font-bold text-sm sm:text-base truncate">{{ trim($activeRecord->operation?->Nazev1 ?? $activeRecord->operation_id) }}</div>
                     </div>
                 </div>
 
                 @if($activeRecord->machine_id)
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white border border-base-200">
-                        <x-mary-icon name="o-wrench-screwdriver" class="w-6 h-6 text-gray-400 shrink-0" />
+                    <div class="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-white border border-base-200">
+                        <x-mary-icon name="o-wrench-screwdriver" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 shrink-0" />
                         <div class="min-w-0">
                             <div class="text-xs text-gray-400 uppercase tracking-wide">Stroj</div>
-                            <div class="font-bold truncate">{{ trim($activeRecord->machine?->NazevUplny ?? $activeRecord->machine_id) }}</div>
+                            <div class="font-bold text-sm sm:text-base truncate">{{ trim($activeRecord->machine?->NazevUplny ?? $activeRecord->machine_id) }}</div>
                         </div>
                     </div>
                 @endif
 
                 @if($activeRecord->drawing_number)
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-white border border-base-200">
-                        <x-mary-icon name="o-pencil-square" class="w-6 h-6 text-gray-400 shrink-0" />
+                    <div class="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-white border border-base-200">
+                        <x-mary-icon name="o-pencil-square" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 shrink-0" />
                         <div class="min-w-0">
                             <div class="text-xs text-gray-400 uppercase tracking-wide">Výkres</div>
-                            <div class="font-bold truncate">{{ $activeRecord->drawing_number }}</div>
+                            <div class="font-bold text-sm sm:text-base truncate">{{ $activeRecord->drawing_number }}</div>
                         </div>
                     </div>
                 @endif
             </div>
 
             {{-- Timer --}}
-            <div class="mt-4 flex items-center justify-between p-4 rounded-lg {{ $isRunning ? 'bg-primary/10' : 'bg-warning/10' }}">
+            <div class="mt-3 sm:mt-4 flex items-center justify-between p-3 sm:p-4 rounded-lg {{ $isRunning ? 'bg-primary/10' : 'bg-warning/10' }}">
                 <div>
                     <div class="text-xs text-gray-500 uppercase tracking-wide">Zahájeno</div>
-                    <div class="text-lg font-mono font-bold">{{ $activeRecord->started_at->format('H:i') }}</div>
+                    <div class="text-base sm:text-lg font-mono font-bold">{{ $activeRecord->started_at->format('H:i') }}</div>
                 </div>
                 <div class="text-right">
                     <div class="text-xs text-gray-500 uppercase tracking-wide">
                         {{ $isRunning ? 'Probíhá' : 'Pozastaveno' }}
                     </div>
-                    <div class="text-3xl font-bold font-mono tabular-nums {{ $isRunning ? 'text-primary' : 'text-warning' }}"
+                    <div class="text-2xl sm:text-3xl font-bold font-mono tabular-nums {{ $isRunning ? 'text-primary' : 'text-warning' }}"
                          wire:poll.10s="$refresh">
                         @php
                             $now = now();
@@ -101,11 +101,11 @@
 
             <x-slot:actions>
                 @if($isRunning)
-                    <x-mary-button label="Pozastavit" icon="o-pause" wire:click="pauseOperation" class="btn-warning btn-outline btn-lg" spinner="pauseOperation" />
+                    <x-mary-button label="Pozastavit" icon="o-pause" wire:click="pauseOperation" class="btn-warning btn-outline btn-lg" spinner="pauseOperation" responsive />
                 @else
-                    <x-mary-button label="Obnovit" icon="o-play" wire:click="resumeOperation" class="btn-primary btn-lg" spinner="resumeOperation" />
+                    <x-mary-button label="Obnovit" icon="o-play" wire:click="resumeOperation" class="btn-primary btn-lg" spinner="resumeOperation" responsive />
                 @endif
-                <x-mary-button label="Ukončit operaci" icon="o-check" wire:click="openCompleteModal" class="btn-success text-white btn-lg" />
+                <x-mary-button label="Ukončit operaci" icon="o-check" wire:click="openCompleteModal" class="btn-success text-white btn-lg" responsive />
             </x-slot:actions>
         </x-mary-card>
     @else

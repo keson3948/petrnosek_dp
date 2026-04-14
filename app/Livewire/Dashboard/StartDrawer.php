@@ -161,6 +161,13 @@ class StartDrawer extends Component
     // Open / Reset
     // ==========================================
 
+    #[On('open-start-drawer-trip')]
+    public function openStartDrawerWithTrip(string $tripKey): void
+    {
+        $this->openStartDrawer();
+        $this->selectTrip($tripKey);
+    }
+
     #[On('open-start-drawer')]
     public function openStartDrawer(): void
     {

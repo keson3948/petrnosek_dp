@@ -11,6 +11,18 @@ class extends Component {
 
     public string $izo = '';
 
+    public function mount(): void
+    {
+        if (auth()->check()) {
+            $this->redirectRoute('dashboard');
+            return;
+        }
+
+        if (! Terminal::isTerminal()) {
+            $this->redirectRoute('login');
+        }
+    }
+
     public function login(): void
     {
         $this->validate([
@@ -90,27 +102,27 @@ class extends Component {
     <div class="grid grid-cols-12 gap-3 md:gap-4">
 
         {{-- Logo + název — wide --}}
-        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex items-center gap-5">
-            <x-application-logo class="w-16 h-16 shrink-0" />
+        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
+            <x-application-logo class="w-12 h-12 sm:w-16 sm:h-16 shrink-0" />
             <div>
-                <div class="text-xl font-bold text-base-content leading-tight">Metal Product</div>
-                <div class="text-xl font-bold text-base-content leading-tight">Servis Praha</div>
+                <div class="text-lg sm:text-xl font-bold text-base-content leading-tight">Metal Product</div>
+                <div class="text-lg sm:text-xl font-bold text-base-content leading-tight">Servis Praha</div>
             </div>
         </div>
 
         {{-- Hodiny — velké --}}
-        <div class="col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col items-center justify-center">
-            <div class="text-4xl md:text-5xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
+        <div class="col-span-12 sm:col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center">
+            <div class="text-3xl sm:text-4xl md:text-5xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
         </div>
 
         {{-- Datum --}}
-        <div class="col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-1">
+        <div class="col-span-12 sm:col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1">
             <x-mary-icon name="o-calendar" class="w-7 h-7 text-primary/40" />
             <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
         </div>
 
         {{-- RFID přihlášení — hlavní karta --}}
-        <div class="col-span-12 md:col-span-6 bg-white/90 backdrop-blur border-2 border-primary/20 rounded-2xl p-8 flex flex-col justify-center">
+        <div class="col-span-12 md:col-span-6 bg-white/90 backdrop-blur border-2 border-primary/20 rounded-2xl p-5 sm:p-8 flex flex-col justify-center">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                     <x-mary-icon name="o-finger-print" class="w-6 h-6 text-primary" />
@@ -134,7 +146,7 @@ class extends Component {
                         required
                         autofocus
                         autocomplete="off"
-                        class="input-lg"
+                        class="input-lg caret-transparent"
                     />
                 </div>
 
@@ -142,25 +154,19 @@ class extends Component {
             </form>
         </div>
 
-        {{-- Terminál --}}
-        @if($terminal = Terminal::current())
-            <div class="col-span-12 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex flex-col justify-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <x-mary-icon name="o-building-office" class="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                        <div class="text-[10px] uppercase tracking-wider text-base-content/40 font-bold">Terminál</div>
-                        <div class="text-lg font-semibold">{{ $terminal->name }}</div>
-                    </div>
-                </div>
+        {{-- Terminál + pracoviště --}}
+        @php($terminal = Terminal::current())
+        <div class="col-span-12 md:col-span-6 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
+            <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <x-mary-icon name="o-building-office" class="w-5 h-5 text-primary" />
             </div>
-        @endif
-
-        {{-- Status --}}
-        <div class="{{ ($terminal = Terminal::current()) ? 'md:col-span-3' : 'md:col-span-6' }} col-span-12 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-6 flex items-center justify-center gap-3">
-            <div class="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span class="text-sm text-base-content/50">Systém online</span>
+            <div class="min-w-0">
+                <div class="text-[10px] uppercase tracking-wider text-base-content/40 font-bold">Terminál</div>
+                <div class="text-lg font-semibold truncate">{{ $terminal->name }}</div>
+                @if($terminal->pracoviste)
+                    <div class="text-sm text-base-content/60 truncate">{{ trim($terminal->pracoviste->NazevUplny ?? '') }}</div>
+                @endif
+            </div>
         </div>
 
         {{-- Patička --}}
