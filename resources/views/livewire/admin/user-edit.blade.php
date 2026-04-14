@@ -17,7 +17,6 @@
                     <x-mary-input label="Klíč Subjektu" wire:model="klic_subjektu" placeholder="Např. 12345" />
                 </div>
 
-                {{-- Skupina subjektu z Economy --}}
                 @if($subjekt)
                     <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
                         <x-mary-icon name="o-user-group" class="w-5 h-5 text-base-content/60 shrink-0" />
@@ -40,8 +39,7 @@
                     </div>
                 @endif
 
-                {{-- Nastavení mistra (jen pokud je mistr) --}}
-                @if($subjekt?->isMistr())
+                @if($subjekt?->canHaveColorAndNumber())
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-colorpicker
                             label="Barva mistra"

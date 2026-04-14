@@ -87,9 +87,10 @@
                             {{-- Stav --}}
                             <div class="shrink-0 flex items-center gap-1.5 justify-end">
                                 @if($record->SluzebniCesta)
-                                    <x-mary-icon name="o-truck" class="text-info w-5 h-5" title="Služební cesta" />
+                                    <x-mary-icon name="o-truck" class="text-success w-5 h-5" title="Služební cesta" />
+                                @else
+                                    <x-mary-icon name="o-check-circle" class="text-success w-6 h-6 sm:w-7 sm:h-7" />
                                 @endif
-                                <x-mary-icon name="o-check-circle" class="text-success w-6 h-6 sm:w-7 sm:h-7" />
                             </div>
                         </div>
                     </x-slot:heading>
@@ -261,9 +262,10 @@
                                 {{-- Badge --}}
                                 <div class="shrink-0 flex items-center gap-1.5 justify-end">
                                     @if($record->SluzebniCesta)
-                                        <x-mary-icon name="o-truck" class="text-info w-5 h-5 opacity-50" title="Služební cesta" />
+                                        <x-mary-icon name="o-truck" class="text-neutral w-5 h-5 opacity-50" title="Služební cesta" />
+                                    @else
+                                        <x-mary-icon name="o-check-circle" class="text-neutral w-6 h-6 sm:w-7 sm:h-7 opacity-50" />
                                     @endif
-                                    <x-mary-icon name="o-check-circle" class="text-neutral w-6 h-6 sm:w-7 sm:h-7 opacity-50" />
                                 </div>
                             </div>
                         </x-slot:heading>

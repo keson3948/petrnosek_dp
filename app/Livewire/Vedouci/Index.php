@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Vedouci;
 
-use App\Models\Attendance\Osoba as AttendanceOsoba;
 use App\Models\Attendance\Pruchod;
 use App\Models\ProductionRecord;
 use App\Models\User;
@@ -10,13 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
-
     public string $search = '';
 
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
@@ -37,14 +33,21 @@ class Index extends Component
 
     public function render()
     {
-        $headers = [
-            ['key' => 'name', 'label' => 'Jméno'],
-            ['key' => 'attendance', 'label' => 'Docházka', 'sortable' => false],
-            ['key' => 'status_label', 'label' => 'Stav', 'sortable' => false],
+        $presentHeaders = [
+            ['key' => '', 'label' => 'Skupina', 'class' => 'w-24 bg-base-200'],
+            ['key' => 'name', 'label' => 'Jméno', 'class' => 'w-64'],
+            ['key' => 'arrival', 'label' => 'Příchod', 'sortable' => false, 'class' => 'w-1 text-center bg-info/20'],
             ['key' => 'current_vp', 'label' => 'Aktuální VP', 'sortable' => false],
             ['key' => 'current_operation', 'label' => 'Operace', 'sortable' => false],
             ['key' => 'current_machine', 'label' => 'Stroj', 'sortable' => false],
-            ['key' => 'started_at_label', 'label' => 'Zahájeno', 'sortable' => false],
+            ['key' => 'started_at_label', 'label' => 'Zahájeno', 'sortable' => false, 'class' => 'w-1 text-center'],
+        ];
+
+        $absentHeaders = [
+            ['key' => 'name', 'label' => 'Jméno', 'class' => 'w-64'],
+            ['key' => 'arrival', 'label' => 'Příchod', 'sortable' => false, 'class' => 'w-1 bg-success/20 text-center'],
+            ['key' => 'departure', 'label' => 'Odchod', 'sortable' => false, 'class' => 'w-1 bg-error/20 text-center'],
+            ['key' => '', 'label' => '', 'sortable' => false]
         ];
 
         $users = User::query()
@@ -52,71 +55,78 @@ class Index extends Component
             ->where('klic_subjektu', '!=', '')
             ->when($this->search, fn (Builder $q) => $q->where('name', 'like', "%{$this->search}%"))
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
-            ->paginate(20);
+            ->get();
 
         $activeRecords = $this->activeRecords;
 
         $attendanceMap = collect();
         try {
-            $cipToUserId = $users->getCollection()
-                ->filter(fn ($u) => $u->izo)
-                ->mapWithKeys(fn ($u) => [$u->attendance_cip => $u->id]);
+            $oscToUserId = $users
+                ->filter(fn ($u) => $u->osobni_cislo_dochazky)
+                ->mapWithKeys(fn ($u) => [$u->osobni_cislo_dochazky => $u->id]);
 
-            if ($cipToUserId->isNotEmpty()) {
-                $cipKeys = $cipToUserId->keys()->all();
-                $bindings = array_map(fn ($v) => (string) $v, $cipKeys);
-                $placeholders = implode(',', array_fill(0, count($bindings), '?'));
-                $osoby = AttendanceOsoba::whereRaw("CAST(CIP AS VARCHAR(20)) IN ({$placeholders})", $bindings)->get();
+            if ($oscToUserId->isNotEmpty()) {
+                $pruchody = Pruchod::vceraADnes()
+                    ->whereIn('OSC', $oscToUserId->keys()->all())
+                    ->orderBy('DATUM')
+                    ->orderBy('CAS')
+                    ->get();
 
-                $oscToUserId = $osoby->mapWithKeys(fn ($o) => [
-                    (int) $o->OSC => $cipToUserId->get(trim($o->CIP)),
-                ]);
+                $attendanceMap = $pruchody->groupBy('OSC')->mapWithKeys(function ($group) use ($oscToUserId) {
+                    $userId = $oscToUserId->get((string) $group->first()->OSC)
+                        ?? $oscToUserId->get((int) $group->first()->OSC);
 
-                if ($oscToUserId->isNotEmpty()) {
-                    $pruchody = Pruchod::dnesni()
-                        ->whereIn('OSC', $oscToUserId->keys()->all())
-                        ->orderBy('CAS')
-                        ->get();
+                    $last = $group->last();
+                    $isPresent = (int) $last->DIRECTION === 1;
 
-                    $attendanceMap = $pruchody->groupBy('OSC')->mapWithKeys(function ($group) use ($oscToUserId) {
-                        $last = $group->last();
-                        $userId = $oscToUserId->get((int) $last->OSC);
+                    $lastArrival = $group->last(fn ($p) => (int) $p->DIRECTION === 1);
+                    $lastDeparture = $group->last(fn ($p) => (int) $p->DIRECTION !== 1);
 
-                        return [$userId => [
-                            'time' => $last->cas_time,
-                            'type' => (int) $last->DIRECTION === 1 ? 'prichod' : 'odchod',
-                        ]];
-                    });
-                }
+                    $showDeparture = $lastDeparture && $lastArrival
+                        && ($lastDeparture->DATUM > $lastArrival->DATUM
+                            || ($lastDeparture->DATUM === $lastArrival->DATUM && $lastDeparture->CAS > $lastArrival->CAS));
+
+                    return [$userId => [
+                        'arrival' => $lastArrival?->cas_time,
+                        'departure' => $showDeparture ? $lastDeparture->cas_time : null,
+                        'is_present' => $isPresent,
+                    ]];
+                });
             }
         } catch (\Exception $e) {
             // MSSQL may not be available
         }
 
-        $users->getCollection()->transform(function ($user) use ($activeRecords, $attendanceMap) {
+        // Transform users
+        $allUsers = $users->map(function ($user) use ($activeRecords, $attendanceMap) {
             $active = $activeRecords->get(trim($user->klic_subjektu));
 
             $user->is_active = (bool) $active;
             $user->status_label = $active
                 ? ($active->status === 0 ? 'Pracuje' : 'Pauza')
-                : 'Neaktivní';
+                : '';
             $user->current_vp = $active ? trim(($active->doklad?->MPSProjekt ?? '').' '.($active->doklad?->KlicDokla ?? '')) : '';
             $user->current_vp_sys_klic = $active ? trim($active->ZakVP_SysPrimKlic ?? '') : '';
             $user->current_operation = $active ? trim($active->operation?->Nazev1 ?? $active->operation_id ?? '') : '';
             $user->current_machine = $active ? trim($active->machine?->NazevUplny ?? $active->machine_id ?? '') : '';
             $user->started_at_label = $active?->started_at?->format('H:i') ?? '';
 
-            // Docházka
             $att = $attendanceMap->get($user->id);
-            $user->attendance_time = $att['time'] ?? null;
-            $user->attendance_type = $att['type'] ?? null;
+            $user->arrival = $att['arrival'] ?? null;
+            $user->departure = $att['departure'] ?? null;
+            $user->is_present = $att['is_present'] ?? false;
 
             return $user;
         });
 
+        $presentUsers = $allUsers->filter(fn ($u) => $u->is_present)->values();
+        $absentUsers = $allUsers->filter(fn ($u) => ! $u->is_present)->values();
+
         return view('livewire.vedouci.index', [
-            'users' => $users,
-            'headers' => $headers,
+            'presentUsers' => $presentUsers,
+            'absentUsers' => $absentUsers,
+            'presentHeaders' => $presentHeaders,
+            'absentHeaders' => $absentHeaders,
         ]);
     }
 }

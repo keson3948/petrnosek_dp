@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Attendance\Osoba;
+use App\Models\Attendance\Pruchod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -27,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'izo',
+        'osobni_cislo_dochazky',
         'klic_subjektu',
         'manager_id',
         'is_active',
@@ -60,41 +61,29 @@ class User extends Authenticatable
     }
 
 
-    public function getAttendanceCipAttribute(): ?string
+    public function todayAttendance(): ?array
     {
-        if (! $this->izo) {
+        if (! $this->osobni_cislo_dochazky) {
             return null;
         }
 
-        return strtoupper(str_pad(dechex((int) $this->izo), 8, '0', STR_PAD_LEFT));
-    }
-
-    public function todayAttendance(): ?array
-    {
         try {
-            $osoba = $this->attendanceOsoba();
-            if ($osoba) {
-                $last = $osoba->pruchody()->dnesni()->orderBy('CAS', 'desc')->first();
-                if ($last) {
-                    return [
-                        'time' => $last->cas_time,
-                        'type' => (int) $last->DIRECTION === 1 ? 'prichod' : 'odchod',
-                    ];
-                }
+            $last = Pruchod::vceraADnes()
+                ->where('OSC', $this->osobni_cislo_dochazky)
+                ->orderBy('DATUM', 'desc')
+                ->orderBy('CAS', 'desc')
+                ->first();
+
+            if ($last) {
+                return [
+                    'time' => $last->cas_time,
+                    'type' => (int) $last->DIRECTION === 1 ? 'prichod' : 'odchod',
+                ];
             }
         } catch (\Exception $e) {
         }
 
         return null;
-    }
-
-    public function attendanceOsoba(): ?\App\Models\Attendance\Osoba
-    {
-        if (! $this->attendance_cip) {
-            return null;
-        }
-
-        return Osoba::where('CIP', $this->attendance_cip)->first();
     }
 
     public function printer()

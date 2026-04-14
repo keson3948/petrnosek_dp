@@ -53,7 +53,6 @@ class SyncUsersFromEconomy extends Command
                 continue;
             }
 
-            // Load Subjekt individually to avoid FireBird IN limit
             $subjekt = Subjekt::with('emailKontakt')->where('KlicSubjektu', $klicSubjektu)->first();
 
             if (! $subjekt) {
@@ -64,10 +63,10 @@ class SyncUsersFromEconomy extends Command
             }
 
             $izo = trim($vztah->NFCRFIDTag ?? '');
+            $osobniCisloDochazky = trim($vztah->OsobniCisloVDochazce ?? '');
             $name = trim($subjekt->Jmeno.' '.$subjekt->Prijmeni);
             $isActive = $vztah->Ukonceno == 0;
 
-            // Check izo uniqueness — skip if another user already has this chip
             $izoForUser = $izo ?: null;
             if ($izoForUser) {
                 $existingWithIzo = User::where('izo', $izoForUser)
@@ -88,6 +87,7 @@ class SyncUsersFromEconomy extends Command
                 $user->update([
                     'name' => $name,
                     'izo' => $izoForUser ?: $user->izo,
+                    'osobni_cislo_dochazky' => $osobniCisloDochazky ?: $user->osobni_cislo_dochazky,
                     'is_active' => $isActive,
                 ]);
                 $updated++;
@@ -101,7 +101,6 @@ class SyncUsersFromEconomy extends Command
                     $email = ($izo ?: $klicSubjektu).'@rfid.local';
                 }
 
-                // Ensure email uniqueness
                 $baseEmail = $email;
                 $counter = 1;
                 while (User::where('email', $email)->exists()) {
@@ -114,6 +113,7 @@ class SyncUsersFromEconomy extends Command
                     'email' => $email,
                     'password' => Hash::make(Str::random(16)),
                     'izo' => $izoForUser,
+                    'osobni_cislo_dochazky' => $osobniCisloDochazky ?: null,
                     'klic_subjektu' => $klicSubjektu,
                     'is_active' => $isActive,
                 ]);

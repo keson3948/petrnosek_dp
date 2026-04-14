@@ -42,6 +42,11 @@ class Pruchod extends Model
         return $query->whereRaw("DATUM = DATEDIFF(DAY, '1900-01-01', GETDATE())");
     }
 
+    public function scopeVceraADnes($query)
+    {
+        return $query->whereRaw("DATUM >= DATEDIFF(DAY, '1900-01-01', GETDATE()) - 1");
+    }
+
     public function save(array $options = [])
     {
         throw new \RuntimeException('Attendance database is read-only.');

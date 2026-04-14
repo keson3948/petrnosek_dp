@@ -146,7 +146,7 @@ class History extends Component
             ->with(['doklad.vlastniOsoba', 'machine', 'operation', 'podsestav'])
             ->where('status', 2)
             ->where('ended_at', '>=', $fiveDaysAgo)
-            ->orderByDesc('ended_at')
+            ->orderByDesc('started_at')
             ->get();
 
         $mistrKeys = $allCompleted->map(fn ($r) => trim($r->doklad?->VlastniOsoba ?? ''))->filter()->unique();

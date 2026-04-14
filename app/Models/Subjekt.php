@@ -76,4 +76,9 @@ class Subjekt extends Model
     {
         return (int) $this->SkupinSubjektu === 1050;
     }
+
+    public function canHaveColorAndNumber(): bool
+    {
+        return in_array((int) $this->SkupinSubjektu, [1050, 1010]);
+    }
 }
