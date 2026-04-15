@@ -39,7 +39,7 @@ class Index extends Component
             ['key' => 'vlastni_osoba', 'label' => 'Mistr'],
             ['key' => 'garant', 'label' => 'Garant'],
             ['key' => 'zakazka', 'label' => 'Zakázka'],
-            ['key' => 'specificky_symbol', 'label' => 'Spec. Symbol'],
+            ['key' => 'specificky_symbol', 'label' => 'Int. projekt'],
             ['key' => 'termin_datum', 'label' => 'Termín'],
             ['key' => 'doklad_id', 'label' => 'ID', 'hidden' => true],
         ];

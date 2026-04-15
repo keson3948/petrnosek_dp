@@ -53,7 +53,7 @@
         @forelse($radky as $index => $radek)
             <div class="mb-3 flex items-start gap-2 ">
                 <x-mary-collapse class="flex-1 border border-base-200 bg-white rounded-lg">
-                    <x-slot:heading class="bg-primary/5 pt-0 relative">
+                    <x-slot:heading class="bg-primary/5 pt-0">
                         @php
                             $datum = $radek->TermiDoda ?? $radek->TerminDatum ?? null;
                         @endphp
@@ -154,7 +154,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="flex justify-end space-x-1">
+                                <div class="flex justify-end space-x-1 relative z-10">
                                     @can('manage zasobovani')
 
                                         @can('can print')
@@ -162,7 +162,7 @@
                                             <x-mary-button
                                                 type="button"
                                                 wire:click="openPrintModal('radek', {{ $radek->EntitaRad }})"
-                                                class="btn-sm btn-square text-primary z-50"
+                                                class="btn-sm btn-square text-primary"
                                                 title="Tisk QR řádku"
                                                 tooltip-left="Tisk QR řádku"
                                                 icon="o-qr-code"
@@ -176,7 +176,7 @@
                                     <x-mary-button
                                         wire:click="openHistory('radek', {{ $radek->EntitaRad }}, '{{ trim($staDokl->doklad->MPSProjekt ?? '') }} {{ trim($staDokl->doklad->KlicDokla ?? '') }}', 'ŘÁDEK VP: {{ $radek->CisloRadk }} | POZICE: {{ trim($radek->Pozice ?? '-') }}')"
                                         icon="o-clock"
-                                        class="btn-sm btn-square {{ $radekHas ? 'text-primary' : 'text-base-content/20' }} z-50"
+                                        class="btn-sm btn-square {{ $radekHas ? 'text-primary' : 'text-base-content/20' }}"
                                         tooltip="{{ $radekHas ? 'Práce na řádku' : 'Žádná historie prací' }}"
                                         :disabled="!$radekHas"
                                     />

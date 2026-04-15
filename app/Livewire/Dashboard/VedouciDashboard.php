@@ -249,7 +249,7 @@ class VedouciDashboard extends Component
         $activeHeaders = [
             ['key' => 'mistr', 'label' => '', 'class' => 'w-12'],
             ['key' => 'vp', 'label' => 'VP'],
-            ['key' => 'symbol', 'label' => 'Symbol'],
+            ['key' => 'symbol', 'label' => 'Int. projekt'],
             ['key' => 'termin', 'label' => 'Termín'],
             ['key' => 'operator', 'label' => 'Operátor'],
             ['key' => 'machine', 'label' => 'Stroj'],
@@ -260,7 +260,7 @@ class VedouciDashboard extends Component
         $vpHeaders = [
             ['key' => 'mistr_avatar', 'label' => '', 'class' => 'w-12'],
             ['key' => 'vp_name', 'label' => 'VP'],
-            ['key' => 'specificky_symbol', 'label' => 'Symbol'],
+            ['key' => 'specificky_symbol', 'label' => 'Int. projekt'],
             ['key' => 'termin', 'label' => 'Termín'],
         ];
 
