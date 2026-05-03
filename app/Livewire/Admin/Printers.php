@@ -17,9 +17,7 @@ class Printers extends Component
     public ?Printer $selectedPrinter = null;
 
     public array $pageSizes = [
-        ['id' => '29x62mm', 'name' => '29x62mm'],
-        ['id' => '62mm', 'name' => '62mm (Nekonečná)'],
-        ['id' => '29mm', 'name' => '29mm (Nekonečná)'],
+        ['id' => '62x29', 'name' => '62x29mm'],
     ];
 
     public array $orientations = [

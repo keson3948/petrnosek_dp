@@ -304,7 +304,7 @@ class Show extends Component
             'klicDokla' => trim($doklad->KlicDokla ?? ''),
             'cisloPodsestavy' => '',
             'cisloPoziceNaVykresu' => '',
-            'pozice' => 'p.' . trim($radek->Pozice ?? '-'),
+            'pozice' => trim($radek->Pozice ?? '-'),
             'mnozstvi' => '',
             'mistrCislo' => $mistrUser?->cislo_mistra,
         ]);
@@ -338,8 +338,8 @@ class Show extends Component
         $this->dispatchPrintJob($printer, $qrUrl, [
             'mpsProjekt' => trim($doklad->MPSProjekt ?? ''),
             'klicDokla' => trim($doklad->KlicDokla ?? ''),
-            'pozice' => 'p.'.trim($evPods->Pozice ?? '-'),
-            'cisloPodsestavy' => 'v.'.trim($evPods->OznaceniPodsestavy ?? '-'),
+            'pozice' => trim($evPods->Pozice ?? '-'),
+            'cisloPodsestavy' => trim($evPods->OznaceniPodsestavy ?? '-'),
             'cisloPoziceNaVykresu' => trim($evPods->CisloPoziceNaVykresu ?? ''),
             'mnozstvi' => (int) ($evPods->Mnozstvi ?? 1) . ' ks',
             'mistrCislo' => $mistrUser?->cislo_mistra,

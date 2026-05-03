@@ -53,10 +53,7 @@
                     </tr>
                 </table>
                 <div style="font-size: 15px; font-weight: bold; line-height: 0.9;">{{ $klicDokla }}</div>
-                <div style="font-size: 18px; font-weight: bold; line-height: 0.9;">{{ $pozice }}@if(!empty($cisloPodsestavy))/{{ $cisloPodsestavy}}@endif</div>
-                @if(!empty($cisloPoziceNaVykresu))
-                    <div style="font-size: 14px; font-weight: bold; line-height: 0.9;">vp. {{ $cisloPoziceNaVykresu }}</div>
-                @endif
+                <div style="font-size: 14px; font-weight: bold; line-height: 0.9;">{{ $pozice }}@if(!empty($cisloPodsestavy))/{{$cisloPodsestavy}}@endif@if(!empty($cisloPoziceNaVykresu))/{{ $cisloPoziceNaVykresu }}@endif</div>
                 <div style="font-size: 18px; font-weight: bold; line-height: 0.9;">{{ $mnozstvi }}</div>
             </td>
         </tr>
