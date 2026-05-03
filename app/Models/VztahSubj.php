@@ -28,6 +28,11 @@ class VztahSubj extends Model
         return $this->belongsTo(Subjekt::class, 'Vedouci', 'KlicSubjektu');
     }
 
+    public function skupinaZamestnancu()
+    {
+        return $this->belongsTo(SkuZam::class, 'SkupinaZamestnancu', 'KlicSkupinyZamestnancu');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('Ukonceno', 0);

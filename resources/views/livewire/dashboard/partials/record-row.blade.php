@@ -1,6 +1,28 @@
 @php
     /** @var \App\Models\ProductionRecord $record */
     /** @var bool $isHistory */
+    $isLunch = (int) ($record->TypZaznamu ?? 0) === 1;
+@endphp
+
+@if($isLunch)
+    <div class="mb-2 flex items-center gap-3 px-3 py-2 rounded-lg border border-warning/30 bg-warning/5">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 bg-warning/20 text-warning">
+            <x-mary-icon name="o-cake" class="w-5 h-5" />
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="font-semibold text-sm sm:text-base text-warning">Oběd</div>
+            <div class="text-xs text-base-content/60">
+                {{ \Carbon\Carbon::parse($record->started_at)->format('d.m. H:i') }}
+                @if($record->ended_at)
+                    – {{ \Carbon\Carbon::parse($record->ended_at)->format('H:i') }}
+                @endif
+            </div>
+        </div>
+        <div class="text-sm font-mono font-semibold text-warning shrink-0">30 min</div>
+    </div>
+@else
+
+@php
     $info = $this->getRecordInfo($record);
     $workedH = $info['workedH'];
     $workedM = $info['workedM'];
@@ -151,9 +173,11 @@
                             @endif
                         </div>
                     </div>
-                    <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit čas">
-                        <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
-                    </button>
+                    @if(auth()->user()->can('edit production record time') || !empty($record->SluzebniCesta))
+                        <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit čas">
+                            <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
+                        </button>
+                    @endif
                 </div>
 
                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200 md:col-span-2">
@@ -169,3 +193,4 @@
         </div>
     </x-slot:content>
 </x-mary-collapse>
+@endif

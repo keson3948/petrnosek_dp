@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Attendance\Pruchod;
+use App\Models\SkuZam;
+use App\Models\VztahSubj;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -101,14 +103,91 @@ class User extends Authenticatable
         return $this->hasMany(ProductionRecord::class, 'user_id', 'klic_subjektu');
     }
 
+    public function vztah()
+    {
+        return $this->hasOne(VztahSubj::class, 'Subjekt', 'klic_subjektu')
+            ->where('Ukonceno', 0);
+    }
+
+    public function activeLunchRecord(): ?ProductionRecord
+    {
+        $lunch = $this->productionRecords()
+            ->lunch()
+            ->where('status', 0)
+            ->whereDate('started_at', today())
+            ->orderByDesc('started_at')
+            ->first();
+
+        if (! $lunch) {
+            return null;
+        }
+
+        $expiresAt = \Carbon\Carbon::parse($lunch->started_at)
+            ->addMinutes(ProductionRecord::LUNCH_DURATION_MIN);
+
+        if (now()->greaterThanOrEqualTo($expiresAt)) {
+            $lunch->update([
+                'status' => 2,
+                'ended_at' => $expiresAt,
+                'SYSTIMEST' => now(),
+            ]);
+
+            return null;
+        }
+
+        return $lunch;
+    }
+
+    public function hasLunchToday(): bool
+    {
+        return $this->productionRecords()
+            ->lunch()
+            ->whereDate('started_at', today())
+            ->exists();
+    }
+
+    public function currentVztah(): ?VztahSubj
+    {
+        if (! $this->klic_subjektu) {
+            return null;
+        }
+
+        if (! $this->relationLoaded('vztah')) {
+            $this->load('vztah.skupinaZamestnancu');
+        }
+
+        return $this->vztah;
+    }
+
+    public function vztahSubj()
+    {
+        return $this->belongsTo(VztahSubj::class, 'Subjekt', 'klic_subjektu');
+    }
+
+    public function employeeGroup(): ?SkuZam
+    {
+        return $this->currentVztah()?->skupinaZamestnancu;
+    }
+
+    public function lunchTime(): ?\Carbon\Carbon
+    {
+        return $this->employeeGroup()?->lunchCarbon();
+    }
+
+    public function canStartLunchNow(): bool
+    {
+        $window = $this->employeeGroup()?->lunchWindow();
+
+        if (! $window) {
+            return false;
+        }
+
+        return now()->between($window[0], $window[1]);
+    }
+
     public function assignedMachines()
     {
         return $this->hasMany(PrednOsobProstr::class, 'Osoba', 'klic_subjektu');
-    }
-
-    public function manager()
-    {
-        return $this->belongsTo(User::class, 'manager_id');
     }
 
     public function subordinates()

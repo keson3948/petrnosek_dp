@@ -1,5 +1,4 @@
 <div class="flex flex-col h-full">
-    {{-- Zobrazení vybraného dokladu (při návratu zpět) --}}
     @if($selectedSysPrimKlic && !$podSearch)
         <div class="mb-4 p-3 border-2 border-primary bg-primary/10 rounded-lg flex items-center justify-between shrink-0">
             <div>

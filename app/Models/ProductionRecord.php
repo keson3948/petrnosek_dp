@@ -11,6 +11,12 @@ class ProductionRecord extends Model
 {
     use HasFirebirdAttributes, HasFirebirdGenerator;
 
+    public const TYPE_WORK = 0;
+
+    public const TYPE_LUNCH = 1;
+
+    public const LUNCH_DURATION_MIN = 30;
+
     protected $connection = 'firebird';
 
     protected $table = 'apc_ZaznOper';
@@ -49,7 +55,20 @@ class ProductionRecord extends Model
         'UPUSR',
         'UPCNT',
         'SluzebniCesta',
+        'TypZaznamu',
+        'CasNaZakZadany',
+        'SkupinaZamestnancu',
     ];
+
+    public function scopeWork($query)
+    {
+        return $query->where('TypZaznamu', self::TYPE_WORK);
+    }
+
+    public function scopeLunch($query)
+    {
+        return $query->where('TypZaznamu', self::TYPE_LUNCH);
+    }
 
     protected $casts = [
         'started_at' => 'datetime',

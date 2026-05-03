@@ -26,7 +26,6 @@ class TerminalIndex extends Component
     public ?string $klic_pracoviste = null;
     public string $name = '';
     public string $slug = '';
-    public ?string $ip_address = '';
     public bool $is_active = true;
 
     public function boot()
@@ -40,14 +39,13 @@ class TerminalIndex extends Component
             'klic_pracoviste' => 'nullable|string|max:15',
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:terminals,slug,' . ($this->terminal?->id ?? 'NULL'),
-            'ip_address' => 'nullable|ip',
             'is_active' => 'boolean',
         ];
     }
 
     public function create(): void
     {
-        $this->reset(['terminal', 'klic_pracoviste', 'name', 'slug', 'ip_address', 'is_active']);
+        $this->reset(['terminal', 'klic_pracoviste', 'name', 'slug', 'is_active']);
         $this->resetValidation();
         $this->is_active = true;
         $this->drawer = true;
@@ -60,7 +58,6 @@ class TerminalIndex extends Component
         $this->klic_pracoviste = $terminal->klic_pracoviste;
         $this->name = $terminal->name;
         $this->slug = $terminal->slug;
-        $this->ip_address = $terminal->ip_address;
         $this->is_active = $terminal->is_active;
         $this->drawer = true;
     }
@@ -74,7 +71,6 @@ class TerminalIndex extends Component
                 'klic_pracoviste' => $this->klic_pracoviste,
                 'name' => $this->name,
                 'slug' => $this->slug,
-                'ip_address' => $this->ip_address,
                 'is_active' => $this->is_active,
             ]);
             $this->success('Terminál upraven.');
@@ -83,7 +79,6 @@ class TerminalIndex extends Component
                 'klic_pracoviste' => $this->klic_pracoviste,
                 'name' => $this->name,
                 'slug' => $this->slug,
-                'ip_address' => $this->ip_address,
                 'is_active' => $this->is_active,
             ]);
             $this->success('Terminál vytvořen.');
@@ -104,15 +99,13 @@ class TerminalIndex extends Component
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
             ['key' => 'name', 'label' => 'Název'],
             ['key' => 'slug', 'label' => 'Identifikátor (Slug)'],
-            ['key' => 'ip_address', 'label' => 'IP adresa'],
             ['key' => 'klic_pracoviste', 'label' => 'Pracoviště'],
             ['key' => 'is_active', 'label' => 'Aktivní'],
         ];
 
         $terminals = Terminal::query()
             ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%{$this->search}%")
-                                                      ->orWhere('slug', 'like', "%{$this->search}%")
-                                                      ->orWhere('ip_address', 'like', "%{$this->search}%"))
+                                                      ->orWhere('slug', 'like', "%{$this->search}%"))
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
             ->paginate(10);
 

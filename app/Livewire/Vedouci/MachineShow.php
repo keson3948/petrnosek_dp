@@ -48,6 +48,7 @@ class MachineShow extends Component
     public function activeRecord()
     {
         return ProductionRecord::where('machine_id', $this->machineKey)
+            ->work()
             ->whereIn('status', [0, 1])
             ->with(['doklad', 'operation'])
             ->first();

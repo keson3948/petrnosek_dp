@@ -8,6 +8,7 @@ use App\Livewire\Dashboard\Concerns\HandlesWizardSteps;
 use App\Livewire\Dashboard\Concerns\ProvidesWizardData;
 use App\Models\ProductionRecord;
 use App\Models\Prostredek;
+use App\Models\Terminal;
 use Livewire\Component;
 use Mary\Traits\Toast;
 
@@ -42,6 +43,7 @@ class StartDrawer extends Component
         ]);
 
         $hasActive = auth()->user()->productionRecords()
+            ->work()
             ->whereIn('status', [0, 1])
             ->exists();
 
@@ -80,6 +82,18 @@ class StartDrawer extends Component
 
         $this->showStartDrawer = false;
         $this->dispatch('operation-started');
+
+        if (Terminal::isTerminal()) {
+            $this->success(
+                'Výrobní operace započata.',
+                description: 'Budete odhlášeni za 5 sekund.',
+                timeout: 5000,
+            );
+            $this->js("setTimeout(() => document.getElementById('terminal-idle-logout-form')?.submit(), 5000)");
+
+            return;
+        }
+
         $this->success('Výrobní operace započata.');
     }
 

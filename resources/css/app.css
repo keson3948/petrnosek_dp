@@ -58,6 +58,13 @@
 * Because Laravel defaults does not match well the design of daisyUI.
 */
 
+div:has(> div.flex.flex-wrap.gap-5.justify-between.items-center) {
+    margin-bottom: 1rem;
+}
+div:has(> div.flex.flex-wrap.gap-5.justify-between.items-center > div.flex.items-center.gap-3) {
+    margin-bottom: 2rem;
+}
+
 .mary-table-pagination span[aria-current="page"]>span {
     @apply bg-primary text-base-100
 }

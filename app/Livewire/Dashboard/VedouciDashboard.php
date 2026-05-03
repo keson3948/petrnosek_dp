@@ -27,7 +27,8 @@ class VedouciDashboard extends Component
     #[Computed]
     public function activeRecords(): Collection
     {
-        return ProductionRecord::whereIn('status', [0, 1])
+        return ProductionRecord::work()
+            ->whereIn('status', [0, 1])
             ->with(['doklad.vlastniOsoba', 'machine.pracoviste', 'operation'])
             ->get();
     }

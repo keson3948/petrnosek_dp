@@ -25,17 +25,27 @@ class extends Component {
 
     public function login(): void
     {
-        $this->validate([
-            'izo' => ['required', 'string', 'max:10']
-        ]);
+        $izo = trim($this->izo);
+        $this->izo = '';
 
-        $user = User::where('izo', $this->izo)
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            ['izo' => $izo],
+            ['izo' => ['required', 'string', 'max:10']]
+        );
+
+        if ($validator->fails()) {
+            $this->addError('izo', 'Neplatný čip.');
+
+            return;
+        }
+
+        $user = User::where('izo', $izo)
             ->where('is_active', true)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             $this->addError('izo', 'Neplatný nebo zablokovaný čip.');
-            $this->izo = '';
+
             return;
         }
 
@@ -56,6 +66,12 @@ class extends Component {
             this.tick();
             setInterval(() => this.tick(), 1000);
             this.focusInput();
+            this.$watch('$wire.izo', (val) => {
+                if (val === '' && this.$refs.cipInput) {
+                    this.$refs.cipInput.value = '';
+                    this.focusInput();
+                }
+            });
         },
         tick() {
             const now = new Date();
@@ -64,9 +80,7 @@ class extends Component {
         },
         focusInput() {
             this.$nextTick(() => {
-                if (this.$refs.cipInput) {
-                    this.$refs.cipInput.querySelector('input')?.focus();
-                }
+                this.$refs.cipInput?.focus();
             });
         },
         handleBlur() {
@@ -96,84 +110,73 @@ class extends Component {
         }
     }"
     @click.document="handleBlur"
-    class="w-full max-w-5xl"
+    class="w-full max-w-3xl"
 >
-    {{-- Bento Grid --}}
-    <div class="grid grid-cols-12 gap-3 md:gap-4">
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.hook('request', ({ fail }) => {
+                fail(({ status, preventDefault }) => {
+                    if (status === 419) {
+                        preventDefault();
+                        window.location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+    <div class="grid grid-cols-12 gap-2 md:gap-4">
 
-        {{-- Logo + název — wide --}}
-        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
-            <x-application-logo class="w-12 h-12 sm:w-16 sm:h-16 shrink-0" />
+        @error('izo')
+        <div class="col-span-12 bg-white/80 border-2 border-error/30 rounded-xl p-2 flex items-center gap-3">
+            <x-mary-icon name="o-x-circle" class="w-4 h-4 text-error shrink-0" />
+            <div class="text-error font-semibold text-sm">{{ $message }}</div>
+        </div>
+        @enderror
+
+        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex items-center gap-4">
+            <x-application-logo class="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
             <div>
-                <div class="text-lg sm:text-xl font-bold text-base-content leading-tight">Metal Product</div>
-                <div class="text-lg sm:text-xl font-bold text-base-content leading-tight">Servis Praha</div>
+                <div class="text-lg sm:text-lg font-bold text-base-content leading-tight">Metal Produkt</div>
+                <div class="text-lg sm:text-lg font-bold text-base-content leading-tight">Servis Praha</div>
             </div>
         </div>
 
-        {{-- Hodiny — velké --}}
-        <div class="col-span-12 sm:col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center">
-            <div class="text-3xl sm:text-4xl md:text-5xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
+        <div class="col-span-12 sm:col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center">
+            <div class="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
         </div>
 
-        {{-- Datum --}}
-        <div class="col-span-12 sm:col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1">
-            <x-mary-icon name="o-calendar" class="w-7 h-7 text-primary/40" />
+        <div class="col-span-12 sm:col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center gap-1">
+            <x-mary-icon name="o-calendar" class="w-4 h-4 text-primary/40" />
             <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
         </div>
 
-        {{-- RFID přihlášení — hlavní karta --}}
-        <div class="col-span-12 md:col-span-6 bg-white/90 backdrop-blur border-2 border-primary/20 rounded-2xl p-5 sm:p-8 flex flex-col justify-center">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <x-mary-icon name="o-finger-print" class="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                    <div class="font-semibold text-base-content">Přihlášení</div>
-                    <div class="text-xs text-base-content/50">Přiložte čip ke čtečce</div>
-                </div>
+        {{-- Přehled aktivních operací na pracovišti --}}
+        @if(Terminal::isTerminal())
+            <div class="col-span-12">
+                <livewire:terminal.workplace-overview />
             </div>
+        @endif
 
-            <form wire:submit="login">
-                <div x-ref="cipInput">
-                    <x-mary-input
-                        @blur="handleBlur"
-                        @input="handleMap"
-                        wire:model="izo"
-                        icon="o-key"
-                        type="password"
-                        placeholder="Čekám na čip..."
-                        error-field="izo"
-                        required
-                        autofocus
-                        autocomplete="off"
-                        class="input-lg caret-transparent"
-                    />
-                </div>
-
-                <button type="submit" class="hidden"></button>
-            </form>
-        </div>
-
-        {{-- Terminál + pracoviště --}}
-        @php($terminal = Terminal::current())
-        <div class="col-span-12 md:col-span-6 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-4 sm:p-6 flex items-center gap-4">
-            <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <x-mary-icon name="o-building-office" class="w-5 h-5 text-primary" />
-            </div>
-            <div class="min-w-0">
-                <div class="text-[10px] uppercase tracking-wider text-base-content/40 font-bold">Terminál</div>
-                <div class="text-lg font-semibold truncate">{{ $terminal->name }}</div>
-                @if($terminal->pracoviste)
-                    <div class="text-sm text-base-content/60 truncate">{{ trim($terminal->pracoviste->NazevUplny ?? '') }}</div>
-                @endif
-            </div>
-        </div>
-
-        {{-- Patička --}}
-        <div class="col-span-12 bg-white/60 backdrop-blur border border-base-200 rounded-2xl p-3 flex items-center justify-center">
-            <a href="{{ route('login') }}" class="text-sm text-base-content/40 hover:text-primary transition-colors" wire:navigate>
-                Přihlásit se pomocí emailu
-            </a>
-        </div>
     </div>
+
+    <form wire:submit="login">
+        <input
+            x-ref="cipInput"
+            @blur="handleBlur"
+            @input="handleMap"
+            wire:model="izo"
+            type="password"
+            autofocus
+            autocomplete="off"
+            class="sr-only"
+        />
+        <button type="submit" class="hidden"></button>
+    </form>
+
+    <x-mary-button href="{{ route('login') }}"
+                   label="Přihlásit se pomocí emailu"
+                   icon="o-envelope"
+       class="fixed bottom-3 right-4 text-xs"
+       wire:navigate>
+    </x-mary-button>
 </div>

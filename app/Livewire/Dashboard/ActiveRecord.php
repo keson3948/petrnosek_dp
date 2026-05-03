@@ -29,6 +29,7 @@ class ActiveRecord extends Component
     public function loadActiveRecord(): void
     {
         $this->activeRecord = auth()->user()->productionRecords()
+            ->work()
             ->whereIn('status', [0, 1])
             ->first();
     }

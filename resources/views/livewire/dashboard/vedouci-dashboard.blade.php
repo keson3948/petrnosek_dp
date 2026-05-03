@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.60s="$refresh">
     <x-mary-header title="Dashboard" separator />
 
     {{-- ===== NA ČEM SE PRACUJE ===== --}}
@@ -15,15 +15,17 @@
 
         {{-- Tabs: Vše + haly --}}
         @if($hallTabs->count() > 1)
-            <div class="tabs tabs-bordered mb-4">
-                <button wire:click="setTab('all')" class="tab {{ $activeTab === 'all' ? 'tab-active' : '' }}">
-                    Vše
-                </button>
-                @foreach($hallTabs as $hall)
-                    <button wire:click="setTab('{{ $hall }}')" class="tab {{ $activeTab === $hall ? 'tab-active' : '' }}">
-                        {{ $hall }}
+            <div class="overflow-x-auto -mx-1 px-1 mb-4">
+                <div class="tabs tabs-bordered flex-nowrap min-w-max">
+                    <button wire:click="setTab('all')" class="tab {{ $activeTab === 'all' ? 'tab-active' : '' }}">
+                        Vše
                     </button>
-                @endforeach
+                    @foreach($hallTabs as $hall)
+                        <button wire:click="setTab('{{ $hall }}')" class="tab {{ $activeTab === $hall ? 'tab-active' : '' }}">
+                            {{ $hall }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
         @endif
 
@@ -37,7 +39,8 @@
                 @endif
             </div>
         @else
-            <x-mary-table :headers="$activeHeaders" :rows="$activeRows" striped>
+            <div class="overflow-x-auto -mx-4 sm:mx-0">
+        <x-mary-table :headers="$activeHeaders" :rows="$activeRows" striped>
                 @scope('cell_mistr', $record)
                     <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
                          style="background-color: {{ $record->_mistr_color }}">
@@ -100,28 +103,34 @@
                     @endif
                 @endscope
             </x-mary-table>
+        </div>
         @endif
     </x-mary-card>
 
     {{-- ===== ROZPRACOVANÉ VP ===== --}}
     <x-mary-card>
-        <x-slot:title>Rozpracované výrobní příkazy</x-slot:title>
+        <x-slot:title>
 
-        <div class="flex flex-wrap items-end gap-4 mb-4">
-            <x-mary-input icon="o-magnifying-glass" wire:model.live.debounce.300ms="search" placeholder="Hledat VP..." clearable class="w-64" />
-            <x-mary-select
-                wire:model.live="filterMistr"
-                :options="collect($mistrOptions)"
-                option-value="id"
-                option-label="name"
-                placeholder="Všichni mistři"
-                class="w-48"
-            />
-        </div>
+            <x-mary-header title="Rozpracované výrobní příkazy" size="text-xl" class="!mb-0">
+                <x-slot:actions>
+                    <x-mary-input icon="o-magnifying-glass" wire:model.live.debounce.300ms="search" placeholder="Hledat VP..." clearable class="w-full sm:w-64" />
+                    <x-mary-select
+                        wire:model.live="filterMistr"
+                        :options="collect($mistrOptions)"
+                        option-value="id"
+                        option-label="name"
+                        placeholder="Všichni mistři"
+                        class="w-full sm:w-48"
+                    />
+                </x-slot:actions>
+            </x-mary-header>
 
+        </x-slot:title>
+
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
         <x-mary-table :headers="$vpHeaders" :rows="$vpRows" with-pagination striped>
             @scope('cell_mistr_avatar', $row)
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                <div class="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
                      style="background-color: {{ $row->mistr_color ?? '#6b7280' }}">
                     {{ $row->mistr_cislo ?? '' }}
                 </div>
@@ -143,5 +152,6 @@
                 </span>
             @endscope
         </x-mary-table>
+        </div>
     </x-mary-card>
 </div>

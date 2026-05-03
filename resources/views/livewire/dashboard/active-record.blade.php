@@ -100,9 +100,7 @@
             </div>
 
             <x-slot:actions>
-                @if($isRunning)
-                    <x-mary-button label="Pozastavit" icon="o-pause" wire:click="pauseOperation" class="btn-warning btn-outline btn-lg" spinner="pauseOperation" responsive />
-                @else
+                @if($isPaused)
                     <x-mary-button label="Obnovit" icon="o-play" wire:click="resumeOperation" class="btn-primary btn-lg" spinner="resumeOperation" responsive />
                 @endif
                 <x-mary-button label="Ukončit operaci" icon="o-check" wire:click="openCompleteModal" class="btn-success text-white btn-lg" responsive />

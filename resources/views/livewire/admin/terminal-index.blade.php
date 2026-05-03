@@ -33,7 +33,6 @@
 
             <x-mary-input label="Název" wire:model="name" />
             <x-mary-input label="Identifikátor (Slug)" wire:model="slug" />
-            <x-mary-input label="IP Adresa" wire:model="ip_address" />
 
             <x-mary-toggle label="Aktivní" wire:model="is_active" right />
 

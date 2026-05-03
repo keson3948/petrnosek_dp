@@ -22,8 +22,11 @@ class UserEdit extends Component
     public User $user;
 
     public string $name = '';
+
     public string $email = '';
+
     public ?string $izo = null;
+
     public ?string $klic_subjektu = null;
 
     public array $selectedRoles = [];
@@ -31,9 +34,11 @@ class UserEdit extends Component
     public bool $confirmModal = false;
 
     public string $machineKey = '';
+
     public bool $machineModal = false;
 
     public ?string $color = null;
+
     public ?int $cislo_mistra = null;
 
     public function boot()
@@ -124,6 +129,7 @@ class UserEdit extends Component
 
         if ($exists) {
             $this->addError('machineKey', 'Tento stroj je již přiřazen.');
+
             return;
         }
 
@@ -162,6 +168,8 @@ class UserEdit extends Component
                 ->find($this->user->klic_subjektu)
             : null;
 
+        $this->user->loadMissing(['vztah.skupinaZamestnancu', 'vztah.vedouciSubjekt']);
+
         $machines = $this->user->assignedMachines()
             ->with('prostredek')
             ->orderBy('Priorita')
@@ -169,6 +177,7 @@ class UserEdit extends Component
             ->map(function ($r) {
                 $r->prostredek_kod = trim($r->Prrostredek ?? '');
                 $r->prostredek_nazev = trim($r->prostredek?->NazevUplny ?? '');
+
                 return $r;
             });
 
@@ -177,9 +186,9 @@ class UserEdit extends Component
                 ->where('KlicProstredku', '>=', '10000')
                 ->orderBy('KlicProstredku')
                 ->get()
-                ->map(fn($p) => [
+                ->map(fn ($p) => [
                     'id' => trim($p->KlicProstredku),
-                    'name' => trim($p->KlicProstredku) . ' — ' . trim($p->NazevUplny ?? ''),
+                    'name' => trim($p->KlicProstredku).' — '.trim($p->NazevUplny ?? ''),
                 ])
             : collect();
 

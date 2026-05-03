@@ -36,6 +36,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'edit profile']);
         Permission::firstOrCreate(['name' => 'can print']);
         Permission::firstOrCreate(['name' => 'manage production records']);
+        Permission::firstOrCreate(['name' => 'edit production record time']);
 
         $roleOperator = Role::firstOrCreate(['name' => 'Operator']);
         $roleOperator->givePermissionTo('simplified layout');
@@ -45,6 +46,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $roleZasobovac = Role::firstOrCreate(['name' => 'Zásobovač']);
         $roleZasobovac->syncPermissions(['manage zasobovani', 'can print']);
+
+        $roleKonstrukter = Role::firstOrCreate(['name' => 'Konstruktér']);
+        $roleKonstrukter->syncPermissions(['simplified layout', 'edit production record time']);
 
         $user = User::firstOrCreate([
             'email' => 'admin@mps.cz',

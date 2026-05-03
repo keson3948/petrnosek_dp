@@ -25,7 +25,8 @@ class MachineIndex extends Component
     #[Computed]
     public function activeRecordsByMachine()
     {
-        return ProductionRecord::whereIn('status', [0, 1])
+        return ProductionRecord::work()
+            ->whereIn('status', [0, 1])
             ->with(['doklad', 'operation'])
             ->get()
             ->filter(fn ($r) => $r->machine_id)

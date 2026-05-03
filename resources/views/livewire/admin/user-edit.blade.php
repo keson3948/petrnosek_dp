@@ -39,6 +39,37 @@
                     </div>
                 @endif
 
+                {{-- Pracovní zařazení (read-only z Economy) --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-xs text-base-content/60 mb-1">
+                            <x-mary-icon name="o-users" class="w-4 h-4" />
+                            <span>Skupina zaměstnanců</span>
+                        </div>
+                        <div class="font-semibold">
+                            {{ $user->vztah?->skupinaZamestnancu ? trim($user->vztah->skupinaZamestnancu->Nazev ?? '') : '—' }}
+                        </div>
+                    </div>
+                    <div class="p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-xs text-base-content/60 mb-1">
+                            <x-mary-icon name="o-cake" class="w-4 h-4" />
+                            <span>Čas obědu</span>
+                        </div>
+                        <div class="font-semibold font-mono">
+                            {{ $user->vztah?->skupinaZamestnancu?->lunchCarbon()?->format('H:i') ?? '—' }}
+                        </div>
+                    </div>
+                    <div class="p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-2 text-xs text-base-content/60 mb-1">
+                            <x-mary-icon name="o-user" class="w-4 h-4" />
+                            <span>Vedoucí</span>
+                        </div>
+                        <div class="font-semibold">
+                            {{ trim(($user->vztah?->vedouciSubjekt?->Jmeno ?? '') . ' ' . ($user->vztah?->vedouciSubjekt?->Prijmeni ?? '')) ?: '—' }}
+                        </div>
+                    </div>
+                </div>
+
                 @if($subjekt?->canHaveColorAndNumber())
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <x-mary-colorpicker

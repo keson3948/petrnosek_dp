@@ -1,10 +1,6 @@
 <div>
     <x-mary-header :title="$operator->name" separator>
-        <x-slot:subtitle>
-            Klíč: {{ $operator->klic_subjektu ?? '—' }}
-        </x-slot:subtitle>
         <x-slot:actions>
-            <x-mary-button label="Zpět" icon="o-arrow-left" link="{{ route('vedouci.index') }}" />
             <x-mary-button label="Přidat záznam" icon="o-plus" class="btn-primary" link="{{ route('vedouci.record-edit', $operator->klic_subjektu) }}" />
         </x-slot:actions>
     </x-mary-header>
@@ -46,7 +42,7 @@
     @endif
 
     {{-- Filters --}}
-    <div class="flex flex-wrap items-end gap-4 mb-6">
+    <div class="flex flex-wrap justify-end gap-4 mb-6 w-full">
         <x-mary-input label="Od" type="date" wire:model.live="dateFrom" class="w-40" />
         <x-mary-input label="Do" type="date" wire:model.live="dateTo" class="w-40" />
     </div>

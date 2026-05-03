@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Terminal extends Model
 {
-    protected $fillable = ['klic_pracoviste', 'name', 'slug', 'ip_address', 'is_active', 'last_seen_at'];
+    protected $fillable = ['klic_pracoviste', 'name', 'slug', 'is_active', 'last_seen_at'];
 
     protected $casts = [
         'last_seen_at' => 'datetime',

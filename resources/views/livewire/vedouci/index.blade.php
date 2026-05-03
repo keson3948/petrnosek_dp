@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.60s="$refresh">
     <x-mary-header title="Přehled zaměstnanců" separator progress-indicator>
         <x-slot:middle class="!justify-end">
             <x-mary-input icon="o-magnifying-glass" wire:model.live.debounce.300ms="search" placeholder="Hledat zaměstnance..." clearable />

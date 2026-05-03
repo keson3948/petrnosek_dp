@@ -42,6 +42,7 @@ trait HandlesBusinessTrips
         }
 
         $hasActive = auth()->user()->productionRecords()
+            ->work()
             ->whereIn('status', [0, 1])
             ->exists();
 

@@ -12,17 +12,14 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required_without:rfid|string|email')]
+    #[Validate('required|string|email')]
     public string $email = '';
 
-    #[Validate('required_without:rfid|string')]
+    #[Validate('required|string')]
     public string $password = '';
 
     #[Validate('boolean')]
     public bool $remember = false;
-
-    #[Validate('required_without:email|string')]
-    public string $rfid = '';
 
     /**
      * Attempt to authenticate the request's credentials.
@@ -43,28 +40,6 @@ class LoginForm extends Form
 
         RateLimiter::clear($this->throttleKey());
     }
-
-    public function authenticateRFID(): void
-    {
-        #$this->ensureIsNotRateLimited();
-
-        $user = \App\Models\User::where('rfid_tag', $this->rfid)->first();
-
-        if (! $user) {
-            #RateLimiter::hit($this->throttleKey());
-
-            $this->rfid = '';
-
-            throw ValidationException::withMessages([
-                'form.rfid' => 'Neplatný RFID čip.',
-            ]);
-        }
-
-        Auth::login($user);
-
-        RateLimiter::clear($this->throttleKey());
-    }
-
 
     /**
      * Ensure the authentication request is not rate limited.

@@ -158,12 +158,15 @@ class History extends Component
         }
 
         $today = $allCompleted->filter(fn ($r) => $r->ended_at->isToday())->values();
-        $historical = $allCompleted->filter(fn ($r) => $r->ended_at < $todayStart);
+        $historical = $allCompleted->filter(
+            fn ($r) => $r->ended_at < $todayStart && (int) ($r->TypZaznamu ?? 0) === 0
+        );
 
         $activeTrips = collect();
         $klicSubjektu = auth()->user()->klic_subjektu;
         if ($klicSubjektu) {
             $hasRunningTrip = auth()->user()->productionRecords()
+                ->work()
                 ->whereIn('status', [0, 1])
                 ->where('SluzebniCesta', 1)
                 ->exists();
@@ -216,6 +219,12 @@ class History extends Component
     private function findEditRecordForSave(): ProductionRecord
     {
         return ProductionRecord::where('user_id', auth()->user()->klic_subjektu)->findOrFail($this->editRecordId);
+    }
+
+    private function canEditTime(ProductionRecord $record): bool
+    {
+        return auth()->user()->can('edit production record time')
+            || ! empty($record->SluzebniCesta);
     }
 
     // ==========================================
@@ -606,6 +615,7 @@ class History extends Component
     public function openEditTime(int $id)
     {
         $record = $this->findEditRecord($id);
+        abort_unless($this->canEditTime($record), 403);
         $this->editRecordId = (int) $record->ID;
 
         $workedMinutes = 0;
@@ -658,6 +668,7 @@ class History extends Component
         }
 
         $record = $this->findEditRecordForSave();
+        abort_unless($this->canEditTime($record), 403);
 
         $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
         $endedAt = $start->copy()->addMinutes($totalMinutes);

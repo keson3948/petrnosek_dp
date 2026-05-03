@@ -35,6 +35,7 @@ class Show extends Component
     public function activeRecord()
     {
         return ProductionRecord::where('user_id', $this->operator->klic_subjektu)
+            ->work()
             ->whereIn('status', [0, 1])
             ->with(['doklad', 'machine', 'operation'])
             ->first();
