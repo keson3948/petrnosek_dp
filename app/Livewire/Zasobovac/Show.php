@@ -25,7 +25,7 @@ class Show extends Component
     public array $newEntries = [];
 
     public ?int $editingId = null;
-    public array $editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
+    public array $editEntry = ['CisloVykresu' => '', 'CisloPoziceNaVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
 
     // History drawer state
     public bool $showHistoryDrawer = false;
@@ -72,6 +72,7 @@ class Show extends Component
             if (! isset($this->newEntries[$index])) {
                 $this->newEntries[$index] = [
                     'CisloVykresu' => '',
+                    'CisloPoziceNaVykresu' => '',
                     'Mnozstvi' => '',
                     'Poznamka' => '',
                 ];
@@ -85,6 +86,7 @@ class Show extends Component
 
         $this->validate([
             "newEntries.{$rowIndex}.CisloVykresu" => 'required|string|max:100',
+            "newEntries.{$rowIndex}.CisloPoziceNaVykresu" => 'nullable|string|max:50',
             "newEntries.{$rowIndex}.Mnozstvi" => 'required|numeric|min:0.01',
             "newEntries.{$rowIndex}.Poznamka" => 'nullable|string|max:255',
         ]);
@@ -94,8 +96,14 @@ class Show extends Component
         $entry = $this->newEntries[$rowIndex];
         $now = now()->format('Y-m-d H:i:s');
 
-        $nextPods = $radek->evPodsestavy->count() + 1;
-        $oznaceni = $radek->CisloRadk . '.' . $nextPods;
+        $prefix = $radek->CisloRadk . '.';
+        $maxNum = $radek->evPodsestavy
+            ->map(fn ($ev) => trim($ev->OznaceniPodsestavy ?? ''))
+            ->filter(fn ($oz) => $oz !== '' && str_starts_with($oz, $prefix))
+            ->map(fn ($oz) => (int) substr($oz, strlen($prefix)))
+            ->max();
+
+        $oznaceni = $prefix . (($maxNum ?: 0) + 1);
 
         EvPodsestav::create([
             'ID' => EvPodsestav::nextId(),
@@ -104,6 +112,7 @@ class Show extends Component
             'Pozice' => $radek->Pozice,
             'OznaceniPodsestavy' => $oznaceni,
             'CisloVykresu' => $entry['CisloVykresu'],
+            'CisloPoziceNaVykresu' => $entry['CisloPoziceNaVykresu'] ?: null,
             'Mnozstvi' => (float) $entry['Mnozstvi'],
             'Poznamka' => $entry['Poznamka'] ?: null,
             'CTSMP' => $now,
@@ -112,6 +121,7 @@ class Show extends Component
 
         $this->newEntries[$rowIndex] = [
             'CisloVykresu' => '',
+            'CisloPoziceNaVykresu' => '',
             'Mnozstvi' => '',
             'Poznamka' => '',
         ];
@@ -131,6 +141,7 @@ class Show extends Component
         $this->editingId = $evPodsId;
         $this->editEntry = [
             'CisloVykresu' => trim($ev->CisloVykresu ?? ''),
+            'CisloPoziceNaVykresu' => trim($ev->CisloPoziceNaVykresu ?? ''),
             'Mnozstvi' => $ev->Mnozstvi,
             'Poznamka' => trim($ev->Poznamka ?? ''),
         ];
@@ -139,7 +150,7 @@ class Show extends Component
     public function cancelEdit(): void
     {
         $this->editingId = null;
-        $this->editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
+        $this->editEntry = ['CisloVykresu' => '', 'CisloPoziceNaVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
     }
 
     public function updateEntry(): void
@@ -148,19 +159,21 @@ class Show extends Component
 
         $this->validate([
             'editEntry.CisloVykresu' => 'required|string|max:100',
+            'editEntry.CisloPoziceNaVykresu' => 'nullable|string|max:50',
             'editEntry.Mnozstvi' => 'required|numeric|min:0.01',
             'editEntry.Poznamka' => 'nullable|string|max:255',
         ]);
 
         EvPodsestav::where('ID', $this->editingId)->update([
             'CisloVykresu' => $this->editEntry['CisloVykresu'],
+            'CisloPoziceNaVykresu' => $this->editEntry['CisloPoziceNaVykresu'] ?: null,
             'Mnozstvi' => (float) $this->editEntry['Mnozstvi'],
             'Poznamka' => $this->editEntry['Poznamka'] ?: null,
             'SYSTIMEST' => now()->format('Y-m-d H:i:s'),
         ]);
 
         $this->editingId = null;
-        $this->editEntry = ['CisloVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
+        $this->editEntry = ['CisloVykresu' => '', 'CisloPoziceNaVykresu' => '', 'Mnozstvi' => '', 'Poznamka' => ''];
 
         $this->success('Záznam upraven.');
     }
@@ -269,6 +282,7 @@ class Show extends Component
             'klicDokla' => trim($doklad->KlicDokla ?? ''),
             'pozice' => '',
             'cisloPodsestavy' => '',
+            'cisloPoziceNaVykresu' => '',
             'mnozstvi' => '',
             'mistrCislo' => $mistrUser?->cislo_mistra,
         ]);
@@ -289,6 +303,7 @@ class Show extends Component
             'mpsProjekt' => trim($doklad->MPSProjekt ?? ''),
             'klicDokla' => trim($doklad->KlicDokla ?? ''),
             'cisloPodsestavy' => '',
+            'cisloPoziceNaVykresu' => '',
             'pozice' => 'p.' . trim($radek->Pozice ?? '-'),
             'mnozstvi' => '',
             'mistrCislo' => $mistrUser?->cislo_mistra,
@@ -325,6 +340,7 @@ class Show extends Component
             'klicDokla' => trim($doklad->KlicDokla ?? ''),
             'pozice' => 'p.'.trim($evPods->Pozice ?? '-'),
             'cisloPodsestavy' => 'v.'.trim($evPods->OznaceniPodsestavy ?? '-'),
+            'cisloPoziceNaVykresu' => trim($evPods->CisloPoziceNaVykresu ?? ''),
             'mnozstvi' => (int) ($evPods->Mnozstvi ?? 1) . ' ks',
             'mistrCislo' => $mistrUser?->cislo_mistra,
         ]);

@@ -8,7 +8,7 @@
                     link="{{ $backRoute ?? route('zasobovac.index') }}"
                     tooltip-bottom="Zpět"
                 />
-                <span>Výrobní příkaz: {{ $staDokl->doklad->KlicDokla ?? 'N/A' }}</span>
+                <span class="text-xl sm:text-2xl">{{ $staDokl->doklad->MPSProjekt ?? 'N/A' }} {{ $staDokl->doklad->KlicDokla ?? 'N/A' }}</span>
             </div>
         </x-slot:title>
         <x-slot:actions>
@@ -197,11 +197,16 @@
                                 @if($editingId === $ev->ID)
                                     @can('manage zasobovani')
                                         <div class="p-3 rounded-xl bg-warning/5 border border-warning/30">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                                                 <x-mary-input
                                                     label="Číslo výkresu *"
                                                     wire:model="editEntry.CisloVykresu"
                                                     placeholder="Zadejte číslo výkresu"
+                                                />
+                                                <x-mary-input
+                                                    label="Pozice na výkresu"
+                                                    wire:model="editEntry.CisloPoziceNaVykresu"
+                                                    placeholder="Volitelné"
                                                 />
                                                 <x-mary-input
                                                     label="Množství *"
@@ -246,6 +251,12 @@
                                                 <div class="text-xs text-gray-400 uppercase">Číslo výkresu</div>
                                                 <div class="font-semibold">{{ $ev->CisloVykresu }}</div>
                                             </div>
+                                            @if(trim($ev->CisloPoziceNaVykresu ?? '') !== '')
+                                                <div>
+                                                    <div class="text-xs text-gray-400 uppercase">Pozice na výkresu</div>
+                                                    <div class="font-semibold">{{ trim($ev->CisloPoziceNaVykresu) }}</div>
+                                                </div>
+                                            @endif
                                             <div>
                                                 <div class="text-xs text-gray-400 uppercase">Množství</div>
                                                 <div class="font-semibold">{{ $ev->Mnozstvi }}</div>
@@ -301,7 +312,7 @@
                             @can('manage zasobovani')
                                 <x-mary-card title="Přidat nový záznam"
                                              class="p-2 bg-primary/5 border border-primary/20 rounded-lg">
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3"
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3"
                                          @keydown.enter.prevent="$wire.saveEntry({{ $index }})"
                                          @entry-saved.window="if ($event.detail.rowIndex === {{ $index }}) $nextTick(() => $el.querySelector('input')?.focus())"
                                     >
@@ -309,6 +320,11 @@
                                             label="Číslo výkresu *"
                                             wire:model="newEntries.{{ $index }}.CisloVykresu"
                                             placeholder="Zadejte číslo výkresu"
+                                        />
+                                        <x-mary-input
+                                            label="Pozice na výkresu"
+                                            wire:model="newEntries.{{ $index }}.CisloPoziceNaVykresu"
+                                            placeholder="Volitelné"
                                         />
                                         <x-mary-input
                                             label="Množství *"
