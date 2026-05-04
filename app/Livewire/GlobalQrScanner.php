@@ -36,7 +36,7 @@ class GlobalQrScanner extends Component
             }
         }
 
-        return $this->redirectRoute('qr.result', ['code' => base64_encode($code)], navigate: true);
+        $this->error('QR kód nebyl rozpoznán.');
     }
 
     public function render()

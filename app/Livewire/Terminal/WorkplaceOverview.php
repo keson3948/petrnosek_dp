@@ -37,15 +37,16 @@ class WorkplaceOverview extends Component
             ? collect()
             : User::whereIn('klic_subjektu', $userKeys)->get()->keyBy('klic_subjektu');
 
-        $managerKeys = $users->map(fn ($u) => trim($u->manager_id ?? ''))->filter()->unique();
-        $managers = $managerKeys->isEmpty()
+        $mistrKeys = $records->map(fn ($r) => trim($r->doklad?->VlastniOsoba ?? ''))->filter()->unique();
+        $mistri = $mistrKeys->isEmpty()
             ? collect()
-            : User::whereIn('klic_subjektu', $managerKeys)->get()->keyBy('klic_subjektu');
+            : User::whereIn('klic_subjektu', $mistrKeys)->get()->keyBy('klic_subjektu');
 
-        $rows = $records->map(function ($r) use ($users, $managers) {
+        $rows = $records->map(function ($r) use ($users, $mistri) {
             $userModel = $users[trim($r->user_id)] ?? null;
             $pods = $r->podsestav;
-            $managerModel = $managers[trim($userModel?->manager_id ?? '')] ?? null;
+            $mistrKey = trim($r->doklad?->VlastniOsoba ?? '');
+            $mistr = $mistrKey ? ($mistri[$mistrKey] ?? null) : null;
 
             return (object) [
                 'operator'       => $userModel?->name ?? '—',
@@ -56,8 +57,8 @@ class WorkplaceOverview extends Component
                 'podsestava'     => $pods ? trim($pods->OznaceniPodsestavy ?? '').'/'.(trim($pods->CisloPoziceNaVykresu ?? '') ?: '-') : null,
                 'drawing_number' => trim($r->drawing_number ?? '') ?: null,
                 'is_paused'      => $r->status === 1,
-                'mistr_cislo'    => $managerModel?->cislo_mistra ?? null,
-                'mistr_color'    => $managerModel?->color ?? '#9ca3af',
+                'mistr_cislo'    => $mistr?->cislo_mistra ?? null,
+                'mistr_color'    => $mistr?->color ?? '#9ca3af',
             ];
         })->values();
 

@@ -8,6 +8,7 @@ use Livewire\Volt\Component;
 
 new #[Layout('layouts.welcome')]
 class extends Component {
+    use \Mary\Traits\Toast;
 
     public string $izo = '';
 
@@ -34,7 +35,7 @@ class extends Component {
         );
 
         if ($validator->fails()) {
-            $this->addError('izo', 'Neplatný čip.');
+            $this->error('Neplatný čip.');
 
             return;
         }
@@ -44,7 +45,7 @@ class extends Component {
             ->first();
 
         if (! $user) {
-            $this->addError('izo', 'Neplatný nebo zablokovaný čip.');
+            $this->error('Neplatný nebo zablokovaný čip.');
 
             return;
         }
@@ -126,14 +127,7 @@ class extends Component {
     </script>
     <div class="grid grid-cols-12 gap-2 md:gap-4">
 
-        @error('izo')
-        <div class="col-span-12 bg-white/80 border-2 border-error/30 rounded-xl p-2 flex items-center gap-3">
-            <x-mary-icon name="o-x-circle" class="w-4 h-4 text-error shrink-0" />
-            <div class="text-error font-semibold text-sm">{{ $message }}</div>
-        </div>
-        @enderror
-
-        <div class="col-span-12 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex items-center gap-4">
+<div class="col-span-12 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex items-center gap-4">
             <x-application-logo class="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
             <div>
                 <div class="text-lg sm:text-lg font-bold text-base-content leading-tight">Metal Produkt</div>
