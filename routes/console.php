@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('economy:sync-users')->dailyAt('00:00');
+Schedule::command('lunch:auto-start')->everyMinute();

@@ -143,11 +143,19 @@ class extends Component {
 
         <div class="col-span-12 sm:col-span-7 md:col-span-6 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center">
             <div class="text-xl sm:text-2xl md:text-4xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
+            <div class="flex items-center justify-center gap-1">
+                <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
+            </div>
         </div>
 
         <div class="col-span-12 sm:col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center gap-1">
-            <x-mary-icon name="o-calendar" class="w-4 h-4 text-primary/40" />
-            <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
+            @if(Terminal::isTerminal())
+                @php $terminal = \App\Models\Terminal::current(); @endphp
+                @if($terminal?->pracoviste)
+                    <x-mary-icon name="o-map-pin" class="w-5 h-5 text-primary/40" />
+                    <div class="text-center font-bold text-base-content text-lg text-base leading-tight">{{ trim($terminal->pracoviste->NazevUplny ?? '') }}</div>
+                @endif
+            @endif
         </div>
 
         @if(Terminal::isTerminal())

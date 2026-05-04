@@ -8,14 +8,6 @@
             </div>
         </div>
     @else
-        <div class="flex items-center gap-2 mb-4">
-            <x-mary-icon name="o-bolt" class="w-4 h-4 text-primary" />
-            <div class="uppercase tracking-wider text-base-content/50 font-bold text-sm">Aktuálně se pracuje</div>
-            @if($pracovisteName)
-                <div class="text-sm font-semibold text-base-content/80 ml-auto">{{ $pracovisteName }}</div>
-            @endif
-        </div>
-
         @if($rows->isEmpty())
             <div class="flex items-center gap-3 text-base-content/50 py-6">
                 <x-mary-icon name="o-moon" class="w-6 h-6" />
@@ -26,16 +18,28 @@
                 <table class="w-full border-collapse">
                     <thead class="sticky top-0 z-10 bg-white/95">
                         <tr class="border-b-2 border-base-200">
-                            <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50 w-40">Operátor</th>
-                            <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">Operace</th>
+                            <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50 w-10">Mistr</th>
+                            <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">Operátor</th>
                             <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">VP</th>
                             <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">Podsestava</th>
+                            <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">Operace</th>
                             <th class="text-left py-2 px-3 text-sm font-bold uppercase tracking-wide text-base-content/50">Stroj</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($rows as $row)
-                            <tr class="border-b border-base-200 {{ $row->is_paused ? 'bg-error/10' : '' }}">
+                            <tr class="border-b border-base-200 {{ $row->is_paused ? 'bg-error/30' : '' }}">
+                                <td class="py-3 px-3">
+                                    @if($row->mistr_cislo)
+                                        <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                                             style="background-color: {{ $row->mistr_color }}">
+                                            {{ $row->mistr_cislo }}
+                                        </div>
+                                    @else
+                                        <span class="text-base-content/30">—</span>
+                                    @endif
+                                </td>
+
                                 <td class="py-3 px-3">
                                     <div class="flex items-center gap-2">
                                         @if($row->is_paused)
@@ -45,35 +49,33 @@
                                             {{ $row->operator }}
                                         </span>
                                     </div>
-                                    @if($row->is_paused)
-                                        <div class="text-xs text-error/70 font-semibold mt-0.5 ml-7">Pozastaveno</div>
-                                    @endif
-                                </td>
-
-                                <td class="py-3 px-3">
-                                    <span class="text-lg font-semibold text-base-content leading-tight">{{ $row->operation }}</span>
                                 </td>
 
                                 <td class="py-3 px-3">
                                     @if($row->vp)
-                                        <div class="text-lg font-bold font-mono text-base-content leading-tight">{{ $row->vp }}</div>
+                                        <span class="text-lg font-bold font-mono text-base-content leading-tight">{{ $row->vp }}</span>
                                     @else
                                         <span class="text-base-content/30 text-base">—</span>
                                     @endif
                                     @if($row->radek_pozice)
-                                        <div class="text-sm text-base-content/60 mt-0.5">Řád. <span class="font-semibold text-base-content/80">{{ $row->radek_pozice }}</span></div>
+                                        <span class="text-sm text-base-content/60 mt-0.5">Řád. <span class="font-semibold text-base-content/80">{{ $row->radek_pozice }}</span></span>
                                     @endif
                                 </td>
 
                                 <td class="py-3 px-3">
                                     @if($row->podsestava)
-                                        <div class="text-base font-bold font-mono text-base-content leading-tight">{{ $row->podsestava }}</div>
+                                        <span class="text-base font-bold font-mono text-base-content leading-tight">{{ $row->podsestava }}</span>
                                     @endif
                                     @if($row->drawing_number)
-                                        <div class="text-sm text-base-content/60 mt-0.5"><span class="font-semibold text-base-content/80">{{ $row->drawing_number }}</span></div>
+                                        <span class="text-sm text-base-content/60 mt-0.5"><span class="font-semibold text-base-content/80">({{ $row->drawing_number }})</span></span>
                                     @elseif(!$row->podsestava)
                                         <span class="text-base-content/30 text-base">—</span>
                                     @endif
+                                </td>
+
+
+                                <td class="py-3 px-3">
+                                    <span class="text-lg font-semibold text-base-content leading-tight">{{ $row->operation }}</span>
                                 </td>
 
                                 <td class="py-3 px-3 max-w-[10rem]">

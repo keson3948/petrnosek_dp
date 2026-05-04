@@ -143,14 +143,12 @@ class ProductionTracker extends Component
         $lunchStartedAt = Carbon::parse($activeLunch->started_at);
         $lunchEndsAt = $lunchStartedAt->copy()->addMinutes(ProductionRecord::LUNCH_DURATION_MIN);
 
-        // Ukončíme oběd s přesným časem 30 min
         $activeLunch->update([
             'status' => 2,
             'ended_at' => $lunchEndsAt,
             'SYSTIMEST' => now(),
         ]);
 
-        // Obnovíme pozastavenou operaci s pauza = přesně 30 min
         $pausedWork = $user->productionRecords()
             ->work()
             ->where('status', 1)
