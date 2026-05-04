@@ -273,25 +273,22 @@
     </div>
 </x-mary-modal>
 
-{{-- ====== MODAL: Upravit čas ====== --}}
-<x-mary-modal wire:model="showEditTimeModal" title="Upravit odpracovaný čas" separator>
+{{-- ====== MODAL: Upravit zadaný čas ====== --}}
+<x-mary-modal wire:model="showEditTimeModal" title="Upravit zadaný čas" separator>
     <div x-data="{
         h: 0,
         m: 0,
-        startedAt: '',
         init() {
             this.$watch('$wire.edit_time_init', (val) => {
                 if (val) {
                     this.h = val.hours ?? 0;
                     this.m = val.minutes ?? 0;
-                    this.startedAt = val.started_at ?? '';
                 }
             });
             let val = $wire.edit_time_init;
             if (val) {
                 this.h = val.hours ?? 0;
                 this.m = val.minutes ?? 0;
-                this.startedAt = val.started_at ?? '';
             }
         },
         addH(d) { this.h = Math.max(0, this.h + d) },
@@ -303,11 +300,11 @@
         },
         pad(v) { return String(v).padStart(2, '0'); }
     }">
-        <div class="mb-4">
-            <x-mary-input label="Začátek" x-model="startedAt" type="datetime-local" name=""></x-mary-input>
+        <div class="text-sm text-base-content/60 mb-3">
+            Upravujete pouze <span class="font-semibold">zadaný čas</span> — skutečný začátek a konec záznamu zůstávají beze změny.
         </div>
 
-        <label class="label"><span class="label-text font-semibold">Odpracovaná doba</span></label>
+        <label class="label"><span class="label-text font-semibold">Zadaný čas</span></label>
         <div class="flex items-center justify-center gap-6 py-4">
             <div class="flex flex-col items-center">
                 <span class="text-xs text-gray-400 uppercase mb-2">Hodiny</span>
@@ -346,7 +343,7 @@
 
         <div class="flex justify-end gap-2 mt-6">
             <x-mary-button label="Zrušit" @click="$wire.showEditTimeModal = false" />
-            <button type="button" class="btn btn-primary" @click="$wire.saveEditTime(h, m, startedAt)">Uložit</button>
+            <button type="button" class="btn btn-primary" @click="$wire.saveEditTime(h, m)">Uložit</button>
         </div>
     </div>
 </x-mary-modal>

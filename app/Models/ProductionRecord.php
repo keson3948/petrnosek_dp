@@ -70,6 +70,19 @@ class ProductionRecord extends Model
         return $query->where('TypZaznamu', self::TYPE_LUNCH);
     }
 
+    public function casZadanyHoursMinutes(): ?array
+    {
+        $sec = $this->CasNaZakZadany;
+
+        if ($sec === null || $sec === '') {
+            return null;
+        }
+
+        $sec = (int) $sec;
+
+        return [intdiv($sec, 3600), intdiv($sec % 3600, 60)];
+    }
+
     protected $casts = [
         'started_at' => 'datetime',
         'ended_at' => 'datetime',

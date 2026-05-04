@@ -63,6 +63,8 @@ class StartDrawer extends Component
             $pracovisteId = $prostredek ? $prostredek->Pracoviste : null;
         }
 
+        $skupinaKlic = trim(auth()->user()->employeeGroup()?->KlicSkupinyZamestnancu ?? '') ?: null;
+
         ProductionRecord::create([
             'ID' => $nextId,
             'machine_id' => $this->machine_id,
@@ -76,6 +78,7 @@ class StartDrawer extends Component
             'ZakVP_radek_entita' => $this->selectedDokladRadekEntita,
             'ZakVP_pozice_radku' => $this->pozice_radku,
             'status' => 0,
+            'SkupinaZamestnancu' => $skupinaKlic,
             'CTSMP' => now(),
             'SYSTIMEST' => now(),
         ]);

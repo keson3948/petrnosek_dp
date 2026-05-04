@@ -7,7 +7,7 @@
 @if($isLunch)
     <div class="mb-2 flex items-center gap-3 px-3 py-2 rounded-lg border border-warning/30 bg-warning/5">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 bg-warning/20 text-warning">
-            <x-mary-icon name="o-cake" class="w-5 h-5" />
+            <x-icons.food class="w-5 h-5" />
         </div>
         <div class="flex-1 min-w-0">
             <div class="font-semibold text-sm sm:text-base text-warning">Oběd</div>
@@ -128,8 +128,8 @@
 
                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
                     <div>
-                        <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava</div>
-                        <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : $emptyLabel }} <span class="text-gray-400 mx-1">/</span> {{ $record->podsestav?->OznaceniPodsestavy ?: '—' }}</div>
+                        <div class="text-xs text-gray-400 uppercase tracking-wide">Řádek / Podsestava / Pozice výk.</div>
+                        <div class="font-semibold">{{ $record->ZakVP_pozice_radku ? 'Poz. ' . $record->ZakVP_pozice_radku : $emptyLabel }} <span class="text-gray-400 mx-1">/</span> {{ $record->podsestav?->OznaceniPodsestavy ?: '—' }} <span class="text-gray-400 mx-1">/</span> {{ $record->podsestav?->CisloPoziceNaVykresu ?: '—' }}</div>
                     </div>
                     <button wire:click="openEditRadekPodsestava({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit řádek a podsestavu">
                         <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
@@ -156,25 +156,38 @@
                     </button>
                 </div>
 
+                @php
+                    $casZadany = $record->casZadanyHoursMinutes();
+                @endphp
                 <div class="flex items-center justify-between p-3 rounded-lg bg-white border border-base-200">
-                    <div>
-                        <div class="text-xs text-gray-400 uppercase tracking-wide">Odpracovaný čas</div>
-                        <div class="font-semibold {{ $isHistory ? '' : 'text-lg' }}">
-                            @if($workedH !== null)
-                                {{ $workedH }}h {{ $workedM }}min
-                            @else
-                                {{ $record->started_at?->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
-                            @endif
+                    <div class="flex flex-wrap items-start gap-x-6 gap-y-1">
+                        <div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide">Reálný čas</div>
+                            <div class="font-semibold {{ $isHistory ? '' : 'text-lg' }}">
+                                @if($workedH !== null)
+                                    {{ $workedH }}h {{ $workedM }}min
+                                @else
+                                    {{ $record->started_at?->format('H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                {{ $record->started_at?->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
+                                @if(($record->total_paused_min ?? 0) > 0)
+                                    <span class="text-warning">(Pauza: {{ $record->total_paused_min }} min)</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="text-xs text-gray-400">
-                            {{ $record->started_at?->format('d.m.Y H:i') }} - {{ $record->ended_at?->format('H:i') ?? '?' }}
-                            @if(!$isHistory && $record->total_paused_seconds > 0)
-                                (Pauza: {{ gmdate("H:i:s", $record->total_paused_seconds) }})
-                            @endif
-                        </div>
+                        @if($casZadany !== null)
+                            <div>
+                                <div class="text-xs text-gray-400 uppercase tracking-wide">Zadaný čas</div>
+                                <div class="font-semibold {{ $isHistory ? '' : 'text-lg' }} text-primary">
+                                    {{ $casZadany[0] }}h {{ $casZadany[1] }}min
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     @if(auth()->user()->can('edit production record time') || !empty($record->SluzebniCesta))
-                        <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square" title="Upravit čas">
+                        <button wire:click="openEditTime({{ $record->ID }})" class="btn btn-ghost btn-sm btn-square shrink-0" title="Upravit zadaný čas">
                             <x-mary-icon name="o-pencil" class="w-5 h-5 text-primary" />
                         </button>
                     @endif

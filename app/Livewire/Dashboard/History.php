@@ -618,26 +618,26 @@ class History extends Component
         abort_unless($this->canEditTime($record), 403);
         $this->editRecordId = (int) $record->ID;
 
-        $workedMinutes = 0;
-        if ($record->started_at && $record->ended_at) {
-            $workedMinutes = max(0, intval($record->started_at->diffInMinutes($record->ended_at)) - ($record->total_paused_min ?? 0));
+        $hm = $record->casZadanyHoursMinutes();
+
+        if ($hm === null && $record->started_at && $record->ended_at) {
+            $workedMinutes = max(0, (int) $record->started_at->diffInMinutes($record->ended_at) - ($record->total_paused_min ?? 0));
+            $hm = [intdiv($workedMinutes, 60), $workedMinutes % 60];
         }
 
         $this->edit_time_init = [
-            'started_at' => $record->started_at?->format('Y-m-d\TH:i') ?? '',
-            'hours' => intdiv($workedMinutes, 60),
-            'minutes' => $workedMinutes % 60,
+            'hours' => $hm[0] ?? 0,
+            'minutes' => $hm[1] ?? 0,
         ];
 
         $this->resetValidation();
         $this->showEditTimeModal = true;
     }
 
-    public function saveEditTime($hours, $minutes, $startedAt)
+    public function saveEditTime($hours, $minutes)
     {
         $hours = (int) $hours;
         $minutes = (int) $minutes;
-        $startedAt = (string) $startedAt;
 
         if ($hours < 0 || $minutes < 0) {
             $this->addError('edit_time', 'Hodiny a minuty nesmí být záporné.');
@@ -645,24 +645,10 @@ class History extends Component
             return;
         }
 
-        $workedMinutes = ($hours * 60) + $minutes;
+        $totalSeconds = ($hours * 3600) + ($minutes * 60);
 
-        if ($workedMinutes == 0) {
-            $this->addError('edit_time', 'Odpracovaný čas musí být větší než 0.');
-
-            return;
-        }
-
-        if (! $startedAt) {
-            $this->addError('edit_time', 'Začátek práce musí být vyplněn.');
-
-            return;
-        }
-
-        $start = \Carbon\Carbon::parse($startedAt);
-
-        if ($start->isFuture()) {
-            $this->addError('edit_time', 'Začátek práce nesmí být v budoucnosti.');
+        if ($totalSeconds === 0) {
+            $this->addError('edit_time', 'Zadaný čas musí být větší než 0.');
 
             return;
         }
@@ -670,22 +656,12 @@ class History extends Component
         $record = $this->findEditRecordForSave();
         abort_unless($this->canEditTime($record), 403);
 
-        $totalMinutes = $workedMinutes + ($record->total_paused_min ?? 0);
-        $endedAt = $start->copy()->addMinutes($totalMinutes);
-
-        if ($endedAt->isFuture()) {
-            $this->addError('edit_time', 'Konec práce nesmí být v budoucnosti.');
-
-            return;
-        }
-
         $record->update([
-            'started_at' => $startedAt,
-            'ended_at' => $endedAt,
+            'CasNaZakZadany' => $totalSeconds,
             'SYSTIMEST' => now(),
         ]);
 
         $this->showEditTimeModal = false;
-        $this->success('Čas uložen.');
+        $this->success('Zadaný čas uložen.');
     }
 }

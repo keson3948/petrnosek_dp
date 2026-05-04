@@ -110,7 +110,7 @@ class extends Component {
         }
     }"
     @click.document="handleBlur"
-    class="w-full max-w-3xl"
+    class="w-full"
 >
     <script>
         document.addEventListener('livewire:init', () => {
@@ -133,7 +133,7 @@ class extends Component {
         </div>
         @enderror
 
-        <div class="col-span-12 md:col-span-5 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex items-center gap-4">
+        <div class="col-span-12 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex items-center gap-4">
             <x-application-logo class="w-10 h-10 sm:w-16 sm:h-16 shrink-0" />
             <div>
                 <div class="text-lg sm:text-lg font-bold text-base-content leading-tight">Metal Produkt</div>
@@ -141,8 +141,8 @@ class extends Component {
             </div>
         </div>
 
-        <div class="col-span-12 sm:col-span-7 md:col-span-4 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center">
-            <div class="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
+        <div class="col-span-12 sm:col-span-7 md:col-span-6 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center">
+            <div class="text-xl sm:text-2xl md:text-4xl font-mono font-bold text-primary tracking-wider" x-text="time"></div>
         </div>
 
         <div class="col-span-12 sm:col-span-5 md:col-span-3 bg-white/80 backdrop-blur border border-base-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center gap-1">
@@ -150,7 +150,6 @@ class extends Component {
             <div class="text-center text-base-content/70 text-sm capitalize leading-tight" x-text="date"></div>
         </div>
 
-        {{-- Přehled aktivních operací na pracovišti --}}
         @if(Terminal::isTerminal())
             <div class="col-span-12">
                 <livewire:terminal.workplace-overview />
@@ -174,9 +173,8 @@ class extends Component {
     </form>
 
     <x-mary-button href="{{ route('login') }}"
-                   label="Přihlásit se pomocí emailu"
                    icon="o-envelope"
-       class="fixed bottom-3 right-4 text-xs"
+       class="fixed bottom-0 right-0 text-xs rounded-none p-3"
        wire:navigate>
     </x-mary-button>
 </div>

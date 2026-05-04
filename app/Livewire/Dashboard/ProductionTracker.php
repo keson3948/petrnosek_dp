@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\ProductionRecord;
+use Carbon\Carbon;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -14,6 +15,8 @@ class ProductionTracker extends Component
     public bool $hasActiveRecord = false;
 
     public bool $showLunchConfirm = false;
+
+    public bool $showResumeConfirm = false;
 
     public function mount()
     {
@@ -96,12 +99,15 @@ class ProductionTracker extends Component
             ]);
         }
 
+        $skupinaKlic = trim($user->employeeGroup()?->KlicSkupinyZamestnancu ?? '') ?: null;
+
         ProductionRecord::create([
             'ID' => ProductionRecord::nextId(),
             'user_id' => $user->klic_subjektu,
             'started_at' => now(),
             'status' => 0,
             'TypZaznamu' => ProductionRecord::TYPE_LUNCH,
+            'SkupinaZamestnancu' => $skupinaKlic,
             'CTSMP' => now(),
             'SYSTIMEST' => now(),
         ]);
@@ -112,15 +118,81 @@ class ProductionTracker extends Component
         $this->success('Oběd zahájen. Trvá 30 minut.');
     }
 
+    public function confirmResumeAfterLunch(): void
+    {
+        $this->showResumeConfirm = true;
+    }
+
+    public function cancelResume(): void
+    {
+        $this->showResumeConfirm = false;
+    }
+
+    public function resumeAfterLunch(): void
+    {
+        $user = auth()->user();
+        $activeLunch = $user->activeLunchRecord();
+
+        if (! $activeLunch) {
+            $this->showResumeConfirm = false;
+            $this->error('Žádný aktivní oběd.');
+
+            return;
+        }
+
+        $lunchStartedAt = Carbon::parse($activeLunch->started_at);
+        $lunchEndsAt = $lunchStartedAt->copy()->addMinutes(ProductionRecord::LUNCH_DURATION_MIN);
+
+        // Ukončíme oběd s přesným časem 30 min
+        $activeLunch->update([
+            'status' => 2,
+            'ended_at' => $lunchEndsAt,
+            'SYSTIMEST' => now(),
+        ]);
+
+        // Obnovíme pozastavenou operaci s pauza = přesně 30 min
+        $pausedWork = $user->productionRecords()
+            ->work()
+            ->where('status', 1)
+            ->first();
+
+        if ($pausedWork) {
+            $pausedWork->update([
+                'status' => 0,
+                'total_paused_min' => ($pausedWork->total_paused_min ?? 0) + ProductionRecord::LUNCH_DURATION_MIN,
+                'last_paused_at' => null,
+                'SYSTIMEST' => now(),
+            ]);
+        }
+
+        $this->showResumeConfirm = false;
+        $this->checkActiveRecord();
+        $this->dispatch('operation-started');
+
+        $remaining = max(0, (int) ceil(now()->diffInSeconds($lunchEndsAt, false) / 60));
+        if ($remaining > 0) {
+            $this->success("Operace se začne počítat za {$remaining} min (po konci oběda).");
+        } else {
+            $this->success('Operace obnovena.');
+        }
+    }
+
     public function render()
     {
         $user = auth()->user();
         $activeLunch = $user->activeLunchRecord();
 
         $lunchEndsAt = null;
+        $canResumeEarly = false;
+        $hasPausedWork = false;
+
         if ($activeLunch) {
-            $lunchEndsAt = \Carbon\Carbon::parse($activeLunch->started_at)
+            $lunchEndsAt = Carbon::parse($activeLunch->started_at)
                 ->addMinutes(ProductionRecord::LUNCH_DURATION_MIN);
+
+            $remainingMin = max(0, (int) ceil(now()->diffInSeconds($lunchEndsAt, false) / 60));
+            $hasPausedWork = $user->productionRecords()->work()->where('status', 1)->exists();
+            $canResumeEarly = $remainingMin <= 5 && $hasPausedWork;
         }
 
         $group = $user->employeeGroup();
@@ -129,6 +201,8 @@ class ProductionTracker extends Component
         return view('livewire.dashboard.production-tracker', [
             'activeLunch' => $activeLunch,
             'lunchEndsAt' => $lunchEndsAt,
+            'canResumeEarly' => $canResumeEarly,
+            'hasPausedWork' => $hasPausedWork,
             'hasLunchToday' => $user->hasLunchToday(),
             'hasLunchGroup' => $lunchTime !== null,
             'canStartLunchNow' => $user->canStartLunchNow(),

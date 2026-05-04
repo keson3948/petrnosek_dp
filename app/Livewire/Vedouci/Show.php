@@ -59,7 +59,7 @@ class Show extends Component
     #[Computed]
     public function records()
     {
-        $query = $this->operator->productionRecords()
+        $query = $this->operator->productionRecords()->work()
             ->with(['doklad', 'machine', 'operation'])
             ->where('status', 2)
             ->orderByDesc('ended_at');

@@ -121,7 +121,7 @@
                             @endif
                             @if($evPodsestavId && $startStep >= 4)
                                 @php $summaryPods = $this->evPodsestav; @endphp
-                                <span>Pods. <strong class="text-gray-800">{{ trim($summaryPods->OznaceniPodsestavy ?? $evPodsestavId) }}</strong></span>
+                                <span>Pods. <strong class="text-gray-800">{{ trim($summaryPods->OznaceniPodsestavy ?? $evPodsestavId) }}/{{ trim($summaryPods->CisloPoziceNaVykresu) }}</strong></span>
                             @endif
                             @if($drawing_number && $startStep >= 5)
                                 <span>Výkres <strong class="text-gray-800">{{ $drawing_number }}</strong></span>
@@ -188,7 +188,11 @@
                     @elseif($startStep === 2)
                         <x-mary-button label="Bez řádku" icon-right="o-arrow-right" wire:click="skipRadek" class="btn-outline btn-md sm:btn-lg" />
                     @elseif($startStep === 3)
-                        <x-mary-button label="Bez podsestavy" icon-right="o-arrow-right" wire:click="skipPodsestava" class="btn-outline btn-md sm:btn-lg" />
+                        @if($evPodsestavId)
+                            <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-md sm:btn-lg" />
+                        @else
+                            <x-mary-button label="Bez podsestavy" icon-right="o-arrow-right" wire:click="skipPodsestava" class="btn-outline btn-md sm:btn-lg" />
+                        @endif
                     @elseif($startStep === 4)
                         @if($drawing_number)
                             <x-mary-button label="Dále" icon-right="o-arrow-right" wire:click="nextStartStep" class="btn-primary btn-md sm:btn-lg" />

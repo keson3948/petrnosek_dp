@@ -91,14 +91,23 @@ class ActiveRecord extends Component
 
         $endedAt = now();
 
-        $this->activeRecord->update([
+        $startedAt = \Carbon\Carbon::parse($this->activeRecord->started_at);
+        $totalMinutes = max(0, (int) $startedAt->diffInMinutes($endedAt) - ($this->activeRecord->total_paused_min ?? 0));
+
+        $updateData = [
             'status' => 2,
             'ended_at' => $endedAt,
             'processed_quantity' => $this->processed_quantity,
             'notes' => $this->notes,
             'last_paused_at' => null,
             'SYSTIMEST' => now(),
-        ]);
+        ];
+
+        if ((int) ($this->activeRecord->TypZaznamu ?? 0) !== ProductionRecord::TYPE_LUNCH) {
+            $updateData['CasNaZakZadany'] = $totalMinutes * 60;
+        }
+
+        $this->activeRecord->update($updateData);
 
         $this->activeRecord = null;
         $this->showCompleteModal = false;

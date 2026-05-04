@@ -2,11 +2,9 @@
 
 namespace App\Livewire\Vedouci;
 
-use App\Models\Attendance\Pruchod;
 use App\Models\ProductionRecord;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -60,16 +58,17 @@ class Index extends Component
         $users = User::query()
             ->whereNotNull('klic_subjektu')
             ->where('klic_subjektu', '!=', '')
-            ->with('vztah.skupinaZamestnancu')
+            ->with([
+                'vztah.skupinaZamestnancu',
+                'pruchody' => fn ($q) => $q->vceraADnes()->orderBy('DATUM')->orderBy('CAS'),
+            ])
             ->when($this->search, fn (Builder $q) => $q->where('name', 'like', "%{$this->search}%"))
             ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
             ->get();
 
         $activeRecords = $this->activeRecords;
 
-        $attendanceMap = $this->loadAttendance($users);
-
-        $allUsers = $users->map(function ($user) use ($activeRecords, $attendanceMap) {
+        $allUsers = $users->map(function ($user) use ($activeRecords) {
             $active = $activeRecords->get($user->klic_subjektu);
             $skupina = $user->vztah?->skupinaZamestnancu;
 
@@ -85,13 +84,13 @@ class Index extends Component
             $user->current_machine = $active ? trim($active->machine?->NazevUplny ?? $active->machine_id ?? '') : '';
             $user->started_at_label = $active?->started_at?->format('H:i') ?? '';
 
-            $att = $attendanceMap->get($user->id);
-            $user->arrival = $att['arrival'] ?? null;
-            $user->departure = $att['departure'] ?? null;
-            $user->is_present = $att['is_present'] ?? false;
-            $user->attendance_date = $att['date'] ?? null;
+            $att = $user->attendanceStatus();
+            $user->arrival = $att['arrival'];
+            $user->departure = $att['departure'];
+            $user->is_present = $att['is_present'];
+            $user->attendance_date = $att['date'];
 
-            $minutes = $att['worked_minutes'] ?? 0;
+            $minutes = $att['worked_minutes'];
             $user->worked_hours = $minutes > 0
                 ? sprintf('%d:%02d', intdiv($minutes, 60), $minutes % 60)
                 : null;
@@ -108,56 +107,5 @@ class Index extends Component
             'presentHeaders' => $presentHeaders,
             'absentHeaders' => $absentHeaders,
         ]);
-    }
-
-
-    private function loadAttendance(Collection $users): Collection
-    {
-        try {
-            $oscToUserId = $users
-                ->filter(fn ($u) => $u->osobni_cislo_dochazky)
-                ->mapWithKeys(fn ($u) => [$u->osobni_cislo_dochazky => $u->id]);
-
-            if ($oscToUserId->isEmpty()) {
-                return collect();
-            }
-
-            $pruchody = Pruchod::vceraADnes()
-                ->whereIn('OSC', $oscToUserId->keys()->all())
-                ->orderBy('DATUM')
-                ->orderBy('CAS')
-                ->get();
-
-            return $pruchody->groupBy('OSC')->mapWithKeys(function ($group) use ($oscToUserId) {
-                $userId = $oscToUserId->get((string) $group->first()->OSC)
-                    ?? $oscToUserId->get((int) $group->first()->OSC);
-
-                $lastArrival = $group->last(fn ($p) => (int) $p->DIRECTION === 1);
-                $lastDeparture = $group->last(fn ($p) => (int) $p->DIRECTION !== 1);
-
-                $isPresent = (int) $group->last()->DIRECTION === 1;
-
-                $showDeparture = $lastDeparture && $lastArrival
-                    && ($lastDeparture->DATUM > $lastArrival->DATUM
-                        || ($lastDeparture->DATUM === $lastArrival->DATUM && $lastDeparture->CAS > $lastArrival->CAS));
-
-                $workedMinutes = 0;
-                if ($lastArrival && $showDeparture) {
-                    $arrMin = (int) $lastArrival->DATUM * 1440 + (int) $lastArrival->CAS;
-                    $depMin = (int) $lastDeparture->DATUM * 1440 + (int) $lastDeparture->CAS;
-                    $workedMinutes = max(0, $depMin - $arrMin);
-                }
-
-                return [$userId => [
-                    'arrival' => $lastArrival?->cas_time,
-                    'departure' => $showDeparture ? $lastDeparture->cas_time : null,
-                    'is_present' => $isPresent,
-                    'worked_minutes' => $workedMinutes,
-                    'date' => $lastArrival?->datum_date?->format('d.m.'),
-                ]];
-            });
-        } catch (\Exception $e) {
-            return collect();
-        }
     }
 }

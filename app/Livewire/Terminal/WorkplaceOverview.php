@@ -25,7 +25,7 @@ class WorkplaceOverview extends Component
         $records = ProductionRecord::work()
             ->whereIn('status', [0, 1])
             ->where('pracoviste_id', $klicPracoviste)
-            ->with(['machine', 'operation', 'doklad'])
+            ->with(['machine', 'operation', 'doklad', 'podsestav'])
             ->get();
 
         $userKeys = $records->pluck('user_id')
@@ -39,12 +39,17 @@ class WorkplaceOverview extends Component
 
         $rows = $records->map(function ($r) use ($users) {
             $userModel = $users[trim($r->user_id)] ?? null;
+            $pods = $r->podsestav;
 
             return (object) [
-                'operator' => $userModel?->name ?? '—',
-                'machine' => trim($r->machine?->NazevUplny ?? $r->machine_id ?? '') ?: '—',
-                'operation' => trim($r->operation?->Nazev1 ?? $r->operation_id ?? '') ?: '—',
-                'vp' => trim(($r->doklad?->MPSProjekt ?? '').' '.($r->doklad?->KlicDokla ?? '')) ?: '—',
+                'operator'       => $userModel?->name ?? '—',
+                'machine'        => trim($r->machine?->NazevUplny ?? $r->machine_id ?? '') ?: '—',
+                'operation'      => trim($r->operation?->Nazev1 ?? $r->operation_id ?? '') ?: '—',
+                'vp'             => trim(($r->doklad?->MPSProjekt ?? '').' '.($r->doklad?->KlicDokla ?? '')) ?: null,
+                'radek_pozice'   => trim($r->ZakVP_pozice_radku ?? '') ?: null,
+                'podsestava'     => $pods ? trim($pods->OznaceniPodsestavy ?? '').'/'.(trim($pods->CisloPoziceNaVykresu ?? '') ?: '-') : null,
+                'drawing_number' => trim($r->drawing_number ?? '') ?: null,
+                'is_paused'      => $r->status === 1,
             ];
         })->values();
 

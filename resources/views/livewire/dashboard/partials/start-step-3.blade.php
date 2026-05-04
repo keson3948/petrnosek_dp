@@ -9,7 +9,7 @@
             wire:click="selectPodsestava({{ $pods->ID }})"
             class="w-full text-left border-2 rounded-lg p-3 transition-colors {{ $isSelected ? 'border-primary bg-primary/10' : 'border-base-200 hover:border-primary/30' }}">
             <div class="font-bold font-mono text-base mb-1 {{ $isSelected ? 'text-primary' : '' }}">
-                {{ trim($pods->OznaceniPodsestavy ?? '—') }}
+                {{ trim($pods->OznaceniPodsestavy ?? '—') }}/{{ trim($pods->CisloPoziceNaVykresu ?? '—') }}
             </div>
             <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm text-gray-600 border-t border-base-200 pt-1 mt-1">
                 <div>Pozice: <span class="font-semibold text-gray-800">{{ trim($pods->Pozice ?? '—') }}</span></div>

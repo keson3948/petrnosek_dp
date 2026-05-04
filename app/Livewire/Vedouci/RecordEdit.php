@@ -40,7 +40,11 @@ class RecordEdit extends Component
     public string $startedAt = '';
     public string $endedAt = '';
     public int $quantity = 0;
+    public int $totalPausedMin = 0;
     public string $notes = '';
+
+    public int $casZadanyHours = 0;
+    public int $casZadanyMinutes = 0;
 
 
     public string $radekFilter = '';
@@ -71,7 +75,12 @@ class RecordEdit extends Component
             $this->startedAt = $record->started_at?->format('Y-m-d\TH:i') ?? '';
             $this->endedAt = $record->ended_at?->format('Y-m-d\TH:i') ?? '';
             $this->quantity = (int) ($record->processed_quantity ?? 0);
+            $this->totalPausedMin = (int) ($record->total_paused_min ?? 0);
             $this->notes = $record->notes ?? '';
+
+            $hm = $record->casZadanyHoursMinutes();
+            $this->casZadanyHours = $hm[0] ?? 0;
+            $this->casZadanyMinutes = $hm[1] ?? 0;
 
             $this->validateCascadeIntegrity();
         } else {
@@ -463,6 +472,8 @@ class RecordEdit extends Component
             $pracovisteId = $prostredek?->Pracoviste;
         }
 
+        $casZadanySeconds = (max(0, $this->casZadanyHours) * 3600) + (max(0, $this->casZadanyMinutes) * 60);
+
         $data = [
             'ZakVP_SysPrimKlic' => $this->sysPrimKlic,
             'ZakVP_radek_entita' => $this->radekEntita,
@@ -476,6 +487,8 @@ class RecordEdit extends Component
             'started_at' => $start,
             'ended_at' => $end,
             'notes' => $this->notes ?: null,
+            'total_paused_min' => max(0, $this->totalPausedMin),
+            'CasNaZakZadany' => $casZadanySeconds > 0 ? $casZadanySeconds : null,
             'SYSTIMEST' => now(),
         ];
 
@@ -484,10 +497,13 @@ class RecordEdit extends Component
             $record->update($data);
             $this->success('Záznam upraven.');
         } else {
+            $skupinaKlic = trim($this->operator->employeeGroup()?->KlicSkupinyZamestnancu ?? '') ?: null;
+
             ProductionRecord::create(array_merge($data, [
                 'ID' => ProductionRecord::nextId(),
                 'user_id' => $this->operator->klic_subjektu,
                 'status' => 2,
+                'SkupinaZamestnancu' => $skupinaKlic,
                 'CTSMP' => now(),
             ]));
             $this->success('Záznam přidán.');

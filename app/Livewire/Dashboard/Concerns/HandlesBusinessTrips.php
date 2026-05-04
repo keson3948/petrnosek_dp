@@ -54,6 +54,8 @@ trait HandlesBusinessTrips
 
         $nextId = ProductionRecord::nextId();
 
+        $skupinaKlic = trim(auth()->user()->employeeGroup()?->KlicSkupinyZamestnancu ?? '') ?: null;
+
         ProductionRecord::create([
             'ID' => $nextId,
             'machine_id' => null,
@@ -68,6 +70,7 @@ trait HandlesBusinessTrips
             'ZakVP_pozice_radku' => null,
             'SluzebniCesta' => 1,
             'status' => 0,
+            'SkupinaZamestnancu' => $skupinaKlic,
             'CTSMP' => now(),
             'SYSTIMEST' => now(),
         ]);

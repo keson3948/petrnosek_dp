@@ -159,6 +159,12 @@ trait HandlesWizardSteps
             return;
         }
 
+        if ($this->evPodsestavId) {
+            $this->startStep = 3;
+
+            return;
+        }
+
         $this->startStep = 4;
     }
 

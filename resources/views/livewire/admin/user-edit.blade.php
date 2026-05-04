@@ -52,7 +52,7 @@
                     </div>
                     <div class="p-3 bg-base-200 rounded-lg">
                         <div class="flex items-center gap-2 text-xs text-base-content/60 mb-1">
-                            <x-mary-icon name="o-cake" class="w-4 h-4" />
+                            <x-icons.food class="w-4 h-4" />
                             <span>Čas obědu</span>
                         </div>
                         <div class="font-semibold font-mono">

@@ -21,7 +21,7 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 relative overflow-y-auto grid-bg bg-gray-50">
+    <body class="font-sans antialiased min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-y-auto grid-bg bg-gray-50">
 
 
 
@@ -32,7 +32,7 @@
 
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-white/10 pointer-events-none" aria-hidden="true"></div>
-        <div class="relative z-10">
+        <div class="relative z-10 w-full">
             {{ $slot }}
         </div>
 

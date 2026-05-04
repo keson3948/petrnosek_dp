@@ -63,6 +63,11 @@ class User extends Authenticatable
     }
 
 
+    public function pruchody()
+    {
+        return $this->hasMany(Pruchod::class, 'OSC', 'osobni_cislo_dochazky');
+    }
+
     public function todayAttendance(): ?array
     {
         if (! $this->osobni_cislo_dochazky) {
@@ -86,6 +91,35 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    public function attendanceStatus(): array
+    {
+        $pruchody = $this->relationLoaded('pruchody') ? $this->pruchody : collect();
+
+        if ($pruchody->isEmpty()) {
+            return ['arrival' => null, 'departure' => null, 'is_present' => false, 'worked_minutes' => 0, 'date' => null];
+        }
+
+        $sorted = $pruchody->sortBy([['DATUM', 'asc'], ['CAS', 'asc']])->values();
+        $lastArrival = $sorted->last(fn ($p) => (int) $p->DIRECTION === 1);
+        $lastDeparture = $sorted->last(fn ($p) => (int) $p->DIRECTION !== 1);
+
+        $departed = $lastDeparture && $lastArrival
+            && ($lastDeparture->DATUM . $lastDeparture->CAS) > ($lastArrival->DATUM . $lastArrival->CAS);
+
+        $workedMinutes = $departed
+            ? max(0, ((int) $lastDeparture->DATUM - (int) $lastArrival->DATUM) * 1440
+                + (int) $lastDeparture->CAS - (int) $lastArrival->CAS)
+            : 0;
+
+        return [
+            'arrival' => $lastArrival?->cas_time,
+            'departure' => $departed ? $lastDeparture->cas_time : null,
+            'is_present' => (int) $sorted->last()->DIRECTION === 1,
+            'worked_minutes' => $workedMinutes,
+            'date' => $lastArrival?->datum_date?->format('d.m.'),
+        ];
     }
 
     public function printer()
