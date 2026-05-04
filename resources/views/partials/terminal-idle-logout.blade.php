@@ -8,7 +8,7 @@
                 this.timer = setTimeout(() => this.logout(), this.timeout);
             },
             logout() {
-                document.getElementById('terminal-idle-logout-form')?.submit();
+                window.location.href = '{{ route('terminal.logout') }}';
             }
         }"
         x-init="
@@ -19,7 +19,5 @@
         "
         class="hidden"
     ></div>
-    <form id="terminal-idle-logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
-        @csrf
-    </form>
+
 @endif

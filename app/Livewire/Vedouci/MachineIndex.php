@@ -57,19 +57,19 @@ class MachineIndex extends Component
 
     public function render()
     {
-        $query = Prostredek::dbcnt(730550)
+        $machines = Prostredek::dbcnt(730550)
             ->where('KlicProstredku', 'like', '20%')
-            ->with('pracoviste');
+            ->with('pracoviste')
+            ->orderBy('KlicProstredku')
+            ->get();
 
         if ($this->search) {
-            $term = $this->search;
-            $query->where(function ($q) use ($term) {
-                $q->where('KlicProstredku', 'like', "%{$term}%")
-                    ->orWhere('NazevUplny', 'like', "%{$term}%");
+            $term = mb_strtolower($this->search);
+            $machines = $machines->filter(function ($m) use ($term) {
+                return str_contains(mb_strtolower($m->KlicProstredku ?? ''), $term)
+                    || str_contains(mb_strtolower($m->NazevUplny ?? ''), $term);
             });
         }
-
-        $machines = $query->orderBy('KlicProstredku')->get();
 
         $activeByMachine = $this->activeRecordsByMachine;
 

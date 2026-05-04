@@ -24,13 +24,15 @@ class AreaIndex extends Component
             ['key' => 'VedouciOsoba', 'label' => 'Vedoucí'],
         ];
 
-        $pracoviste = Pracoviste::query()
-            ->when($this->search, function ($q) {
-                $term = '%' . $this->search . '%';
-                $q->where('NazevUplny', 'like', $term)
-                    ->orWhere('KlicPracoviste', 'like', $term);
-            })
-            ->get();
+        $pracoviste = Pracoviste::all();
+
+        if ($this->search) {
+            $term = mb_strtolower($this->search);
+            $pracoviste = $pracoviste->filter(fn ($p) =>
+                str_contains(mb_strtolower($p->NazevUplny ?? ''), $term)
+                || str_contains(mb_strtolower($p->KlicPracoviste ?? ''), $term)
+            )->values();
+        }
 
         return view('livewire.admin.area-index', [
             'areas' => $pracoviste,

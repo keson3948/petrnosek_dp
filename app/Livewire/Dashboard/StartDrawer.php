@@ -92,7 +92,7 @@ class StartDrawer extends Component
                 description: 'Budete odhlášeni za 5 sekund.',
                 timeout: 5000,
             );
-            $this->js("setTimeout(() => document.getElementById('terminal-idle-logout-form')?.submit(), 5000)");
+            $this->js("setTimeout(() => window.location.href = '".route('terminal.logout')."', 5000)");
 
             return;
         }

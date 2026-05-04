@@ -286,7 +286,7 @@
             </div>
 
             <div class="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-                <div class="text-xs uppercase tracking-wide text-base-content/60 mb-2 font-bold">Zadaný čas (schválený)</div>
+                <div class="text-xs uppercase tracking-wide text-base-content/60 mb-2 font-bold">Vykázaný čas</div>
                 <div class="grid grid-cols-2 gap-3">
                     <x-mary-input label="Hodiny" type="number" wire:model="casZadanyHours" min="0" />
                     <x-mary-input label="Minuty" type="number" wire:model="casZadanyMinutes" min="0" max="59" />

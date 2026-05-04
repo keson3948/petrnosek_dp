@@ -210,6 +210,16 @@ class User extends Authenticatable
 
     public function canStartLunchNow(): bool
     {
+        $hasTrip = $this->productionRecords()
+            ->work()
+            ->where('status', 0)
+            ->where('SluzebniCesta', 1)
+            ->exists();
+
+        if ($hasTrip) {
+            return true;
+        }
+
         $window = $this->employeeGroup()?->lunchWindow();
 
         if (! $window) {

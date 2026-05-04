@@ -179,7 +179,7 @@
                         </div>
                         @if($casZadany !== null)
                             <div>
-                                <div class="text-xs text-gray-400 uppercase tracking-wide">Zadaný čas</div>
+                                <div class="text-xs text-gray-400 uppercase tracking-wide">Vykázaný čas</div>
                                 <div class="font-semibold {{ $isHistory ? '' : 'text-lg' }} text-primary">
                                     {{ $casZadany[0] }}h {{ $casZadany[1] }}min
                                 </div>

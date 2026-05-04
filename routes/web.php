@@ -6,6 +6,13 @@ use Livewire\Volt\Volt;
 
 Volt::route('/', 'welcome')->name('welcome');
 
+Route::get('/terminal-logout', function () {
+    auth()->logout();
+    session()->invalidate();
+    session()->regenerateToken();
+    return redirect()->route('welcome');
+})->name('terminal.logout');
+
 Route::get('/terminal/{token}', \App\Http\Controllers\Terminal::class)
     ->name('terminal.init');
 

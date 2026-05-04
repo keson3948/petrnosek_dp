@@ -61,6 +61,10 @@ class AutoStartLunch extends Command
 
                 $activeWork = $user->productionRecords->first();
 
+                if ($activeWork && $activeWork->SluzebniCesta) {
+                    continue;
+                }
+
                 if ($activeWork) {
                     $activeWork->update([
                         'status' => 1,

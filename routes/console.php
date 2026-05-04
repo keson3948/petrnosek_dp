@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('economy:sync-users')->dailyAt('00:00');
 Schedule::command('lunch:auto-start')->everyMinute();
+Schedule::command('attendance:auto-close-records')->everyFifteenMinutes();

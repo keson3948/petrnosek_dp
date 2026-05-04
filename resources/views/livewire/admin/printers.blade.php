@@ -1,5 +1,5 @@
 <div>
-    <x-mary-header title="Správa tiskáren" separator>
+    <x-mary-header title="Tiskárny" separator>
         <x-slot:middle class="!justify-end">
             <x-mary-input wire:model.live.debounce.300ms="search" icon="o-magnifying-glass" placeholder="Hledat..." clearable />
         </x-slot:middle>

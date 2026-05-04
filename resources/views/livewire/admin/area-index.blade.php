@@ -1,5 +1,5 @@
 <div>
-    <x-mary-header title="Pracoviště (Economy)" separator progress-indicator>
+    <x-mary-header title="Pracoviště" separator progress-indicator>
         <x-slot:middle class="!justify-end">
             <x-mary-input icon="o-magnifying-glass" wire:model.live="search" placeholder="Hledat..." />
         </x-slot:middle>

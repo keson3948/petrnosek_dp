@@ -81,15 +81,7 @@ class VedouciDashboard extends Component
         ])
             ->typPohybu('EC_ZAKVYR')
             ->vyhodnoceni(1)
-            ->whereHas('doklad', function (Builder $q) {
-                $q->tdfDocType(410008)
-                    ->dbcnt(10904)
-                    ->docYear(2022);
-
-                if ($this->filterMistr) {
-                    $q->where('VlastniOsoba', $this->filterMistr);
-                }
-            })
+            ->whereHas('doklad', fn (Builder $q) => $q->tdfDocType(410008)->dbcnt(10904)->docYear(2022))
             ->orderBy(
                 Doklad::select('TerminDatum')
                     ->whereColumn('ecd_Dokl.SysPrimKlicDokladu', 'ecd_StaDokl.Doklad'),
@@ -136,7 +128,7 @@ class VedouciDashboard extends Component
         $mistrUsers = $this->loadMistrUsers($staDoklady);
         $activeUserModels = $this->activeUsers;
 
-        // Build mistr filter options
+        // Build mistr options from the already-loaded collection (no second query)
         $mistrOptions = $staDoklady
             ->map(fn ($s) => [
                 'id' => trim($s->doklad->vlastniOsoba?->KlicSubjektu ?? ''),
@@ -147,6 +139,13 @@ class VedouciDashboard extends Component
             ->sortBy('name')
             ->values()
             ->toArray();
+
+        // Apply mistr filter in PHP — no second DB query needed
+        if ($this->filterMistr) {
+            $staDoklady = $staDoklady->filter(
+                fn ($s) => trim($s->doklad->VlastniOsoba ?? '') === $this->filterMistr
+            );
+        }
 
         // Map active records by VP SysPrimKlic for quick lookup
         $activeByVp = $this->activeRecords->groupBy(fn ($r) => trim($r->ZakVP_SysPrimKlic ?? ''));
